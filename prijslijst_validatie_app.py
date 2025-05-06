@@ -84,7 +84,7 @@ if uploaded_files:
 
                 # Show result and download button for THIS file
                 if report_path and os.path.exists(report_path):
-                    st.success(f"Validatierapport voor '{original_filename}' succesvol gegenereerd! (Grafieken tijdelijk uit)")
+                    st.success(f"Validatierapport voor '{original_filename}' succesvol gegenereerd!")
                     try:
                         with open(report_path, "rb") as fp:
                             report_bytes = fp.read()

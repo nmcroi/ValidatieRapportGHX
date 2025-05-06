@@ -434,7 +434,7 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
     Retourneert: (results, filled_percentages, red_flag_messages, errors_per_field)
     """
     results = [] # Lijst met alle individuele fout/warning dicts
-    fields = validation_config.get("fields", {})
+    fields_config = validation_config.get("fields", {})
     invalid_values_config = validation_config.get("invalid_values", [])
     invalid_values = [str(val).lower() for val in invalid_values_config]
     filled_counts = {} # Houdt telling bij per veld
@@ -443,11 +443,37 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
     total_rows = len(df)
     rij_offset = 3 # Start rijnummer in Excel na header(s)/instructie(s)
 
+    # Initialiseer summary_stats (zal worden geretourneerd als filled_percentages)
+    summary_stats = {
+        'counts_mandatory': {
+            'correct_fields': 0, 
+            'incorrect_fields': 0, 
+            'not_present_fields': 0, 
+            'total_defined_mandatory_fields': 0
+        },
+        'counts_optional': {
+            'filled_occurrences': 0, 
+            'empty_occurrences': 0, 
+            'total_defined_optional_fields': 0, 
+            'total_possible_optional_occurrences': 0
+        },
+        'total_rows_in_df': total_rows
+    }
+
     # Initialiseer tellers en resultaatlijsten
-    for field in fields:
-        if field in df.columns:
-            filled_counts[field] = 0
-            field_validation_results[field] = []
+    for field_name in fields_config:
+        # Controleer of 'importance' bestaat en 'Verplicht' is, anders default naar optioneel
+        rules = fields_config[field_name]
+        is_mandatory = rules.get('importance') == 'Verplicht'
+        
+        if is_mandatory:
+            summary_stats['counts_mandatory']['total_defined_mandatory_fields'] += 1
+        else:
+            summary_stats['counts_optional']['total_defined_optional_fields'] += 1
+
+        if field_name in df.columns:
+            filled_counts[field_name] = 0
+            field_validation_results[field_name] = []
 
     # --- Hoofd loop door rijen ---
     logging.info(f"Start validatie van {total_rows} rijen...")
@@ -456,7 +482,7 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
         row_data = row.to_dict() # Voor dependency checks
 
         # Valideer elk veld in de rij
-        for field, rules in fields.items():
+        for field, rules in fields_config.items():
             if field in df.columns:
                 value = row[field]
                 value_str = '' if pd.isnull(value) else str(value).strip()
@@ -527,26 +553,32 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
     logging.info("UOM relatie validatie voltooid.")
 
 
-    # 2. Bereken errors_per_field (aantal unieke rijen met fouten per veld, max = gevuld)
-    logging.info("Berekenen fouten per veld...")
-    errors_per_field = {}
-    for field_name, field_errors_list in field_validation_results.items():
-        # Tel alleen unieke rijen met fouten voor dit veld
-        unique_error_rows = set(res["Rij"] for res in field_errors_list)
-        error_count = len(unique_error_rows)
-        # Aantal fouten kan niet groter zijn dan aantal gevulde velden
-        errors_per_field[field_name] = min(error_count, filled_counts.get(field_name, 0))
+    # 2. Bereken summary_stats NA ALLE validaties ---
+    logging.info("Berekenen vullingspercentages...") # Hergebruik logging message, past nu beter
+    for field_name, rules in fields_config.items():
+        is_mandatory = rules.get('importance') == 'Verplicht'
 
-    # 3. Bereken filled_percentages
-    logging.info("Berekenen vullingspercentages...")
-    filled_percentages = {
-        field: (count / total_rows * 100) if total_rows > 0 else 0
-        for field, count in filled_counts.items()
-    }
+        if field_name in df.columns:
+            if is_mandatory:
+                # Heeft dit veld fouten?
+                if not field_validation_results.get(field_name): # Geen lijst met errors voor dit veld
+                    summary_stats['counts_mandatory']['correct_fields'] += 1
+                else:
+                    summary_stats['counts_mandatory']['incorrect_fields'] += 1
+            else: # Optioneel veld
+                filled_in_col = filled_counts.get(field_name, 0)
+                summary_stats['counts_optional']['filled_occurrences'] += filled_in_col
+                summary_stats['counts_optional']['empty_occurrences'] += (total_rows - filled_in_col)
+                summary_stats['counts_optional']['total_possible_optional_occurrences'] += total_rows
+        else: # Veld niet in DataFrame (niet in input Excel)
+            if is_mandatory:
+                summary_stats['counts_mandatory']['not_present_fields'] += 1
+            # Voor optionele velden die niet aanwezig zijn, doen we niets met filled/empty occurrences
 
-    # 4. Finaliseer red_flag_messages
+    filled_percentages = summary_stats # Wijs de berekende statistieken toe aan de return variabele
+
     logging.info("Verwerken Red Flag berichten...")
-    # Haal eventuele RED FLAG dicts uit 'results' (toegevoegd door UOM bijv.)
+    # Verwerk Red Flags die door UOM validatie zijn toegevoegd aan validation_results
     validation_red_flags_dicts = [r for r in results if r.get("GHX Kolom") == "RED FLAG"]
     for flag_dict in validation_red_flags_dicts:
          msg = flag_dict.get("Foutmelding")
@@ -575,6 +607,16 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
     red_flag_messages = unique_red_flags # Dit is de uiteindelijke lijst
 
     logging.info(f"Validatie analyse voltooid. Gevonden meldingen: {len(results)}, Unieke Red Flags: {len(red_flag_messages)}")
+
+    # 3. Bereken errors_per_field (aantal unieke rijen met fouten per veld, max = gevuld)
+    logging.info("Berekenen fouten per veld...")
+    errors_per_field = {}
+    for field_name, field_errors_list in field_validation_results.items():
+        # Tel alleen unieke rijen met fouten voor dit veld
+        unique_error_rows = set(res["Rij"] for res in field_errors_list)
+        error_count = len(unique_error_rows)
+        # Aantal fouten kan niet groter zijn dan aantal gevulde velden
+        errors_per_field[field_name] = min(error_count, filled_counts.get(field_name, 0))
 
     # Retourneer alle berekende informatie
     return results, filled_percentages, red_flag_messages, errors_per_field
@@ -679,7 +721,8 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
             df_original=df_original,
             red_flag_messages=red_flag_messages,
             errors_per_field=errors_per_field,
-            JSON_CONFIG_PATH=validation_json_path # Nodig voor laden config in rapport
+            JSON_CONFIG_PATH=validation_json_path, # Nodig voor laden config in rapport
+            summary_data=filled_percentages,  # Doorgeven van summary_data
         )
 
         if output_path:

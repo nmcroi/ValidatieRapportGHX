@@ -393,6 +393,7 @@ def genereer_rapport(
     df_original: pd.DataFrame,
     red_flag_messages: list,
     JSON_CONFIG_PATH: str,  # Pad nodig om config te laden
+    summary_data: dict,  # VERWIJDERDE PARAMETER TERUGGEZET
     errors_per_field: dict = None,
 ):
     """
@@ -865,6 +866,7 @@ def genereer_rapport(
 
             # Onthoud de laatst gebruikte rij-index (0-based)
             attention_end_row = current_row - 1
+            col_d_end_row = attention_end_row  # Initialize col_d_end_row here
             # --- Einde Blok 3 ---
 
             # --- Blok 4: Fout Meldingen Tabel (Blauw, D3:Gxx) ---
@@ -1155,6 +1157,27 @@ def genereer_rapport(
 
             # Grafiek 2: Donut Verplichte Velden
             donut_chart_mand = workbook.add_chart({"type": "doughnut"})
+
+            # Bepaal dynamisch de categorieën, waarden en punten voor de donut chart
+            # op basis van de telling voor 'Kolom niet aanwezig'
+            count_not_present_mand = summary_data['counts_mandatory'].get('not_present', 0)
+
+            # Standaardinstellingen (alsof alle 4 categorieën aanwezig zijn)
+            categories_end_row_mand = donut_mand_row + 4
+            values_end_row_mand = donut_mand_row + 4
+            chart_points_mand = [
+                {"fill": {"color": colors[1]}},  # Juist ingevuld
+                {"fill": {"color": colors[2]}},  # Foutief ingevuld
+                {"fill": {"color": colors[3]}},  # Leeg
+                {"fill": {"color": colors[4]}},  # Kolom niet aanwezig
+            ]
+
+            # Als 'Kolom niet aanwezig' 0 is, pas de ranges en punten aan
+            if count_not_present_mand == 0:
+                categories_end_row_mand = donut_mand_row + 3  # Neem 3 categorieën
+                values_end_row_mand = donut_mand_row + 3      # Neem 3 waarden
+                chart_points_mand = chart_points_mand[:-1]    # Verwijder laatste kleurpunt
+
             donut_chart_mand.add_series(
                 {
                     "name": f"Verplichte Velden Status ({total_donut_mand} velden)",
@@ -1162,32 +1185,24 @@ def genereer_rapport(
                         "1. Dashboard",
                         donut_mand_row + 1,
                         0,
-                        donut_mand_row + 4,
+                        categories_end_row_mand,  # Dynamische eindrij
                         0,
                     ],
                     "values": [
                         "1. Dashboard",
                         donut_mand_row + 1,
                         1,
-                        donut_mand_row + 4,
+                        values_end_row_mand,    # Dynamische eindrij
                         1,
                     ],
-                    "points": [
-                        {"fill": {"color": colors[1]}},
-                        {"fill": {"color": colors[2]}},
-                        {"fill": {"color": colors[3]}},
-                        {"fill": {"color": colors[4]}},
-                    ],
+                    "points": chart_points_mand,       # Dynamische puntenlijst
                     "data_labels": {
                         "percentage": True,
                         "font": {"size": 11, "color": "white"},
-                        "leader_lines": True,
                     },
                 }
             )
-            donut_chart_mand.set_title(
-                {"name": f"Verplichte Velden ({total_donut_mand} velden)"}
-            )
+            donut_chart_mand.set_title({"name": "Verplichte Velden"})
             donut_chart_mand.set_legend({"position": "bottom", "font": {"size": 11}})
             donut_chart_mand.set_size({"width": 500, "height": 500}) # Vaste grootte
             ws_dash.insert_chart(f"D{chart_start_row + 1}", donut_chart_mand)
@@ -1219,7 +1234,6 @@ def genereer_rapport(
                     "data_labels": {
                         "percentage": True,
                         "font": {"size": 11, "color": "white"},
-                        "leader_lines": True,
                     },
                 }
             )
