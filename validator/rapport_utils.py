@@ -723,7 +723,7 @@ def genereer_rapport(
             current_row = 2  # Start schrijven op rij 3 (0-based index 2)
             ws_dash.merge_range(
                 f"A{current_row+1}:B{current_row+1}",
-                "Belangrijkste Statistieken:",
+                "Belangrijkste Statistieken",
                 fmt_header_green,
             )
             ws_dash.set_row(current_row, 18)  # Hoogte header rij
@@ -735,14 +735,14 @@ def genereer_rapport(
             aantal_aanw_lege_verpl_velden = empty_in_present
 
             stats_data_original = [
-                ("Aantal rijen:", total_rows),
-                ("Aantal kolommen:", total_original_cols),
-                ("Aantal velden:", aantal_velden_totaal),
-                ("Aantal aanwezige verplichte velden:", aantal_aanw_verpl_velden),
-                ("Aantal afwezige verplichte velden:", aantal_afw_verpl_velden),
-                ("Aantal gevulde verplichte velden:", total_filled_in_present),
+                ("Aantal rijen", total_rows),
+                ("Aantal kolommen", total_original_cols),
+                ("Aantal velden", aantal_velden_totaal),
+                ("Aantal aanwezige verplichte velden", aantal_aanw_verpl_velden),
+                ("Aantal afwezige verplichte velden", aantal_afw_verpl_velden),
+                ("Aantal gevulde verplichte velden", total_filled_in_present),
                 (
-                    "Aantal aanwezige lege verplichte velden:",
+                    "Aantal aanwezige lege verplichte velden",
                     aantal_aanw_lege_verpl_velden,
                 ),
             ]
@@ -757,21 +757,21 @@ def genereer_rapport(
             action_start_row = current_row
             ws_dash.merge_range(
                 f"A{current_row+1}:B{current_row+1}",
-                "Belangrijkste Actiepunten:",
+                "Belangrijkste Actiepunten",
                 fmt_header_red,
             )
             ws_dash.set_row(current_row, 18)
             current_row += 1
             actions_data_original = [  # <<< CORRECTE INSPRINGING
                 (
-                    "Aantal lege verplichte velden (incl. ontbrekende):",
+                    "Aantal lege verplichte velden (incl. ontbrekende)",
                     aantal_leeg_incl_missing,
                 ),
                 (
-                    "Percentage ingevulde verplichte velden (incl. ontbrekende):",
+                    "Percentage ingevulde verplichte velden (incl. ontbrekende)",
                     percentage_ingevuld_incl_missing / 100,
                 ),  # Deel door 100 blijft
-                ("Aantal ontbrekende verplichte kolommen:", M_missing),
+                ("Aantal ontbrekende verplichte kolommen", M_missing),
             ]
 
             # Definieer een basis format voor de rode waarden (zonder specifiek num_format)
@@ -807,7 +807,7 @@ def genereer_rapport(
             # Schrijf header voor Aandachtspunten (merged over A:B)
             ws_dash.merge_range(
                 f"A{attention_start_row+1}:B{attention_start_row+1}",
-                "Aandachtspunten:",
+                "Aandachtspunten",
                 fmt_header_red,
             )
             ws_dash.set_row(attention_start_row, 18)  # Header hoogte
@@ -891,23 +891,25 @@ def genereer_rapport(
             if not df_errors.empty:
                 # Check of 'code' kolom bestaat voor we verder gaan
                 if "code" in df_errors.columns:
-                    df_foutcodes = (
-                        df_errors.groupby("code").size().reset_index(name="Aantal")
-                    )
-                    df_foutcodes = df_foutcodes[
-                        df_foutcodes["code"] != ""
-                    ]  # Filter lege codes uit
+                    # Simpel: groepeer alle fouten alleen op code, net als in het notebook
+                    df_foutcodes = df_errors.groupby("code").size().reset_index(name="Aantal")
+                    
+                    # Filter lege codes uit
+                    df_foutcodes = df_foutcodes[df_foutcodes["code"] != ""]
+                    
+                    # Maak beschrijving op basis van de foutcode
                     df_foutcodes["Beschrijving"] = df_foutcodes["code"].apply(
                         lambda x: error_code_desc.get(str(x).strip(), f"Code: {x}")
                     )
 
                     # --- NIEUWE CODE: Bepaal sets van error codes VOOR de helper functie ---
                     mandatory_error_codes = set()
-                    # Gebruik df_errors_mand die *eerder* in genereer_rapport is gedefinieerd
                     if not df_errors_mand.empty and "code" in df_errors_mand.columns:
                         mandatory_error_codes = set(df_errors_mand["code"].unique())
 
                     non_mandatory_error_codes = set()
+                    if not df_errors_non_mand.empty and "code" in df_errors_non_mand.columns:
+                        non_mandatory_error_codes = set(df_errors_non_mand["code"].unique())
                     # Gebruik df_errors_non_mand die *eerder* in genereer_rapport is gedefinieerd
                     if (
                         not df_errors_non_mand.empty
@@ -935,9 +937,9 @@ def genereer_rapport(
                             return list(types)[0]  # Retourneer het enige element
 
                     # --- EINDE AANGEPASTE HELPER ---
-                    df_foutcodes["Type (Sheet)"] = df_foutcodes["code"].apply(
-                        get_error_type
-                    )  # Apply werkt nu correct
+                    df_foutcodes["Type (Sheet)"] = df_foutcodes.apply(
+                        lambda row: get_error_type(row["code"]), axis=1
+                    )  # Nu per foutcode, maar kan verder worden uitgebreid naar veld+code indien nodig
                     df_foutcodes = df_foutcodes.sort_values(
                         "Aantal", ascending=False
                     ).reset_index(drop=True)
@@ -1027,7 +1029,7 @@ def genereer_rapport(
                 #HIER!!!
 
                 # Schrijf de header
-                ws_dash.write(col_d_start_row, 3, "Ontbrekende verplichte kolommen:", fmt_missing_col_header)
+                ws_dash.write(col_d_start_row, 3, "Ontbrekende verplichte kolommen", fmt_missing_col_header)
                 # Schrijf de kolomnamen
                 current_col_d_row = col_d_start_row + 1
                 for col_name in missing_mandatory_columns:
@@ -2078,7 +2080,7 @@ Deze score bestaat uit drie onderdelen:
                 writer, sheet_name="8. Kolom Mapping", index=False
             )
             ws_map.set_column(0, 0, 45)
-            ws_map.set_column(1, 1, 45)
+            ws_map.set_column(1, 1, 75)
             (max_row_map, max_col_map) = mapping_df_sheet.shape
             # Header format
             for c_idx, value in enumerate(mapping_df_sheet.columns.values):

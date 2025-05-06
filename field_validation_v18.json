@@ -4140,7 +4140,7 @@
             "description": "Check of verplichte template kolommen aanwezig zijn",
             "fields": ["Is BestelbareEenheid", "Omschrijving Verpakkingseenheid"],
             "condition": "template_check",
-            "error_message": "U maakt niet gebruik van onze nieuwste template, wij adviseren u om dat wel te doen. De link naar de nieuwste en meest actuele GHX Template is:\n\nhttps://ghxnl.ghxeurope.com/synqeps/webroot/upload/GHXstandaardTemplate2.xlsx"
+            "error_message": "U maakt niet gebruik van onze nieuwste template, wij adviseren u om dat wel te doen. De link naar de nieuwste en meest actuele GHX Template is:\nhttps://ghxnl.ghxeurope.com/synqeps/webroot/upload/GHXstandaardTemplate2.xlsx"
         },
         {
             "description": "Check of het een staffelbestand is",

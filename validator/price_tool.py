@@ -259,7 +259,7 @@ def validate_field(field_name: str, value: Any, field_rules: dict, invalid_value
         try:
             if not re.match(pattern, value_str):
                 error_message = field_rules.get("error_messages", {}).get("invalid_format", f"Waarde '{value_str}' heeft ongeldig formaat.")
-                error_code = field_rules.get("error_codes", {}).get("invalid_format", "76")
+                error_code = field_rules.get("error_codes", {}).get("invalid_format", "95")
                 errors.append({'message': error_message, 'code': error_code})
         except re.error as e:
              logging.warning(f"Ongeldige regex voor veld {field_name}: {pattern} - Fout: {e}")
@@ -596,6 +596,19 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
               if msg and msg not in red_flag_messages_list:
                    red_flag_messages_list.append(msg)
 
+    # Template check conditie: controleer of alle vereiste kolommen voor de nieuwe template aanwezig zijn
+    template_check_flag = next((flag for flag in validation_config.get("red_flags", []) 
+                              if flag.get("condition") == "template_check"), None)
+    if template_check_flag:
+        template_fields = template_check_flag.get("fields", [])
+        # Controleer of alle template-specifieke velden aanwezig zijn in de dataframe
+        template_fields_missing = [f for f in template_fields if f not in df.columns]
+        # Als er velden missen, is het niet de nieuwste template
+        if template_fields_missing:
+            msg = template_check_flag.get("error_message")
+            if msg and msg not in red_flag_messages_list:
+                red_flag_messages_list.append(msg)
+                logging.info(f"Red flag 'template_check' getriggerd: ontbrekende velden: {template_fields_missing}")
 
     # Verwijder duplicaten uit de verzamelde lijst
     seen_messages = set()
@@ -660,6 +673,17 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
             string_columns = [field for field, rules in validation_config.get("fields", {}).items()
                               if rules.get("read_as_string")]
             dtype_spec = {col: str for col in string_columns}
+            
+            # Voeg expliciete dtype mappings toe voor problematische kolomnamen in de originele Excel
+            # Voor UNSPSC Code (zowel GHX als supplier-kolomnamen)
+            dtype_spec["UNSPSC CODE (UNITED NATIONS STANDARD PRODUCTS AND SERVICES CODE)"] = str
+            dtype_spec["UNSPSC Code"] = str
+            
+            # Voor GTIN en andere kolommen die numeriek lijken maar string moeten zijn
+            dtype_spec["BARCODENUMMER (EAN/ GTIN/ HIBC)"] = str
+            dtype_spec["GTIN Verpakkingseenheid"] = str
+            
+            # Lees Excel in met de uitgebreide dtype_spec
             df = pd.read_excel(input_excel_path, dtype=dtype_spec)
             df_original = df.copy()
             logging.info(f"Excel succesvol gelezen: {df.shape[0]} rijen, {df.shape[1]} kolommen.")
