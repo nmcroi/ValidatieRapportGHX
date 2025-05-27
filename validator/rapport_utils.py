@@ -1723,11 +1723,14 @@ Deze score bestaat uit drie onderdelen:
             df_percentages_sheet.to_excel(
                 writer, sheet_name="4. Verplichte %", index=False
             )
+            # Definieer percentage opmaak
+            percentage_format = writer.book.add_format({'num_format': '0.00%'})
+
             ws_mand_perc.set_column(0, 0, 30)
             ws_mand_perc.set_column(1, 1, 30)
             ws_mand_perc.set_column(2, 2, 12)
-            ws_mand_perc.set_column(3, 3, 18)  # Filled %
-            ws_mand_perc.set_column(4, 4, 18)  # Fout %
+            ws_mand_perc.set_column(3, 3, 18, percentage_format)  # Filled %
+            ws_mand_perc.set_column(4, 4, 18, percentage_format)  # Fout %
             ws_mand_perc.set_column(5, 5, 20)  # Aantal Juist
             # Pas format toe op percentage kolommen
             # (Let op: De set_column hieronder leek overbodig/dubbel in de originele code, ik laat hem weg
@@ -1900,15 +1903,17 @@ Deze score bestaat uit drie onderdelen:
                 df_percentages_non_mand_sheet.to_excel(
                     writer, sheet_name="6. Optionele %", index=False
                 )
+                # Definieer percentage opmaak (als het nog niet bestaat of voor de zekerheid opnieuw)
+                percentage_format = writer.book.add_format({'num_format': '0.00%'})
+
                 ws_opt_perc.set_column(0, 0, 30)
                 ws_opt_perc.set_column(1, 1, 30)
                 ws_opt_perc.set_column(2, 2, 12)
-                ws_opt_perc.set_column(3, 3, 18)  # Filled %
-                ws_opt_perc.set_column(4, 4, 18)  # Fout %
+                ws_opt_perc.set_column(3, 3, 18, percentage_format)  # Filled %
+                ws_opt_perc.set_column(4, 4, 18, percentage_format)  # Fout %
                 ws_opt_perc.set_column(5, 5, 20)  # Aantal Juist
-                # Pas format toe
-                # Stel alleen breedte in voor percentage kolommen (format komt van tabel stijl)
-                ws_opt_perc.set_column(3, 4, 18)  # fmt_perc_table verwijderd
+                # De onderstaande regel is nu overbodig door de expliciete format hierboven
+                # ws_opt_perc.set_column(3, 4, 18)  # fmt_perc_table verwijderd
                 (max_row_op, max_col_op) = df_percentages_non_mand_sheet.shape
                 # Header format
                 for c_idx, value in enumerate(

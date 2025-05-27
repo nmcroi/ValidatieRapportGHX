@@ -2,6 +2,21 @@
 
 Een Streamlit applicatie voor het valideren van prijslijsten volgens GHX-standaarden.
 
+## Starten van de applicatie
+
+1. **Activeer de virtuele omgeving**:
+   ```bash
+   source venv/bin/activate
+   ```
+   Je ziet nu `(venv)` voor je command prompt om aan te geven dat de omgeving actief is
+
+2. **Start de Streamlit app**:
+   ```bash
+   streamlit run prijslijst_validatie_app.py
+   ```
+
+3. **Gebruik de applicatie** in je browser (opent automatisch)
+
 ## Functies
 
 - Upload Excel prijslijsten voor validatie
