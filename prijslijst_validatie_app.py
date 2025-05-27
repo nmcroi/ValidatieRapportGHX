@@ -155,3 +155,6 @@ if st.session_state.report_data:
 
 else:
     st.info("Wacht op upload van een of meerdere Excel-bestanden.")
+
+st.markdown("---") # Een horizontale lijn voor scheiding
+st.markdown("© 2025 Created by Niels Croiset | GHX | Nightstory | V270525")
