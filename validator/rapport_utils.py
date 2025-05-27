@@ -709,7 +709,7 @@ def genereer_rapport(
 
             # --- Kolombreedtes Instellen ---
             ws_dash.set_column("A:A", 130)
-            ws_dash.set_column("B:B", 8)
+            ws_dash.set_column("B:B", 10)
             ws_dash.set_column("C:C", 5)
             ws_dash.set_column("D:D", 75)
             ws_dash.set_column(
