@@ -55,7 +55,21 @@ if uploaded_files:
         # Reset/clear previous report data when starting new validation
         st.session_state.report_data = {}
         # Loop through each uploaded file
+        MAX_FILE_SIZE_MB = 50
+        MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+
         for uploaded_file in uploaded_files:
+            # Check file size before processing
+            if uploaded_file.size > MAX_FILE_SIZE_BYTES:
+                file_size_mb = uploaded_file.size / (1024 * 1024)
+                st.error(
+                    f"Bestand '{uploaded_file.name}' ({file_size_mb:.1f}MB) is te groot. "
+                    f"Maximaal toegestane online validatiegrootte is {MAX_FILE_SIZE_MB}MB. "
+                    f"Neem contact op met Niels Croiset om dit bestand lokaal te laten valideren."
+                )
+                st.session_state.report_data[uploaded_file.name] = {'error': 'file_too_large'} # Markeer als error
+                continue  # Skip to the next file
+
             st.markdown("***") # Separator line
             st.subheader(f"Bezig met verwerken: {uploaded_file.name}")
             original_filename = uploaded_file.name
@@ -123,12 +137,15 @@ if uploaded_files:
                          logging.error(f"Kon tijdelijk bestand {temp_file_path} niet verwijderen: {del_err}")
 
         st.markdown("***") # Separator after all files
-        st.success("Alle geselecteerde bestanden zijn verwerkt.")
+        st.success("Alle geselecteerde bestanden zijn beoordeeld.") # Aangepast omdat sommige overgeslagen kunnen zijn
 
 # --- Display Download Buttons from Session State (outside the main button click logic) ---
 if st.session_state.report_data:
     st.markdown("### Beschikbare Rapporten:")
     for original_filename, data in st.session_state.report_data.items():
+        if data.get('error') == 'file_too_large':
+            st.warning(f"Bestand '{original_filename}' was te groot en is niet verwerkt.")
+            continue # Sla downloadknop over voor te grote bestanden
         st.download_button(
             label=f"Download Rapport voor '{original_filename}'",
             data=data['bytes'],
@@ -142,6 +159,8 @@ if st.session_state.report_data:
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
             for original_filename, data in st.session_state.report_data.items():
+                if data.get('error') == 'file_too_large':
+                    continue # Voeg geen te grote bestanden toe aan zip
                 # Use the generated report filename inside the zip
                 zip_file.writestr(data['filename'], data['bytes'])
 
