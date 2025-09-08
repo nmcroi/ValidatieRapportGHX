@@ -36,31 +36,63 @@
       "-"
     ],
       "error_code_descriptions": {
-        "73": "Aantal verplichte velden die leeg zijn.",
-        "74": "Aantal verplichte velden met te korte waarden.",
-        "75": "Aantal verplichte velden met te lange waarden.",
-        "76": "Duplicaten in Artikelnummer gevonden.",
-        "77": "Velden die numeriek moeten zijn, maar dat niet zijn.",
-        "78": "Velden die verkeerde symbolen of tekens bevatten.",
-        "79": "Velden met verkeerde lengtes.",
-        "80": "Velden met waardes die moeten voorkomen in een specifieke lijst.",
-        "81": "Aantal velden met ongeldige CE Certificaat einddatum.",
-        "82": "Aantal velden met ongeldige CE Certificerende instantie.",
-        "83": "Aantal fouten in Brutoprijs (max digits overschrijding).",
-        "84": "Aantal ontbrekende Nettoprijs-velden.",
-        "85": "Aantal fouten in Nettoprijs (max digits overschrijding).",
-        "86": "Aantal ontbrekende Is BestelbareEenheid-velden.",
-        "87": "Aantal Is BestelbareEenheid-velden met ongeldige waarde.",
-        "88": "Aantal ontbrekende Is BasisEenheid-velden.",
-        "89": "Aantal Is BasisEenheid-velden met ongeldige waarde.",
-        "90": "Aantal ontbrekende Omschrijving Verpakkingseenheid-velden.",
-        "91": "Aantal Omschrijving Verpakkingseenheid-velden met te lange waarden.",
-        "92": "Boolean velden waar de waarde niet 1 of 0 is.",
-        "93": "Mismatch fouten.",
-        "94": "Velden moeten alfanumeriek zijn.",
-        "95": "Fout in het formaat van het veld.",
-        "96": "Datum mag niet foutief zijn of vóór een andere datum liggen.",
-        "97": "UOM-relatie fouten: velden die opzich correct zijn maar in combinatie conflicteren."
+        "700": "Aantal verplichte velden die leeg zijn.",
+        "701": "Een waarde is te kort.",
+        "702": "Een waarde is te lang.",
+        "703": "Een waarde die uniek moet zijn, is een duplicaat (bijv. GTIN).",
+        "704": "Een waarde is niet numeriek.",
+        "705": "Velden die verkeerde symbolen of tekens bevatten.",
+        "706": "Een waarde heeft niet de correcte, exacte lengte.",
+        "707": "Een waarde komt niet voor in de bijbehorende referentielijst.",
+        "708": "Ongeldige CE Certificaat einddatum.",
+        "709": "Ongeldige CE Certificerende instantie.",
+        "710": "Fout in Brutoprijs (max digits overschrijding).",
+        "711": "Nettoprijs-veld ontbreekt.",
+        "712": "Fout in Nettoprijs (max digits overschrijding).",
+        "713": "Is BestelbareEenheid-veld ontbreekt.",
+        "714": "Is BestelbareEenheid-veld met ongeldige waarde.",
+        "715": "Is BasisEenheid-veld ontbreekt.",
+        "716": "Is BasisEenheid-veld met ongeldige waarde.",
+        "717": "Omschrijving Verpakkingseenheid-veld ontbreekt.",
+        "718": "Omschrijving Verpakkingseenheid-veld met te lange waarde.",
+        "719": "Een boolean-veld (JA/NEE) heeft een ongeldige waarde.",
+        "720": "Een door de gebruiker ingevulde waarde komt niet overeen met een berekende waarde (mismatch).",
+        "721": "Een veld moet alfanumeriek zijn.",
+        "722": "Een waarde heeft een ongeldig format (bijv. datum, URL, CAS).",
+        "723": "Een datum ligt vóór een andere datum waarmee het een logische relatie heeft.",
+        "724": "UOM-relatie fouten: velden die op zichzelf correct zijn maar in combinatie conflicteren.",
+        
+        "750": "FLAG: Aanbeveling om een optioneel, maar belangrijk veld (zoals Artikelomschrijving) in te vullen.",
+        "751": "FLAG: Een veld is leeg terwijl dit verplicht is vanwege een afhankelijkheid met een ander veld.",
+        "752": "FLAG: De Brutoprijs is lager dan de Nettoprijs.",
+        "753": "FLAG: De 'Omschrijving Verpakkingseenheid' komt mogelijk niet overeen met de UOM-velden.",
+        "754": "CORRECTION: De 'Omrekenfactor' is automatisch berekend.",
+        "755": "CORRECTION: De 'Prijs per Kleinste eenheid' is automatisch berekend.",
+        "756": "FLAG: Een GTIN ontbreekt bij een medisch hulpmiddel met een hoge risicoklasse.",
+        "757": "CORRECTION: Een BTW-percentage (zoals 9 of 21) is omgezet naar de juiste BTW-code.",
+        "758": "FLAG: De eindwaarde van een prijsstaffel is lager dan of gelijk aan de startwaarde.",
+        "759": "FLAG: 'GLN Leverancier' is verplicht voor GS1, maar niet ingevuld.",
+        "760": "FLAG: Een 'Link IFU' wordt sterk aanbevolen voor een medisch hulpmiddel, maar ontbreekt.",
+        "761": "FLAG: De 'Artikelnaam Alternatief Artikel' ontbreekt terwijl het artikelnummer wel is ingevuld.",
+        "762": "FLAG: Aanbeveling om 'Barcode Alternatief Artikel' in te vullen.",
+        "763": "FLAG: De 'UNSPSC'-code ontbreekt terwijl dit verplicht is voor specifieke ziekenhuizen.",
+        "764": "FLAG: Een veld dat verplicht is voor GS1-aanleveringen is niet ingevuld.",
+        "765": "FLAG: Een 'CAS-nummer' wordt verwacht omdat het product als chemische stof is geïdentificeerd.",
+        "766": "FLAG: Aanbeveling om een 'CAS-nummer' in te vullen bij een 'Stofnaam' of 'Brutoformule'.",
+        "767": "FLAG: Aanbeveling om 'Link IFU' in te vullen bij een 'Gebruiksaanwijzing Code Referentie'.",
+        "768": "FLAG: De 'Maximum Temperatuur' is lager dan de 'Minimum Temperatuur'.",
+        "769": "FLAG: Een 'GMDN-code' ontbreekt terwijl deze verplicht is op basis van productkenmerken.",
+        "770": "FLAG: Een 'EMDN-code' ontbreekt terwijl deze verplicht is op basis van productkenmerken.",
+        "771": "FLAG: Een 'CE Certificaat nummer' ontbreekt terwijl dit verplicht is op basis van de risicoklasse.",
+        "772": "CORRECTION: De ingevulde risicoklasse is niet geldig in combinatie met de gekozen productclassificatiecode.",
+        "773": "FLAG: Een GMDN-code of EMDN-code is verplicht voor medische producten (UNSPSC 42xxxx).",
+
+        "800": "GLOBAL FLAG: Er ontbreekt een barcode (GTIN of Aanvullende ID) op een productregel.",
+        "801": "GLOBAL FLAG: UOM codes moeten gelijk zijn als base=orderable beide 1 zijn.",
+        "802": "GLOBAL FLAG: De aangeleverde template is mogelijk verouderd.",
+        "803": "GLOBAL FLAG: De 'Omschrijving Verpakkingseenheid' komt niet overeen met de UOM-codes.",
+        "804": "GLOBAL FLAG: De set afmetingen (H, B, D) is niet compleet ingevuld.",
+        "805": "GLOBAL FLAG: Inhoud velden moeten gelijk zijn als base=orderable beide 1 zijn."
         }
     },
     "file_context_rules": {
@@ -134,27 +166,27 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "Artikelnummer is niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "rejection",
-                    "code": "74",
+                    "code": "701",
                     "condition": "min_length",
                     "params": 3,
                     "message": "Artikelnummer is te kort. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "rejection",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 46,
                     "message": "Artikelnummer is te lang. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "76",
+                    "code": "703",
                     "condition": "is_duplicate_artikelnummer",
                     "message": "Het veld 'Artikelnummer' komt meerdere malen voor in uw lijst. Dit is toegestaan, maar controleer of dit correct is en of de bijbehorende verpakkingseenheden verschillen."
                 }
@@ -165,20 +197,20 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "Artikelnaam is niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "rejection",
-                    "code": "74",
+                    "code": "701",
                     "condition": "min_length",
                     "params": 3,
                     "message": "Artikelnaam is te kort. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 90,
                     "message": "Artikelnaam is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
@@ -190,14 +222,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 2000,
                     "message": "Artikelomschrijving is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "101",
+                    "code": "750",
                     "condition": "is_empty",
                     "message": "Het veld 'Artikelomschrijving' is niet ingevuld. Voor een volledige productspecificatie wordt aangeraden dit veld in te vullen."
                 }
@@ -208,14 +240,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "language_codes",
                     "message": "De ingevulde waarde voor 'Artikelomschrijving Taal Code' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_empty_when_dependency_filled",
                     "params": ["Artikelomschrijving"],
                     "message": "Het veld 'Artikelomschrijving Taal Code' is niet ingevuld, terwijl het veld 'Artikelomschrijving' wel is ingevuld. Deze combinatie is verplicht."
@@ -226,14 +258,20 @@
             "data_format": "numeric",
             "rules": [
                 {
+                    "type": "rejection",
+                    "code": "700",
+                    "condition": "is_empty",
+                    "message": "De 'Brutoprijs' is niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
+                },
+                {
                     "type": "correction",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De 'Brutoprijs' is ongeldig. De waarde zou hierdoor in een later stadium aangepast kunnen worden naar '0'."
                 },
                 {
                     "type": "flag",
-                    "code": "103",
+                    "code": "752",
                     "condition": "is_less_than_field",
                     "params": ["Nettoprijs"],
                     "message": "De 'Brutoprijs' is lager dan de 'Nettoprijs'. Controleer of deze waarden correct zijn ingevuld."
@@ -245,13 +283,13 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "De 'Nettoprijs' is niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "rejection",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De 'Nettoprijs' heeft een ongeldig format. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 }
@@ -262,13 +300,13 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "'Is BestelbareEenheid' is niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Is BestelbareEenheid' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -279,13 +317,13 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "'Is BasisEenheid' is niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Is BasisEenheid' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -296,20 +334,20 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "Omschrijving Verpakkingseenheid is niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 25,
                     "message": "Omschrijving Verpakkingseenheid is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "104",
+                    "code": "753",
                     "condition": "uom_description_mismatch",
                     "message": "De 'Omschrijving Verpakkingseenheid' komt mogelijk niet overeen met de specificaties in de UOM-velden die erop volgen. Controleer of de omschrijving en de UOM-codes en -inhoud met elkaar corresponderen."
                 }
@@ -320,13 +358,13 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "Het veld 'UOM Code Verpakkingseenheid' is verplicht, maar niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "uom_codes",
                     "message": "De ingevulde waarde voor 'UOM Code Verpakkingseenheid' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -338,13 +376,13 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "Het veld 'Inhoud Verpakkingseenheid' is verplicht, maar niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "rejection",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De waarde voor 'Inhoud Verpakkingseenheid' heeft een ongeldig format. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 }
@@ -355,13 +393,13 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "Het veld 'UOM Code Basiseenheid' is verplicht, maar niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "uom_codes",
                     "message": "De ingevulde waarde voor 'UOM Code Basiseenheid' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -373,13 +411,13 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "Het veld 'Inhoud Basiseenheid' is verplicht, maar niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "rejection",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De waarde voor 'Inhoud Basiseenheid' heeft een ongeldig format. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 }
@@ -390,13 +428,13 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "Het veld 'UOM Code Inhoud Basiseenheid' is verplicht, maar niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "uom_codes",
                     "message": "De ingevulde waarde voor 'UOM Code Inhoud Basiseenheid' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -407,32 +445,38 @@
             "data_format": "numeric",
             "rules": [
                 {
+                    "type": "rejection",
+                    "code": "700",
+                    "condition": "is_empty",
+                    "message": "De 'Omrekenfactor' is niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
+                },
+                {
                     "type": "correction",
-                    "code": "105",
+                    "code": "754",
                     "condition": "is_empty_or_not_numeric",
                     "message": "De 'Omrekenfactor' is niet ingevuld of ongeldig. De waarde zou hierdoor in een later stadium voor u berekend kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "93",
+                    "code": "720",
                     "condition": "mismatch_calculation",
                     "params": ["Inhoud Verpakkingseenheid", "*", "Inhoud Basiseenheid"],
                     "message": "De door u ingevulde 'Omrekenfactor' komt niet overeen met de berekende waarde (Inhoud Verpakkingseenheid x Inhoud Basiseenheid). Controleer of deze waarden correct zijn."
                 }
             ]
         },
-        "Prijs per Kleinste eenheid": {
+        "Prijs per Kleinste Eenheid": {
             "data_format": "numeric",
             "rules": [
                 {
                     "type": "correction",
-                    "code": "106",
+                    "code": "755",
                     "condition": "is_empty_or_not_numeric",
                     "message": "De 'Prijs per Kleinste eenheid' is niet ingevuld of ongeldig. De waarde zou hierdoor in een later stadium voor u berekend kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "93",
+                    "code": "720",
                     "condition": "mismatch_calculation",
                     "params": ["Nettoprijs", "/", "Omrekenfactor"],
                     "message": "De door u ingevulde 'Prijs per Kleinste eenheid' komt niet overeen met de berekende waarde (Nettoprijs / Omrekenfactor). Controleer of deze waarden correct zijn."
@@ -444,7 +488,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De waarde voor 'Aantal van de Volgende Lagere Verpakkingslaag' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -455,7 +499,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "descriptor_codes",
                     "message": "De ingevulde waarde voor 'Artikel Hiërarchie Omschrijving' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -467,27 +511,27 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "74",
+                    "code": "701",
                     "condition": "min_length",
                     "params": 13,
                     "message": "De 'GTIN Verpakkingseenheid' is te kort. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "rejection",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 14,
                     "message": "De 'GTIN Verpakkingseenheid' is te lang. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "76",
+                    "code": "703",
                     "condition": "is_duplicate_gtin",
                     "message": "De 'GTIN Verpakkingseenheid' komt meerdere malen voor in deze lijst. Hoewel dit soms correct kan zijn, is een GTIN doorgaans uniek per productregel. Controleer of dit de bedoeling is."
                 },
                 {
                     "type": "flag",
-                    "code": "107",
+                    "code": "756",
                     "condition": "is_empty_when_context",
                     "params": ["is_medical_device_high_risk"],
                     "message": "Een GTIN is verplicht voor medische hulpmiddelen met een hoge risicoklasse, maar het veld 'GTIN Verpakkingseenheid' is niet ingevuld."
@@ -499,7 +543,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 200,
                     "message": "Het veld 'GTIN Verpakkingseenheid Historie' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
@@ -511,14 +555,14 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "74",
+                    "code": "701",
                     "condition": "min_length",
                     "params": 13,
                     "message": "De 'GTIN Basiseenheid' is te kort. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "rejection",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 14,
                     "message": "De 'GTIN Basiseenheid' is te lang. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
@@ -530,7 +574,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 200,
                     "message": "Het veld 'GTIN Basiseenheid Historie' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
@@ -542,7 +586,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 50,
                     "message": "Het veld 'Aanvullende Productidentificatie' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
@@ -554,14 +598,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "atiit_codes",
                     "message": "De ingevulde waarde voor 'Code voor Aanvullende Productidentificatie' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_empty_when_dependency_filled",
                     "params": ["Aanvullende Productidentificatie"],
                     "message": "Het veld 'Code voor Aanvullende Productidentificatie' is niet ingevuld, terwijl u wel een 'Aanvullende Productidentificatie' heeft opgegeven. Deze combinatie is verplicht."
@@ -573,13 +617,13 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "Het veld 'GHX BTW Code' is verplicht, maar niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "params": ["0", "1", "2", "3"],
                     "message": "De ingevulde waarde voor 'GHX BTW Code' is ongeldig. Het veld accepteert alleen 0, 1, 2 of 3. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -591,7 +635,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De waarde voor 'Staffel Vanaf' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -602,13 +646,13 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De waarde voor 'Staffel Tot' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "109",
+                    "code": "758",
                     "condition": "is_less_than_or_equal_to_field",
                     "params": ["Staffel Vanaf"],
                     "message": "Het veld 'Staffel Tot' heeft een waarde die lager is dan of gelijk is aan 'Staffel Vanaf'. Controleer of de staffel correct is ingevuld."
@@ -620,7 +664,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 50,
                     "message": "De 'Naam Fabrikant' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
@@ -632,14 +676,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "74",
+                    "code": "701",
                     "condition": "min_length",
                     "params": 3,
                     "message": "Het 'Artikelnummer Fabrikant' is te kort. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 46,
                     "message": "Het 'Artikelnummer Fabrikant' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
@@ -651,7 +695,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "79",
+                    "code": "706",
                     "condition": "is_not_exact_length_numeric",
                     "params": 13,
                     "message": "De 'GLN Fabrikant' heeft een ongeldig format. Een GLN bestaat uit exact 13 cijfers. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -663,14 +707,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "79",
+                    "code": "706",
                     "condition": "is_not_exact_length_numeric",
                     "params": 13,
                     "message": "De 'GLN Leverancier' heeft een ongeldig format. Een GLN bestaat uit exact 13 cijfers. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "110",
+                    "code": "759",
                     "condition": "is_empty_when_context",
                     "params": ["is_gs1_submission"],
                     "message": "Het veld 'GLN Leverancier' is verplicht voor GS1-aanleveringen, maar is niet ingevuld."
@@ -682,7 +726,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "country_codes",
                     "message": "De ingevulde waarde voor 'Doelmarkt Landcode' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -694,7 +738,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "95",
+                    "code": "722",
                     "condition": "not_starts_with",
                     "params": "https",
                     "message": "De link voor 'Artikelinformatie' heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -706,7 +750,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "95",
+                    "code": "722",
                     "condition": "not_starts_with",
                     "params": "https",
                     "message": "De link voor 'Artikelfoto' heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -718,14 +762,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "95",
+                    "code": "722",
                     "condition": "not_starts_with",
                     "params": "https",
                     "message": "De link voor 'IFU' heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "111",
+                    "code": "760",
                     "condition": "is_empty_when_context",
                     "params": ["is_medical_device"],
                     "message": "Het veld 'Link IFU' is niet ingevuld. Voor medische hulpmiddelen wordt een IFU sterk aanbevolen."
@@ -737,14 +781,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "74",
+                    "code": "701",
                     "condition": "min_length",
                     "params": 3,
                     "message": "De 'Functionele Artikelnaam' is te kort. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 150,
                     "message": "De 'Functionele Artikelnaam' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
@@ -756,14 +800,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "language_codes",
                     "message": "De ingevulde waarde voor 'Functionele Naam Taal Code' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_empty_when_dependency_filled",
                     "params": ["Functionele Artikelnaam"],
                     "message": "Het veld 'Functionele Naam Taal Code' is niet ingevuld, terwijl het veld 'Functionele Artikelnaam' wel is ingevuld. Deze combinatie is verplicht."
@@ -775,14 +819,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "74",
+                    "code": "701",
                     "condition": "min_length",
                     "params": 3,
                     "message": "De 'Merknaam' is te kort. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 90,
                     "message": "De 'Merknaam' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
@@ -794,14 +838,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "74",
+                    "code": "701",
                     "condition": "min_length",
                     "params": 3,
                     "message": "Het 'Artikelnummer Alternatief Artikel' is te kort. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 46,
                     "message": "Het 'Artikelnummer Alternatief Artikel' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
@@ -813,7 +857,7 @@
             "rules": [
                 {
                     "type": "flag",
-                    "code": "112",
+                    "code": "761",
                     "condition": "is_empty_when_dependency_filled",
                     "params": ["Artikelnummer Alternatief Artikel"],
                     "message": "Het veld 'Artikelnaam Alternatief Artikel' is niet ingevuld, terwijl u wel een 'Artikelnummer Alternatief Artikel' heeft opgegeven. Deze combinatie is verplicht."
@@ -825,26 +869,32 @@
             "rules": [
                 {
                     "type": "flag",
-                    "code": "113",
+                    "code": "762",
                     "condition": "is_empty_when_dependency_filled",
                     "params": ["Artikelnummer Alternatief Artikel"],
                     "message": "Het veld 'Barcode Alternatief Artikel' is niet ingevuld. Het wordt aanbevolen dit veld in te vullen als er een alternatief artikel is opgegeven."
                 }
             ]
         },
-        "UNSPSC": {
+        "UNSPSC Code": {
             "data_format": "numeric_string",
             "rules": [
                 {
+                    "type": "rejection",
+                    "code": "700",
+                    "condition": "is_empty",
+                    "message": "De 'UNSPSC Code' is niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
+                },
+                {
                     "type": "correction",
-                    "code": "79",
+                    "code": "706",
                     "condition": "is_not_exact_length_numeric",
                     "params": 8,
                     "message": "De 'UNSPSC' heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "114",
+                    "code": "763",
                     "condition": "is_empty_when_context",
                     "params": ["is_umcu_or_lumc_submission"],
                     "message": "Het veld 'UNSPSC' is niet ingevuld. Voor aanlevering aan bepaalde ziekenhuizen is dit een verplicht veld."
@@ -856,16 +906,22 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "79",
+                    "code": "706",
                     "condition": "is_not_exact_length_numeric",
                     "params": 5,
                     "message": "De 'GMDN Code' heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "120",
+                    "code": "769",
                     "condition": "is_empty_when_gmdn_required",
                     "message": "Een GMDN-code is verplicht voor dit product op basis van de ingevulde risicoklasse en/of productkenmerken, maar het veld is niet ingevuld."
+                },
+                {
+                    "type": "flag",
+                    "code": "773",
+                    "condition": "medical_product_missing_classification",
+                    "message": "Een GMDN-code of EMDN-code is verplicht voor medische producten (UNSPSC 42xxxx), maar beide velden zijn niet ingevuld."
                 }
             ]
         },
@@ -874,16 +930,22 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "emdn_codes",
                     "message": "De 'EMDN Code' heeft een ongeldig format of de waarde komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "121",
+                    "code": "770",
                     "condition": "is_empty_when_emdn_required",
                     "message": "Op basis van de ingevulde productkenmerken lijkt dit een medisch hulpmiddel voor de EU-markt. Voor registratie in EUDAMED is een EMDN-code vereist, maar dit veld is niet ingevuld."
+                },
+                {
+                    "type": "flag",
+                    "code": "773",
+                    "condition": "medical_product_missing_classification",
+                    "message": "Een GMDN-code of EMDN-code is verplicht voor medische producten (UNSPSC 42xxxx), maar beide velden zijn niet ingevuld."
                 }
             ]
         },
@@ -892,14 +954,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "79",
+                    "code": "706",
                     "condition": "is_not_exact_length_numeric",
                     "params": 8,
                     "message": "De 'GPCCategoryCode' heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "115",
+                    "code": "764",
                     "condition": "is_empty_when_context",
                     "params": ["is_gs1_submission"],
                     "message": "Het veld 'GPCCategoryCode' is verplicht voor GS1-aanleveringen, maar is niet ingevuld."
@@ -911,14 +973,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "params": ["76", "85"],
                     "message": "De ingevulde waarde voor 'Code voor Aanvullende Productclassificatie' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_filled_when_dependency_empty",
                     "params": ["Aanvullende Productclassificatiewaarde"],
                     "message": "Het veld 'Code voor Aanvullende Productclassificatie' is ingevuld, maar de bijbehorende 'Aanvullende Productclassificatiewaarde' (Risicoklasse) ontbreekt."
@@ -930,17 +992,23 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "risk_classes",
                     "message": "De ingevulde 'Aanvullende Productclassificatiewaarde' (Risicoklasse) komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_empty_when_dependency_filled",
                     "params": ["Code voor Aanvullende Productclassificatie"],
                     "message": "Het veld 'Aanvullende Productclassificatiewaarde' (Risicoklasse) is niet ingevuld, terwijl u wel een 'Code voor Aanvullende Productclassificatie' heeft opgegeven. Deze combinatie is verplicht."
+                },
+                {
+                    "type": "correction",
+                    "code": "772",
+                    "condition": "invalid_au_risk_combination",
+                    "message": "De ingevulde 'Aanvullende Productclassificatiewaarde' (Risicoklasse) is niet geldig in combinatie met de gekozen 'Code voor Aanvullende Productclassificatie'. De waarde zou hierdoor in een later stadium aangepast kunnen worden."
                 }
             ]
         },
@@ -949,14 +1017,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 15,
                     "message": "Het 'CE Certificaat nummer' is te lang. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "122",
+                    "code": "771",
                     "condition": "is_empty_when_context",
                     "params": ["is_medical_device_high_risk"],
                     "message": "Het veld 'CE Certificaat nummer' is niet ingevuld, terwijl dit verplicht is op basis van de ingevulde risicoklasse (IIB of III)."
@@ -968,19 +1036,19 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "95",
+                    "code": "722",
                     "condition": "invalid_date_format",
                     "message": "De 'CE Certificaat einddatum' heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "correction",
-                    "code": "96",
+                    "code": "723",
                     "condition": "is_in_the_past",
                     "message": "De 'CE Certificaat einddatum' ligt in het verleden. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_empty_when_dependency_filled",
                     "params": ["CE Certificaat nummer"],
                     "message": "Het veld 'CE Certificaat einddatum' is niet ingevuld, terwijl u wel een 'CE Certificaat nummer' heeft opgegeven. Dit veld is dan verplicht."
@@ -992,14 +1060,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 50,
                     "message": "De 'CE Certificerende instantie' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_empty_when_dependency_filled",
                     "params": ["CE Certificaat nummer"],
                     "message": "Het veld 'CE Certificerende instantie' is niet ingevuld, terwijl u wel een 'CE Certificaat nummer' heeft opgegeven. Dit veld is dan verplicht."
@@ -1011,7 +1079,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Duurzaam Geproduceerd' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1022,7 +1090,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 50,
                     "message": "De 'Naam Duurzaamheidslabel' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
@@ -1034,7 +1102,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 2000,
                     "message": "De 'Omschrijving Duurzaamheid' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
@@ -1046,13 +1114,13 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "95",
+                    "code": "722",
                     "condition": "invalid_cas_format",
                     "message": "Het CAS-nummer heeft een ongeldig format. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "116",
+                    "code": "765",
                     "condition": "is_empty_when_context",
                     "params": ["is_chemical"],
                     "message": "Het veld 'CAS-nummer' is niet ingevuld, terwijl we vanuit uw UNSPSC kunnen lezen dat het hier gaat om een chemische stof. Doorgaans is hier een CAS-nummer bij verplicht."
@@ -1064,14 +1132,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 200,
                     "message": "De 'Stofnaam' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "117",
+                    "code": "766",
                     "condition": "is_filled_when_dependency_empty",
                     "params": ["CAS nummer"],
                     "message": "Het veld 'Stofnaam' is ingevuld, maar het bijbehorende CAS-nummer ontbreekt. Dit is aanbevolen voor een volledige identificatie."
@@ -1083,14 +1151,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 40,
                     "message": "De 'Brutoformule' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "117",
+                    "code": "766",
                     "condition": "is_filled_when_dependency_empty",
                     "params": ["CAS nummer"],
                     "message": "Het veld 'Brutoformule' is ingevuld, maar het bijbehorende CAS-nummer ontbreekt. Dit is aanbevolen voor een volledige identificatie."
@@ -1102,14 +1170,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "claimtype_codes",
                     "message": "De ingevulde waarde voor 'Claim Type Code' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_filled_when_dependency_empty",
                     "params": ["Element Claim Code"],
                     "message": "Het veld 'Claim Type Code' is ingevuld, maar de bijbehorende 'Element Claim Code' ontbreekt. Deze combinatie is doorgaans verplicht."
@@ -1121,14 +1189,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "elementclaim_codes",
                     "message": "De ingevulde waarde voor 'Element Claim Code' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_filled_when_dependency_empty",
                     "params": ["Claim Type Code"],
                     "message": "Het veld 'Element Claim Code' is ingevuld, maar de bijbehorende 'Claim Type Code' ontbreekt. Deze combinatie is doorgaans verplicht."
@@ -1140,7 +1208,7 @@
             "rules": [
               {
                 "type": "correction",
-                "code": "79",
+                "code": "706",
                 "condition": "is_not_exact_length_numeric",
                 "params": 4,
                 "message": "Het UN-nummer heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -1152,7 +1220,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "adr_classes",
                     "message": "De ingevulde waarde voor 'ADR Gevarenklasse' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -1164,7 +1232,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Veiligheidsblad (VIB/SDS)' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1175,7 +1243,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "95",
+                    "code": "722",
                     "condition": "not_starts_with",
                     "params": "https",
                     "message": "De link voor het Veiligheidsinformatieblad heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -1187,7 +1255,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Eindgebruikersverklaring' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1198,7 +1266,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Koelgoed' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1209,7 +1277,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Vriesgoed' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1220,7 +1288,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "temp_qualifier_codes",
                     "message": "De ingevulde waarde voor 'Code Type Temperatuur' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -1232,7 +1300,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "params": ["SRT", "FPC", "11"],
                     "message": "De ingevulde waarde voor 'Gebruiksaanwijzing Code Referentie' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -1244,7 +1312,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De waarde voor 'Maximum Temperatuur' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1255,7 +1323,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De waarde voor 'Minimum Temperatuur' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1266,7 +1334,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "params": ["CEL", "FAH", "KEL"],
                     "message": "De ingevulde waarde voor 'Eenheid van Temperatuur' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -1278,7 +1346,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De waarde voor 'Bruto Gewicht Verpakkingseenheid' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1289,14 +1357,14 @@
             "rules": [
                 {
                 "type": "correction",
-                "code": "80",
+                "code": "707",
                 "condition": "value_not_in_list",
                 "list_ref": "uom_codes",
                 "message": "De ingevulde waarde voor 'Eenheidscode Bruto Gewicht Verpakkingseenheid (UOM)' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                 "type": "flag",
-                "code": "102",
+                "code": "751",
                 "condition": "is_filled_when_dependency_empty",
                 "params": ["Bruto Gewicht Verpakkingseenheid"],
                 "message": "Het veld 'Eenheidscode Bruto Gewicht Verpakkingseenheid (UOM)' is ingevuld, maar de bijbehorende numerieke waarde ontbreekt."
@@ -1308,13 +1376,13 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De waarde voor 'Hoogte' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_filled_when_dependency_empty",
                     "params": ["Eenheidscode Hoogte"],
                     "message": "Het veld 'Hoogte' is ingevuld, maar de bijbehorende 'Eenheidscode Hoogte' ontbreekt."
@@ -1326,14 +1394,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "uom_codes",
                     "message": "De ingevulde waarde voor 'Eenheidscode Hoogte (UOM)' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_filled_when_dependency_empty",
                     "params": ["Hoogte"],
                     "message": "Het veld 'Eenheidscode Hoogte (UOM)' is ingevuld, maar de bijbehorende 'Hoogte' ontbreekt."
@@ -1345,13 +1413,13 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De waarde voor 'Breedte' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_filled_when_dependency_empty",
                     "params": ["Eenheidscode Breedte"],
                     "message": "Het veld 'Breedte' is ingevuld, maar de bijbehorende 'Eenheidscode Breedte' ontbreekt."
@@ -1363,14 +1431,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "uom_codes",
                     "message": "De ingevulde waarde voor 'Eenheidscode Breedte (UOM)' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_filled_when_dependency_empty",
                     "params": ["Breedte"],
                     "message": "Het veld 'Eenheidscode Breedte (UOM)' is ingevuld, maar de bijbehorende 'Breedte' ontbreekt."
@@ -1382,13 +1450,13 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De waarde voor 'Diepte' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_filled_when_dependency_empty",
                     "params": ["Eenheidscode Diepte"],
                     "message": "Het veld 'Diepte' is ingevuld, maar de bijbehorende 'Eenheidscode Diepte' ontbreekt."
@@ -1400,14 +1468,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "uom_codes",
                     "message": "De ingevulde waarde voor 'Eenheidscode Diepte' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_filled_when_dependency_empty",
                     "params": ["Diepte"],
                     "message": "Het veld 'Eenheidscode Diepte' is ingevuld, maar de bijbehorende 'Diepte' ontbreekt."
@@ -1419,13 +1487,13 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_numeric",
                     "message": "De waarde voor 'Bruto Gewicht Basiseenheid' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_filled_when_dependency_empty",
                     "params": ["Eenheidscode Gewicht Basiseenheid"],
                     "message": "Het veld 'Bruto Gewicht Basiseenheid' is ingevuld, maar de bijbehorende eenheidscode ontbreekt."
@@ -1437,14 +1505,14 @@
             "rules": [
                 {
                 "type": "correction",
-                "code": "80",
+                "code": "707",
                 "condition": "value_not_in_list",
                 "list_ref": "uom_codes",
                 "message": "De ingevulde waarde voor 'Eenheidscode Gewicht Basiseenheid' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                 "type": "flag",
-                "code": "102",
+                "code": "751",
                 "condition": "is_filled_when_dependency_empty",
                 "params": ["Bruto Gewicht Basiseenheid"],
                 "message": "Het veld 'Eenheidscode Gewicht Basiseenheid' is ingevuld, maar de bijbehorende numerieke waarde ontbreekt."
@@ -1456,7 +1524,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Herbruikbaar' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1467,14 +1535,14 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "reusability_codes",
                     "message": "De ingevulde waarde voor 'Herbruikbaarheids Code' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_empty_when_dependency_filled",
                     "params": ["Herbruikbaar"],
                     "message": "Het veld 'Herbruikbaarheids Code' is niet ingevuld, terwijl is aangegeven dat het product 'Herbruikbaar' is. Dit veld is dan verplicht."
@@ -1486,7 +1554,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Indicatie Implanteerbaar' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1497,7 +1565,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Bevat het Artikel Menselijk Weefsel' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1508,7 +1576,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Serienummer' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1519,7 +1587,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "serial_number_locations",
                     "message": "De ingevulde waarde voor 'Locatie Serienummer op de Verpakking' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -1531,7 +1599,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Batch Nummer' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1542,25 +1610,25 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Steriel' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
             ]
         },
-        "Type Sterilisatie gebruikt door fabrikant": {
+        "Type Sterilisatie gebruikt door Fabrikant": {
             "data_format": "string",
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "sterilization_types",
                     "message": "De ingevulde waarde voor 'Type Sterilisatie' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "102",
+                    "code": "751",
                     "condition": "is_empty_when_dependency_filled",
                     "params": ["Steriel"],
                     "message": "Het veld 'Type Sterilisatie' is niet ingevuld, terwijl is aangegeven dat het product 'Steriel' is. Dit veld is dan verplicht."
@@ -1572,7 +1640,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Latex' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1583,7 +1651,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'MRI Compatibility' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1594,13 +1662,13 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Is ConsumentenEenheid' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "115",
+                    "code": "764",
                     "condition": "is_empty_when_context",
                     "params": ["is_gs1_submission"],
                     "message": "Het veld 'Is ConsumentenEenheid' is verplicht voor GS1-aanleveringen, maar is niet ingevuld."
@@ -1612,13 +1680,13 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Is VerzendEenheid' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "115",
+                    "code": "764",
                     "condition": "is_empty_when_context",
                     "params": ["is_gs1_submission"],
                     "message": "Het veld 'Is VerzendEenheid' is verplicht voor GS1-aanleveringen, maar is niet ingevuld."
@@ -1630,7 +1698,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "77",
+                    "code": "704",
                     "condition": "is_not_integer",
                     "message": "De waarde voor 'Levertijd' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1641,7 +1709,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "80",
+                    "code": "707",
                     "condition": "value_not_in_list",
                     "list_ref": "date_on_packaging_types",
                     "message": "De ingevulde waarde voor 'Code Type Datum op Verpakking' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
@@ -1653,13 +1721,13 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "95",
+                    "code": "722",
                     "condition": "invalid_date_format",
                     "message": "De 'Startdatum Beschikbaarheid' heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "115",
+                    "code": "764",
                     "condition": "is_empty_when_context",
                     "params": ["is_gs1_submission"],
                     "message": "Het veld 'Startdatum Beschikbaarheid' is verplicht voor GS1-aanleveringen, maar is niet ingevuld."
@@ -1671,13 +1739,13 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "95",
+                    "code": "722",
                     "condition": "invalid_date_format",
                     "message": "De 'Einddatum Beschikbaarheid' heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "96",
+                    "code": "723",
                     "condition": "is_before_field",
                     "params": ["Startdatum Beschikbaarheid"],
                     "message": "De 'Einddatum Beschikbaarheid' ligt voor de 'Startdatum Beschikbaarheid'. Controleer of deze datums correct zijn ingevuld."
@@ -1689,13 +1757,13 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "De 'Startdatum Prijs Artikel' is niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "rejection",
-                    "code": "95",
+                    "code": "722",
                     "condition": "invalid_date_format",
                     "message": "De 'Startdatum Prijs Artikel' heeft een ongeldig format. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 }
@@ -1706,19 +1774,19 @@
             "rules": [
                 {
                     "type": "rejection",
-                    "code": "73",
+                    "code": "700",
                     "condition": "is_empty",
                     "message": "De 'Einddatum Prijs Artikel' is niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "rejection",
-                    "code": "95",
+                    "code": "722",
                     "condition": "invalid_date_format",
                     "message": "De 'Einddatum Prijs Artikel' heeft een ongeldig format. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "flag",
-                    "code": "96",
+                    "code": "723",
                     "condition": "is_before_field",
                     "params": ["Startdatum Prijs Artikel"],
                     "message": "De 'Einddatum Prijs Artikel' ligt voor de 'Startdatum Prijs Artikel'. Controleer of deze datums correct zijn ingevuld."
@@ -1730,7 +1798,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "92",
+                    "code": "719",
                     "condition": "is_not_boolean",
                     "message": "De waarde voor 'Contract aanwezig' is ongeldig. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
                 }
@@ -1741,7 +1809,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 30,
                     "message": "Het 'Contractnummer Provider' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
@@ -1753,7 +1821,7 @@
             "rules": [
                 {
                     "type": "correction",
-                    "code": "75",
+                    "code": "702",
                     "condition": "max_length",
                     "params": 2000,
                     "message": "De 'Zoeksleutels' zijn te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
@@ -1766,7 +1834,7 @@
             "id": "CHECK_BARCODE_PRESENCE",
             "description": "Controleer of zowel GTIN Verpakkingseenheid als Aanvullende Productidentificatie leeg zijn.",
             "type": "flag",
-            "code": "201",
+            "code": "800",
             "condition": "all_fields_empty",
             "fields": [
                 "GTIN Verpakkingseenheid",
@@ -1778,7 +1846,7 @@
             "id": "CHECK_UOM_RELATION_CONFLICTS",
             "description": "Controleer op algemene UOM-relatie conflicten.",
             "type": "flag",
-            "code": "97",
+            "code": "724",
             "condition": "uom_relation_conflict",
             "fields": [
                 "Is BestelbareEenheid",
@@ -1793,7 +1861,7 @@
             "id": "CHECK_UOM_MATCH_IF_BASE_AND_ORDERABLE",
             "description": "Controleer of UOM codes overeenkomen als beide eenheidsindicatoren op 1 staan.",
             "type": "flag",
-            "code": "202",
+            "code": "801",
             "condition": "uom_match_if_base_and_orderable",
             "fields": [
                 "Is BestelbareEenheid",
@@ -1807,7 +1875,7 @@
             "id": "CHECK_TEMPLATE_VERSION",
             "description": "Check of verplichte kolommen uit de nieuwste template aanwezig zijn.",
             "type": "flag",
-            "code": "203",
+            "code": "802",
             "condition": "template_column_missing",
             "fields": ["Is BestelbareEenheid", "Omschrijving Verpakkingseenheid"],
             "message": "U maakt mogelijk geen gebruik van de nieuwste template. Wij adviseren u de meest actuele versie te downloaden via: https://ghxnl.ghxeurope.com/synqeps/webroot/upload/GHXstandaardTemplate2.xlsx"
@@ -1816,7 +1884,7 @@
             "id": "CHECK_UOM_DESCRIPTION_FORMAT",
             "description": "Check of Omschrijving Verpakkingseenheid mogelijk niet overeenkomt met inhoud en UOM code.",
             "type": "flag",
-            "code": "204",
+            "code": "803",
             "condition": "uom_description_format_mismatch",
             "fields": [
                 "Omschrijving Verpakkingseenheid",
@@ -1826,10 +1894,24 @@
             "message": "Het veld 'Omschrijving Verpakkingseenheid' komt niet overeen met de aanbevolen notatie. De ideale invulling is een combinatie van de verschillende UOM-velden."
         },
         {
+            "id": "CHECK_CONTENT_MATCH_IF_BASE_AND_ORDERABLE",
+            "description": "Controleer of Inhoud velden overeenkomen als beide eenheidsindicatoren op 1 staan.",
+            "type": "flag",
+            "code": "805",
+            "condition": "content_match_if_base_and_orderable",
+            "fields": [
+                "Is BestelbareEenheid",
+                "Is BasisEenheid",
+                "Inhoud Verpakkingseenheid",
+                "Inhoud Basiseenheid"
+            ],
+            "message": "Als een artikel bij 'Is BestelbareEenheid' en 'Is BasisEenheid' een 1 heeft, dan moeten de Inhoud velden in 'Inhoud Verpakkingseenheid' en 'Inhoud Basiseenheid' gelijk zijn."
+        },
+        {
             "id": "CHECK_INCOMPLETE_DIMENSIONS",
             "description": "Controleert of alle drie de afmetingen (H, B, D) zijn ingevuld als er minimaal één is ingevuld.",
             "type": "flag",
-            "code": "205",
+            "code": "804",
             "condition": "incomplete_set",
             "fields": ["Hoogte", "Breedte", "Diepte"],
             "message": "Minstens één afmeting (hoogte, breedte, of diepte) is ingevuld, maar de set is niet compleet. Voor een volledige specificatie wordt aangeraden alle drie de afmetingen in te vullen."

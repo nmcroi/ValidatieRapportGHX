@@ -1,0 +1,33 @@
+# Error Codes Summary
+# Generated from field_validation_v20.json
+# Total error codes: 25
+================================================================================
+
+## REJECTION (73-97) (25 codes)
+--------------------------------------------------
+73: Aantal verplichte velden die leeg zijn.
+74: Aantal verplichte velden met te korte waarden.
+75: Aantal verplichte velden met te lange waarden.
+76: Duplicaten in Artikelnummer gevonden.
+77: Velden die numeriek moeten zijn, maar dat niet zijn.
+78: Velden die verkeerde symbolen of tekens bevatten.
+79: Velden met verkeerde lengtes.
+80: Velden met waardes die moeten voorkomen in een specifieke lijst.
+81: Aantal velden met ongeldige CE Certificaat einddatum.
+82: Aantal velden met ongeldige CE Certificerende instantie.
+83: Aantal fouten in Brutoprijs (max digits overschrijding).
+84: Aantal ontbrekende Nettoprijs-velden.
+85: Aantal fouten in Nettoprijs (max digits overschrijding).
+86: Aantal ontbrekende Is BestelbareEenheid-velden.
+87: Aantal Is BestelbareEenheid-velden met ongeldige waarde.
+88: Aantal ontbrekende Is BasisEenheid-velden.
+89: Aantal Is BasisEenheid-velden met ongeldige waarde.
+90: Aantal ontbrekende Omschrijving Verpakkingseenheid-velden.
+91: Aantal Omschrijving Verpakkingseenheid-velden met te lange waarden.
+92: Boolean velden waar de waarde niet 1 of 0 is.
+93: Mismatch fouten.
+94: Velden moeten alfanumeriek zijn.
+95: Fout in het formaat van het veld.
+96: Datum mag niet foutief zijn of vóór een andere datum liggen.
+97: UOM-relatie fouten: velden die opzich correct zijn maar in combinatie conflicteren.
+

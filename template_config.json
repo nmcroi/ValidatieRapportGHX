@@ -1,0 +1,50 @@
+{
+    "version": "1.0",
+    "description": "Template-aware validation configuration",
+    "default_template": {
+        "name": "GHX Standard Template v2.0",
+        "mandatory_fields": [
+            "Artikelnummer",
+            "Artikelnaam", 
+            "Brutoprijs",
+            "Nettoprijs",
+            "Is BestelbareEenheid",
+            "Is BasisEenheid",
+            "Omschrijving Verpakkingseenheid",
+            "UOM Code Verpakkingseenheid",
+            "Inhoud Verpakkingseenheid",
+            "UOM Code Basiseenheid",
+            "Inhoud Basiseenheid",
+            "UOM Code Inhoud Basiseenheid",
+            "Omrekenfactor",
+            "GHX BTW Code",
+            "UNSPSC Code",
+            "Startdatum Prijs Artikel",
+            "Einddatum Prijs Artikel"
+        ],
+        "visible_fields": "all",
+        "excluded_from_stats": [],
+        "total_expected_fields": 102,
+        "notes": "Default template - alle velden zichtbaar, 17 verplichte velden"
+    },
+    "template_generator": {
+        "detection": {
+            "stamp_sheet": "_GHX_META",
+            "stamp_range": "GHX_STAMP",
+            "fallback_to_default": true
+        },
+        "context_rules": {
+            "gs1": {
+                "mandatory_fields": ["Artikelnummer", "GTIN", "GLN Fabrikant"],
+                "excluded_fields": ["EMDN Code", "GMDN Code"],
+                "excluded_from_stats": ["EMDN Code", "GMDN Code"]
+            },
+            "medisch": {
+                "mandatory_fields": ["Artikelnummer", "GMDN Code", "EMDN Code"],
+                "excluded_fields": ["GTIN"],
+                "excluded_from_stats": ["GTIN"]
+            }
+        },
+        "notes": "Template Generator context rules - dynamic field visibility and mandatory status"
+    }
+}

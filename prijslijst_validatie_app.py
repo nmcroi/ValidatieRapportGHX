@@ -21,7 +21,8 @@ except ImportError as e:
 # Pad naar de configuratiebestanden (pas aan indien nodig)
 # Gaat er hier vanuit dat ze in dezelfde map staan als de app
 MAPPING_JSON = "header_mapping.json"
-VALIDATION_JSON = "field_validation_v18.json"
+VALIDATION_JSON = "field_validation_v20.json"
+REFERENCE_JSON = "reference_lists.json"
 
 # Logging configureren (optioneel, toont logs in console waar Streamlit draait)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -37,6 +38,9 @@ if not os.path.exists(MAPPING_JSON):
     st.stop()
 if not os.path.exists(VALIDATION_JSON):
     st.error(f"Validatie configuratiebestand niet gevonden: {VALIDATION_JSON}")
+    st.stop()
+if not os.path.exists(REFERENCE_JSON):
+    st.error(f"Reference lists bestand niet gevonden: {REFERENCE_JSON}")
     st.stop()
 
 # Initialiseer session state voor rapport data als deze nog niet bestaat
@@ -89,6 +93,7 @@ if uploaded_files:
                         mapping_json_path=MAPPING_JSON,
                         validation_json_path=VALIDATION_JSON,
                         original_input_filename=original_filename,
+                        reference_json_path=REFERENCE_JSON,
                     )
                     logging.info(f"validate_pricelist voltooid voor {original_filename}.")
 

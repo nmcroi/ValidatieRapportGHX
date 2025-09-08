@@ -1,14 +1,27 @@
-# GHX Prijslijst Validatie App
+# GHX Prijslijst Validatie App v2.0
 
-Een Streamlit applicatie voor het valideren van prijslijsten volgens GHX-standaarden.
+Een prijslijst validatiesysteem met **dual architecture**: Streamlit web interface voor development en CLI interface voor server deployment.
 
-## Starten van de applicatie
+## 🏗️ Architectuur
+
+**Development (Streamlit):**
+- Web interface voor interactief testen
+- File upload via browser  
+- Real-time validatie feedback
+
+**Production (CLI):**
+- Command-line interface voor server deployment
+- Batch processing capabilities
+- Automation-friendly design
+
+## 🚀 Starten van de applicatie
+
+### Development Mode (Streamlit)
 
 1. **Activeer de virtuele omgeving**:
    ```bash
    source venv/bin/activate
    ```
-   Je ziet nu `(venv)` voor je command prompt om aan te geven dat de omgeving actief is
 
 2. **Start de Streamlit app**:
    ```bash
@@ -17,22 +30,37 @@ Een Streamlit applicatie voor het valideren van prijslijsten volgens GHX-standaa
 
 3. **Gebruik de applicatie** in je browser (opent automatisch)
 
-## Functies
+### Production Mode (CLI)
 
-- Upload Excel prijslijsten voor validatie
-- Automatische herkenning van kolommen via header mapping
-- Validatie op basis van configurable rules
-- Genereert uitgebreide Excel-rapporten met validatieresultaten
-- Identificeert ontbrekende of onjuiste gegevens
+Zie `deployment_for_IT/README_FOR_IT.md` voor server deployment instructies.
 
-## Projectstructuur
+## ✨ Functies
 
-- `prijslijst_validatie_app.py` - Hoofdbestand voor de Streamlit app
-- `validator/` - Bevat validatielogica
-  - `price_tool.py` - Core validatie engine
-  - `rapport_utils.py` - Excel rapport generatie
-- `field_validation_v18.json` - Configuratie voor veldvalidatie
-- `header_mapping.json` - Mapping van Excel headers naar GHX-standaard velden
+- **Template-aware validatie**: Detecteert verschillende Excel template types
+- **Multiline header support**: Ondersteunt complexe Excel headers
+- **Cross-field validatie**: Controleert logische samenhang tussen velden
+- **UOM conflict detection**: Identificeert eenheden-gerelateerde fouten
+- **Excel error suppression**: Onderdrukt groene driehoekjes in output
+- **Categorized error reporting**: Onderscheidt Afkeuringen, Aanpassingen, en Vlaggen
+- **Database corrections**: Voorspellende suggesties voor veel voorkomende fouten
+
+## 📂 Projectstructuur
+
+```
+📁 Project PrijsValGem_WS app/
+├── 🐍 prijslijst_validatie_app.py          # Streamlit web interface
+├── 📊 Configuratie bestanden:
+│   ├── field_validation_v20.json           # ⭐ JSON v20 validatie regels
+│   ├── header_mapping.json                 # Excel header mapping
+│   ├── reference_lists.json                # UOM codes, landen, etc.
+│   ├── template_config.json                # Template-specifieke regels
+│   └── error_code_mapping.json             # Error code hernummering
+├── 🔧 validator/ - Core validatie engine:
+│   ├── price_tool.py                       # Hoofdvalidatie logica
+│   └── rapport_utils.py                    # Excel rapport generatie
+├── 🚀 deployment_for_IT/ - Server deployment
+└── 📖 Documentatie en archief bestanden
+```
 
 ## Git Workflow
 
@@ -44,7 +72,7 @@ Volg deze stappen om wijzigingen naar GitHub te pushen:
 
 2. **Navigeer naar de projectmap**:
    ```bash
-   cd "/Users/ghxnielscroiset/Library/CloudStorage/OneDrive-GlobalHealthcareExchange/Documenten/Windsurf/Project PrijsValGem_WS app"
+   cd "/Users/ncroiset/Vibe Coding Projecten/Cursor Projecten/Project PrijsValGem_WS app"
    ```
 
 3. **Controleer welke bestanden gewijzigd zijn**:
@@ -74,7 +102,24 @@ Volg deze stappen om wijzigingen naar GitHub te pushen:
 - Voeg de versie toe in de commit message voor belangrijke releases, bijv.: `"Fix: rapportgeneratie verbeterd (versie6525-15.46)"`
 - Test altijd wijzigingen voordat je ze commit
 
-## Bekende Versies
+## 📋 Versiegeschiedenis
 
+### v2.0 (September 2025)
+- ✅ **JSON v20 architectuur**: Volledig nieuwe validatie configuratie structuur
+- ✅ **Template-aware validatie**: Dynamische verplichte velden per template type
+- ✅ **Excel error suppression**: Groene driehoekjes worden onderdrukt
+- ✅ **UOM conflict detection**: Specifieke validaties voor eenheden-conflicten
+- ✅ **Categorized error reporting**: Afkeuringen/Aanpassingen/Vlaggen onderscheid
+- ✅ **Database corrections sheet**: Voorspellende correctie suggesties
+- ✅ **Dual architecture**: Streamlit + CLI ready for server deployment
+
+### Legacy Versies
 - **versie6525(13:35)**: Rapport generatie en donut charts structuur gefixt
 - **versie6525(15:46)**: Foutcode 76 exclusief voor Artikelnummer duplicaten gemaakt en template-check geïmplementeerd
+
+## 🔗 Gerelateerde Documentatie
+
+- `MAPSTRUCTUUR_DOCUMENTATIE.md` - Gedetailleerde projectstructuur uitleg
+- `CONVERSION_REPORT.md` - Architectuur migratie strategie  
+- `deployment_for_IT/README_FOR_IT.md` - Server deployment instructies
+- `Handleiding_JSON.md` - JSON configuratie handleiding

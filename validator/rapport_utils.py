@@ -8,6 +8,116 @@ import xlsxwriter  # Nodig voor pd.ExcelWriter engine en grafieken
 from datetime import datetime
 from typing import Dict, List, Tuple, Any  # Type hints zijn goed om te behouden
 
+# -----------------------------
+# EXCEL ERROR SUPPRESSION HELPER
+# -----------------------------
+
+def suppress_excel_errors(worksheet, max_row=1000, max_col=50):
+    """
+    Onderdrukt Excel groene driehoekjes (error indicators) voor veelvoorkomende waarschuwingen.
+    
+    Args:
+        worksheet: XlsxWriter worksheet object
+        max_row: Maximum rij om error suppression toe te passen
+        max_col: Maximum kolom (als letter, bijv. 'AZ' voor kolom 52)
+    """
+    try:
+        # Convert max_col number to Excel column letter if needed
+        if isinstance(max_col, int):
+            max_col_letter = ""
+            while max_col > 0:
+                max_col -= 1
+                max_col_letter = chr(max_col % 26 + ord('A')) + max_col_letter
+                max_col //= 26
+        else:
+            max_col_letter = max_col
+            
+        range_str = f"A1:{max_col_letter}{max_row}"
+        
+        # Suppress common Excel errors that cause green triangles
+        error_types = {
+            'number_stored_as_text': range_str,    # Numbers stored as text (most common)
+            'formula_differs': range_str,          # Formula differs from adjacent cells  
+            'eval_error': range_str,               # Formula evaluation errors
+            'empty_cell_reference': range_str,     # Empty cell references
+            'list_data_validation': range_str,     # Data validation issues
+        }
+        
+        worksheet.ignore_errors(error_types)
+        
+    except Exception as e:
+        # Fail silently - error suppression is niet-kritisch
+        logging.debug(f"Error suppression gefaald: {e}")
+
+# -----------------------------
+# TEMPLATE DETECTIE FUNCTIES  
+# -----------------------------
+
+def has_template_generator_stamp(df: pd.DataFrame) -> bool:
+    """
+    Detecteert of een DataFrame een Template Generator stamp heeft.
+    
+    Phase 1: Simpele heuristiek (later vervangen door stamp reading)
+    Phase 2: Echte stamp detection uit Excel metadata
+    """
+    # TODO: Implementeer echte stamp detection
+    # Voor nu: simpele heuristiek gebaseerd op kolom patterns
+    
+    # Template Generator templates hebben vaak unieke kolom combinaties
+    tg_indicators = [
+        "Context Labels",  # Mogelijk TG kolom
+        "Template Preset", # Mogelijk TG kolom  
+        "GHX_STAMP",      # Mogelijk TG metadata kolom
+    ]
+    
+    # Check of specifieke TG indicators aanwezig zijn
+    has_tg_indicators = any(col in df.columns for col in tg_indicators)
+    
+    if has_tg_indicators:
+        logging.info("Template Generator indicatoren gedetecteerd")
+        return True
+        
+    return False
+
+def is_new_template(df: pd.DataFrame) -> bool:
+    """
+    Bepaalt of een DataFrame een nieuwe GHX template structuur heeft.
+    
+    Criteria: Moet beide nieuwe template kolommen bevatten
+    """
+    new_template_columns = ["Is BestelbareEenheid", "Omschrijving Verpakkingseenheid"]
+    return all(col in df.columns for col in new_template_columns)
+
+def is_old_template(df: pd.DataFrame) -> bool:
+    """
+    Bepaalt of een DataFrame een oude template of supplier template is.
+    
+    Criteria: Mist kritieke nieuwe template kolommen
+    """
+    return not is_new_template(df)
+
+def determine_template_type(df: pd.DataFrame) -> str:
+    """
+    Bepaalt het template type op basis van DataFrame kolommen.
+    
+    Returns:
+        'TG' - Template Generator gegenereerde template
+        'N'  - Nieuwe GHX standaard template  
+        'O'  - Oude GHX template of supplier template
+    """
+    # Prioriteit 1: Template Generator detection
+    if has_template_generator_stamp(df):
+        logging.info("Template type gedetecteerd: Template Generator (TG)")
+        return "TG"
+    
+    # Prioriteit 2: Nieuwe vs Oude template
+    if is_new_template(df):
+        logging.info("Template type gedetecteerd: Nieuwe GHX template (N)")
+        return "N"
+    else:
+        logging.info("Template type gedetecteerd: Oude/Supplier template (O)")
+        return "O"
+
 # --- Configuratie Constanten (Vervangen globale variabelen uit notebook) ---
 # Deze kunnen later eventueel uit een centraal config bestand of env variabelen komen
 
@@ -212,15 +322,20 @@ def add_colored_dataset_sheet(
     ghx_mandatory_fields,
     original_column_mapping,
     JSON_CONFIG_PATH,
+    validation_config=None,
 ):
     """Voeg een sheet toe met de volledige dataset in kleurcodering."""
-    # ### AANGEPAST: Gebruik de load_validation_config binnen deze module ###
-    config = load_validation_config(JSON_CONFIG_PATH)
-    if not config:  # Als config laden mislukt is
-        print(
-            "WARNING: Kan gekleurde dataset sheet niet toevoegen omdat validatie config mist."
-        )
-        return
+    # Gebruik de doorgegeven validation_config of val terug op laden van bestand
+    if validation_config:
+        config = validation_config
+    else:
+        # Fallback: laad van bestand (backwards compatibility)
+        config = load_validation_config(JSON_CONFIG_PATH)
+        if not config:  # Als config laden mislukt is
+            print(
+                "WARNING: Kan gekleurde dataset sheet niet toevoegen omdat validatie config mist."
+            )
+            return
 
     # Check of het een (vermoedelijk) nieuwe template is door te kijken naar specifieke kolommen
     # Dit is een benadering; een expliciete check is beter indien mogelijk
@@ -241,6 +356,9 @@ def add_colored_dataset_sheet(
 
     try:
         worksheet = workbook.add_worksheet("9. Dataset Validatie")
+        
+        # Onderdruk Excel groene driehoekjes
+        suppress_excel_errors(worksheet, max_row=len(df)+10, max_col=len(df.columns)+5)
 
         # Formaten
         correct_format = workbook.add_format(
@@ -280,7 +398,7 @@ def add_colored_dataset_sheet(
 
         # Maak error lookups
         error_lookup = {}  # Voor normale fouten
-        uom_relation_error_lookup = {}  # Voor code 97 fouten
+        uom_relation_error_lookup = {}  # Voor code 724, 801, 805 fouten (UOM relatie conflicten)
 
         for error in validation_results:
             if error["GHX Kolom"] == "RED FLAG":
@@ -293,14 +411,35 @@ def add_colored_dataset_sheet(
             if col_name in df.columns:
                 col_idx = df.columns.get_loc(col_name)
                 if 0 <= row_idx < len(df):
-                    lookup_dict = (
-                        uom_relation_error_lookup
-                        if error_code == "97"
-                        else error_lookup
-                    )
-                    if row_idx not in lookup_dict:
-                        lookup_dict[row_idx] = set()
-                    lookup_dict[row_idx].add(col_idx)
+                    # UOM relatie fouten (724, 801, 805) krijgen speciale behandeling
+                    # Voor codes 801 en 805 moeten we beide gerelateerde velden kleuren
+                    if error_code in ["724", "801", "805"]:
+                        if row_idx not in uom_relation_error_lookup:
+                            uom_relation_error_lookup[row_idx] = set()
+                        uom_relation_error_lookup[row_idx].add(col_idx)
+                        
+                        # Voor code 801 (UOM match): kleur ook het gerelateerde UOM veld
+                        if error_code == "801":
+                            if col_name == "UOM Code Verpakkingseenheid" and "UOM Code Basiseenheid" in df.columns:
+                                related_col_idx = df.columns.get_loc("UOM Code Basiseenheid")
+                                uom_relation_error_lookup[row_idx].add(related_col_idx)
+                            elif col_name == "UOM Code Basiseenheid" and "UOM Code Verpakkingseenheid" in df.columns:
+                                related_col_idx = df.columns.get_loc("UOM Code Verpakkingseenheid")
+                                uom_relation_error_lookup[row_idx].add(related_col_idx)
+                        
+                        # Voor code 805 (Content match): kleur ook het gerelateerde Inhoud veld
+                        elif error_code == "805":
+                            if col_name == "Inhoud Verpakkingseenheid" and "Inhoud Basiseenheid" in df.columns:
+                                related_col_idx = df.columns.get_loc("Inhoud Basiseenheid")
+                                uom_relation_error_lookup[row_idx].add(related_col_idx)
+                            elif col_name == "Inhoud Basiseenheid" and "Inhoud Verpakkingseenheid" in df.columns:
+                                related_col_idx = df.columns.get_loc("Inhoud Verpakkingseenheid")
+                                uom_relation_error_lookup[row_idx].add(related_col_idx)
+                    else:
+                        # Normale fouten
+                        if row_idx not in error_lookup:
+                            error_lookup[row_idx] = set()
+                        error_lookup[row_idx].add(col_idx)
 
         # Schrijf headers
         for col, header in enumerate(df.columns):
@@ -326,8 +465,10 @@ def add_colored_dataset_sheet(
 
                 # Dependency check (vereenvoudigd uit Code 5)
                 has_dependency = False
-                if is_empty and field_name in config["fields"]:
-                    field_config = config["fields"][field_name]
+                # Gebruik validation_config als beschikbaar, anders config
+                active_config = validation_config if validation_config else config
+                if is_empty and active_config and "fields" in active_config and field_name in active_config["fields"]:
+                    field_config = active_config["fields"][field_name]
                     if "depends_on" in field_config:
                         cond = field_config["depends_on"].get("condition")
                         related_fields = field_config["depends_on"].get("fields", [])
@@ -348,10 +489,11 @@ def add_colored_dataset_sheet(
                     and col_idx in uom_relation_error_lookup[row_idx]
                 ):
                     cell_format = uom_relation_error_format
+                elif is_empty and (is_mandatory or has_dependency):
+                    # PRIORITEIT: Verplichte velden die leeg zijn zijn ALTIJD geel
+                    cell_format = empty_mandatory_format
                 elif row_idx in error_lookup and col_idx in error_lookup[row_idx]:
                     cell_format = error_format
-                elif is_empty and (is_mandatory or has_dependency):
-                    cell_format = empty_mandatory_format
 
                 # Schrijf waarde met bepaalde opmaak
                 worksheet.write(
@@ -373,6 +515,7 @@ def add_colored_dataset_sheet(
         # Optioneel: voeg een sheet toe met de foutmelding
         try:
             error_sheet = workbook.add_worksheet("9. Dataset Fout")
+            suppress_excel_errors(error_sheet)
             error_sheet.write(0, 0, f"Kon '9. Dataset Validatie' sheet niet genereren.")
             error_sheet.write(1, 0, f"Foutmelding: {e}")
         except:
@@ -395,6 +538,7 @@ def genereer_rapport(
     JSON_CONFIG_PATH: str,  # Pad nodig om config te laden
     summary_data: dict,  # VERWIJDERDE PARAMETER TERUGGEZET
     errors_per_field: dict = None,
+    validation_config: dict = None,  # Geconverteerde config voor Sheet 9
 ):
     """
     Genereert het volledige Excel validatierapport, inclusief alle sheets,
@@ -409,9 +553,50 @@ def genereer_rapport(
     ERROR_END = ERROR_LIMIT  # Eindig bij deze rij (voor slicing bij limiet)
 
     try:
-        # Helper functie voor schone headers
+        # Helper functie voor schone headers - gebruik dezelfde logica als price_tool.py
         def clean_header(header):
-            return str(header).split("\n")[0].strip()
+            from .price_tool import clean_column_name
+            # Verwijder newlines en splits op dash om Nederlandse naam vóór de dash te behouden
+            clean = str(header).split("\n")[0].strip()
+            # Split op " - " en neem het Nederlandse deel (vóór de dash)
+            if " - " in clean:
+                clean = clean.split(" - ")[0].strip()
+            # Nu pas clean_column_name toe voor consistente normalisatie
+            return clean_column_name(clean)
+        
+        # Helper functie voor kolomkoppen in rapporten (behoudt Nederlandse naam zonder normalisatie)
+        def clean_header_for_display(header):
+            if pd.isna(header) or not str(header).strip():
+                return header
+            # Verwijder newlines en neem eerste regel
+            clean = str(header).split("\n")[0].strip()
+            # Split op " - " en neem het Nederlandse deel (vóór de dash)
+            if " - " in clean:
+                clean = clean.split(" - ")[0].strip()
+            return clean
+        
+        # Helper functie om error codes naar categorieën te mappen
+        def get_error_category(error_code):
+            if pd.isna(error_code) or str(error_code).strip() == "":
+                return "Onbekend"
+            
+            code_str = str(error_code).strip()
+            try:
+                code_int = int(float(code_str))  # Handle both int and float strings
+                
+                # Categorisering op basis van code ranges
+                if 700 <= code_int <= 749:
+                    return "Afkeuring"
+                elif code_int == 772:  # Speciale uitzondering voor correction
+                    return "Aanpassing"
+                elif 750 <= code_int <= 799:
+                    return "Vlag"
+                elif 800 <= code_int <= 899:
+                    return "Vlag"  # Global flags zijn ook vlaggen
+                else:
+                    return "Onbekend"
+            except (ValueError, TypeError):
+                return "Onbekend"
 
         # Bestandsnaam zonder extensie voor output naamgeving
         bestandsnaam_zonder_extensie = os.path.splitext(bestandsnaam)[0]
@@ -421,13 +606,25 @@ def genereer_rapport(
         total_cols = len(df.columns)  # Kolommen in verwerkte df
         total_original_cols = len(df_original.columns)  # Kolommen in origineel bestand
 
-        config = load_validation_config(JSON_CONFIG_PATH)
-        if not config:
-            print("FOUT: Kan rapport niet genereren zonder validatie configuratie.")
-            return None
+        # Gebruik de doorgegeven validation_config of val terug op laden van bestand
+        if validation_config:
+            config = validation_config
+        else:
+            config = load_validation_config(JSON_CONFIG_PATH)
+            if not config:
+                print("FOUT: Kan rapport niet genereren zonder validatie configuratie.")
+                return None
 
+        # Check voor v20 vs v18 structuur voor non_mandatory_fields
+        if "field_validations" in config:
+            # v20 structuur
+            all_fields = list(config.get("field_validations", {}).keys())
+        else:
+            # v18 structuur (fallback)
+            all_fields = list(config.get("fields", {}).keys())
+            
         non_mandatory_fields = [
-            f for f in config.get("fields", {}) if f not in ghx_mandatory_fields
+            f for f in all_fields if f not in ghx_mandatory_fields
         ]
         present_mandatory_columns = [f for f in ghx_mandatory_fields if f in df.columns]
         missing_mandatory_columns = [
@@ -555,16 +752,8 @@ def genereer_rapport(
             else 0
         )
 
-        # Score berekening
-        template_type = (
-            "N"
-            if M_missing == 0
-            and all(
-                f in df.columns
-                for f in ["Is BestelbareEenheid", "Omschrijving Verpakkingseenheid"]
-            )
-            else "O"
-        )
+        # Score berekening - Template Type Detectie
+        template_type = determine_template_type(df)  # Nieuwe functie
 
         percentage_correct = 0
         volledigheids_percentage = 0
@@ -703,6 +892,7 @@ def genereer_rapport(
             # START CODE VOOR SHEET 1: DASHBOARD
             # ==================================================================
             ws_dash = workbook.add_worksheet("1. Dashboard")
+            suppress_excel_errors(ws_dash)
             writer.sheets["1. Dashboard"] = ws_dash
             # Verberg rij 1
             ws_dash.set_row(0, None, None, {"hidden": True})  # Verberg rij 1 (index 0)
@@ -872,17 +1062,24 @@ def genereer_rapport(
             # --- Blok 4: Fout Meldingen Tabel (Blauw, D3:Gxx) ---
             table_start_row = 2
             ws_dash.merge_range(
-                f"D{table_start_row+1}:G{table_start_row+1}",
+                f"D{table_start_row+1}:H{table_start_row+1}",
                 "Fout Meldingen",
                 fmt_header_blue,
             )
             ws_dash.set_row(table_start_row, 18)
 
-            error_code_desc = config.get("error_code_descriptions", {})
-            if "97" not in error_code_desc:
-                error_code_desc["97"] = "UOM-relatie conflict"
-            if "94" not in error_code_desc:
-                error_code_desc["94"] = (
+            # Load error code descriptions - support both v18 and v20 structure  
+            if "global_settings" in config and "error_code_descriptions" in config["global_settings"]:
+                # v20 structure
+                error_code_desc = config["global_settings"]["error_code_descriptions"]
+            else:
+                # v18 structure (fallback)
+                error_code_desc = config.get("error_code_descriptions", {})
+            
+            if "724" not in error_code_desc:
+                error_code_desc["724"] = "UOM-relatie conflict"
+            if "721" not in error_code_desc:
+                error_code_desc["721"] = (
                     "Formaat Omschrijving Verp.eenheid (Waarschuwing)"
                 )
 
@@ -897,9 +1094,9 @@ def genereer_rapport(
                     # Filter lege codes uit
                     df_foutcodes = df_foutcodes[df_foutcodes["code"] != ""]
                     
-                    # Maak beschrijving op basis van de foutcode
+                    # Maak beschrijving op basis van de foutcode en verwijder FLAG: prefix
                     df_foutcodes["Beschrijving"] = df_foutcodes["code"].apply(
-                        lambda x: error_code_desc.get(str(x).strip(), f"Code: {x}")
+                        lambda x: error_code_desc.get(str(x).strip(), f"Code: {x}").replace("FLAG: ", "")
                     )
 
                     # --- NIEUWE CODE: Bepaal sets van error codes VOOR de helper functie ---
@@ -940,13 +1137,16 @@ def genereer_rapport(
                     df_foutcodes["Type (Sheet)"] = df_foutcodes.apply(
                         lambda row: get_error_type(row["code"]), axis=1
                     )  # Nu per foutcode, maar kan verder worden uitgebreid naar veld+code indien nodig
+                    
+                    # Voeg Type categorisering kolom toe
+                    df_foutcodes["Type"] = df_foutcodes["code"].apply(get_error_category)
                     df_foutcodes = df_foutcodes.sort_values(
                         "Aantal", ascending=False
                     ).reset_index(drop=True)
                     df_foutcodes_top = df_foutcodes.head(10)
-                    # Herschik en hernoem kolommen pas na het berekenen van Type (Sheet)
+                    # Herschik en hernoem kolommen pas na het berekenen van Type (Sheet) en Type
                     df_foutcodes_top = df_foutcodes_top[
-                        ["Beschrijving", "Aantal", "Type (Sheet)", "code"]
+                        ["Beschrijving", "Aantal", "Type", "Type (Sheet)", "code"]
                     ]
                     df_foutcodes_top = df_foutcodes_top.rename(
                         columns={"code": "Foutcode"}
@@ -1157,99 +1357,15 @@ def genereer_rapport(
             stacked_chart.set_size({"width": 950, "height": 500})
             ws_dash.insert_chart(f"A{chart_start_row + 1}", stacked_chart)
 
-            # Grafiek 2: Donut Verplichte Velden
-            donut_chart_mand = workbook.add_chart({"type": "doughnut"})
-
-            # Bepaal dynamisch de categorieën, waarden en punten voor de donut chart
-            # op basis van de telling voor 'Kolom niet aanwezig'
-            count_not_present_mand = summary_data['counts_mandatory'].get('not_present', 0)
-
-            # Standaardinstellingen (alsof alle 4 categorieën aanwezig zijn)
-            categories_end_row_mand = donut_mand_row + 4
-            values_end_row_mand = donut_mand_row + 4
-            chart_points_mand = [
-                {"fill": {"color": colors[1]}},  # Juist ingevuld
-                {"fill": {"color": colors[2]}},  # Foutief ingevuld
-                {"fill": {"color": colors[3]}},  # Leeg
-                {"fill": {"color": colors[4]}},  # Kolom niet aanwezig
-            ]
-
-            # Als 'Kolom niet aanwezig' 0 is, pas de ranges en punten aan
-            if count_not_present_mand == 0:
-                categories_end_row_mand = donut_mand_row + 3  # Neem 3 categorieën
-                values_end_row_mand = donut_mand_row + 3      # Neem 3 waarden
-                chart_points_mand = chart_points_mand[:-1]    # Verwijder laatste kleurpunt
-
-            donut_chart_mand.add_series(
-                {
-                    "name": f"Verplichte Velden Status ({total_donut_mand} velden)",
-                    "categories": [
-                        "1. Dashboard",
-                        donut_mand_row + 1,
-                        0,
-                        categories_end_row_mand,  # Dynamische eindrij
-                        0,
-                    ],
-                    "values": [
-                        "1. Dashboard",
-                        donut_mand_row + 1,
-                        1,
-                        values_end_row_mand,    # Dynamische eindrij
-                        1,
-                    ],
-                    "points": chart_points_mand,       # Dynamische puntenlijst
-                    "data_labels": {
-                        "percentage": True,
-                        "font": {"size": 11, "color": "white"},
-                    },
-                }
-            )
-            donut_chart_mand.set_title({"name": "Verplichte Velden"})
-            donut_chart_mand.set_legend({"position": "bottom", "font": {"size": 11}})
-            donut_chart_mand.set_size({"width": 500, "height": 500}) # Vaste grootte
-            ws_dash.insert_chart(f"D{chart_start_row + 1}", donut_chart_mand)
-
-            # Grafiek 3: Donut Alle Velden
-            donut_chart_all = workbook.add_chart({"type": "doughnut"})
-            donut_chart_all.add_series(
-                {
-                    "name": f"Alle Velden Status ({total_donut_all} velden)",
-                    "categories": [
-                        "1. Dashboard",
-                        donut_all_row + 1,
-                        0,
-                        donut_all_row + 3,
-                        0,
-                    ],
-                    "values": [
-                        "1. Dashboard",
-                        donut_all_row + 1,
-                        1,
-                        donut_all_row + 3,
-                        1,
-                    ],
-                    "points": [
-                        {"fill": {"color": colors[1]}},
-                        {"fill": {"color": colors[2]}},
-                        {"fill": {"color": colors[3]}},
-                    ],  # Groen, Rood, Geel
-                    "data_labels": {
-                        "percentage": True,
-                        "font": {"size": 11, "color": "white"},
-                    },
-                }
-            )
-            donut_chart_all.set_title(
-                {"name": f"Alle Velden ({total_donut_all} velden)"}
-            )
-            donut_chart_all.set_legend({"position": "bottom", "font": {"size": 11}})
-            donut_chart_all.set_size({"width": 500, "height": 500}) # Vaste, identieke grootte
-            ws_dash.insert_chart(f"E{chart_start_row + 1}", donut_chart_all)
+            # Donut charts verwijderd - alleen tabellen blijven bestaan voor overzicht
+            # Data blijft beschikbaar in donut_mand_row en donut_all_row tabellen
+            pass
 
             # ==================================================================
             # START CODE VOOR SHEET 2: INLEIDING
             # ==================================================================
             ws_inleiding = workbook.add_worksheet("2. Inleiding")
+            suppress_excel_errors(ws_inleiding)
             writer.sheets["2. Inleiding"] = ws_inleiding
             ws_inleiding.hide_gridlines(2)  # Gridlines verbergen
             ws_inleiding.set_column("A:A", 125)  # Kolombreedte aangepast naar 125
@@ -1542,6 +1658,7 @@ Deze score bestaat uit drie onderdelen:
             # START CODE VOOR SHEET 3: VERPLICHTE FOUTEN
             # ==================================================================
             ws_mand_err = workbook.add_worksheet("3. Verplichte Fouten")
+            suppress_excel_errors(ws_mand_err)
             writer.sheets["3. Verplichte Fouten"] = ws_mand_err
             required_cols_err = [
                 "Rij",
@@ -1558,12 +1675,21 @@ Deze score bestaat uit drie onderdelen:
                 df_errors_mand_sheet = df_errors_mand_sheet.rename(
                     columns={"code": "Foutcode"}
                 )
+                
+                # Voeg Type kolom toe
+                df_errors_mand_sheet["Type"] = df_errors_mand_sheet["Foutcode"].apply(get_error_category)
                 df_errors_mand_sheet = df_errors_mand_sheet.sort_values(
                     by=["Rij", "GHX Kolom"]
                 )
                 df_errors_mand_sheet = df_errors_mand_sheet.fillna(
                     ""
                 )  # Vul NaN etc. met lege string
+                
+                # Schoon de "Supplier Kolom" headers op (alleen Nederlandse namen)
+                if "Supplier Kolom" in df_errors_mand_sheet.columns:
+                    df_errors_mand_sheet["Supplier Kolom"] = df_errors_mand_sheet["Supplier Kolom"].apply(
+                        clean_header_for_display
+                    )
 
                 # Limiet toepassen
                 limit_message_format = workbook.add_format(
@@ -1604,6 +1730,7 @@ Deze score bestaat uit drie onderdelen:
                 ws_mand_err.set_column(3, 3, 45)  # Veldwaarde
                 ws_mand_err.set_column(4, 4, 70)  # Foutmelding
                 ws_mand_err.set_column(5, 5, 10)  # Foutcode
+                ws_mand_err.set_column(6, 6, 12)  # Type
 
                 # Bepaal tabel dimensies gebaseerd op de display DataFrame
                 (max_row_disp, max_col_disp) = df_errors_mand_sheet_display.shape
@@ -1679,6 +1806,7 @@ Deze score bestaat uit drie onderdelen:
             # START CODE VOOR SHEET 4: VERPLICHTE %
             # ==================================================================
             ws_mand_perc = workbook.add_worksheet("4. Verplichte %")
+            suppress_excel_errors(ws_mand_perc)
             writer.sheets["4. Verplichte %"] = ws_mand_perc
             # Bereken df_percentages hier opnieuw of gebruik een doorgegeven versie
             # Voor nu, herbruik berekening van eerder in deze functie
@@ -1760,6 +1888,7 @@ Deze score bestaat uit drie onderdelen:
             # START CODE VOOR SHEET 5: OPTIONELE FOUTEN
             # ==================================================================
             ws_opt_err = workbook.add_worksheet("5. Optionele Fouten")
+            suppress_excel_errors(ws_opt_err)
             writer.sheets["5. Optionele Fouten"] = ws_opt_err
             if not df_errors_non_mand.empty and all(
                 c in df_errors_non_mand.columns for c in required_cols_err
@@ -1768,10 +1897,19 @@ Deze score bestaat uit drie onderdelen:
                 df_errors_non_mand_sheet = df_errors_non_mand_sheet.rename(
                     columns={"code": "Foutcode"}
                 )
+                
+                # Voeg Type kolom toe
+                df_errors_non_mand_sheet["Type"] = df_errors_non_mand_sheet["Foutcode"].apply(get_error_category)
                 df_errors_non_mand_sheet = df_errors_non_mand_sheet.sort_values(
                     by=["Rij", "GHX Kolom"]
                 )
                 df_errors_non_mand_sheet = df_errors_non_mand_sheet.fillna("")
+                
+                # Schoon de "Supplier Kolom" headers op (alleen Nederlandse namen)
+                if "Supplier Kolom" in df_errors_non_mand_sheet.columns:
+                    df_errors_non_mand_sheet["Supplier Kolom"] = df_errors_non_mand_sheet["Supplier Kolom"].apply(
+                        clean_header_for_display
+                    )
                 # Limiet
                 if len(df_errors_non_mand_sheet) > ERROR_LIMIT:
                     ws_opt_err.write(
@@ -1794,12 +1932,13 @@ Deze score bestaat uit drie onderdelen:
                     index=False,
                 )
                 # Opmaak
-                ws_opt_err.set_column(0, 0, 8)
-                ws_opt_err.set_column(1, 1, 30)
-                ws_opt_err.set_column(2, 2, 30)
-                ws_opt_err.set_column(3, 3, 45)
-                ws_opt_err.set_column(4, 4, 70)
-                ws_opt_err.set_column(5, 5, 10)
+                ws_opt_err.set_column(0, 0, 8)   # Rij
+                ws_opt_err.set_column(1, 1, 30)  # GHX Kolom
+                ws_opt_err.set_column(2, 2, 30)  # Supplier Kolom
+                ws_opt_err.set_column(3, 3, 45)  # Veldwaarde
+                ws_opt_err.set_column(4, 4, 70)  # Foutmelding
+                ws_opt_err.set_column(5, 5, 10)  # Foutcode
+                ws_opt_err.set_column(6, 6, 12)  # Type
                 (max_row_oe, max_col_oe) = df_errors_non_mand_sheet.shape
                 ws_opt_err.add_table(
                     startrow_opt_err,
@@ -1855,6 +1994,7 @@ Deze score bestaat uit drie onderdelen:
             # START CODE VOOR SHEET 6: OPTIONELE %
             # ==================================================================
             ws_opt_perc = workbook.add_worksheet("6. Optionele %")
+            suppress_excel_errors(ws_opt_perc)
             writer.sheets["6. Optionele %"] = ws_opt_perc
             # Bereken df_percentages_non_mand hier
             field_stats_non_mand_perc = []
@@ -1888,16 +2028,29 @@ Deze score bestaat uit drie onderdelen:
                     }
                 )
             df_percentages_non_mand_sheet = pd.DataFrame(field_stats_non_mand_perc)
-            df_percentages_non_mand_sheet = df_percentages_non_mand_sheet[
-                [
+            
+            # Check if DataFrame is not empty before column selection
+            if not df_percentages_non_mand_sheet.empty:
+                df_percentages_non_mand_sheet = df_percentages_non_mand_sheet[
+                    [
+                        "GHX Header",
+                        "Supplier Header",
+                        "Aanwezig",
+                        "FilledPercentage",
+                        "PercentageFout",
+                        "Aantal juist ingevuld",
+                    ]
+                ]
+            else:
+                # Create empty DataFrame with correct columns
+                df_percentages_non_mand_sheet = pd.DataFrame(columns=[
                     "GHX Header",
-                    "Supplier Header",
+                    "Supplier Header", 
                     "Aanwezig",
                     "FilledPercentage",
                     "PercentageFout",
-                    "Aantal juist ingevuld",
-                ]
-            ]
+                    "Aantal juist ingevuld"
+                ])
 
             if not df_percentages_non_mand_sheet.empty:
                 df_percentages_non_mand_sheet.to_excel(
@@ -1949,6 +2102,7 @@ Deze score bestaat uit drie onderdelen:
             # START CODE VOOR SHEET 7: DATABASE AANPASSING
             # ==================================================================
             ws_db = workbook.add_worksheet("7. Database Aanpassing")
+            suppress_excel_errors(ws_db)
             writer.sheets["7. Database Aanpassing"] = ws_db
             ws_db.set_column("A:A", 35)
             ws_db.set_column("B:B", 115)
@@ -2033,52 +2187,58 @@ Deze score bestaat uit drie onderdelen:
             # ==================================================================
 
             # ==================================================================
-            # START CODE VOOR SHEET 8: KOLOM MAPPING
+            # START CODE VOOR SHEET 8: KOLOM MAPPING - NIEUWE SIMPELE IMPLEMENTATIE
             # ==================================================================
             ws_map = workbook.add_worksheet("8. Kolom Mapping")
+            suppress_excel_errors(ws_map)
             writer.sheets["8. Kolom Mapping"] = ws_map
-            # Bereken mapping_df zoals in vorige versie
-            ghx_headers_in_config = list(config.get("fields", {}).keys())
+            
+            # Simpele aanpak: gebruik direct de mapping informatie die we hebben
             mapping_data_map = []
-            mapped_supplier_headers_clean = set()
-            for ghx_header in ghx_headers_in_config:
-                supplier_header_original = original_column_mapping.get(ghx_header)
-                supplier_header_clean = (
-                    clean_header(supplier_header_original)
-                    if supplier_header_original
-                    else ""
-                )
-                if ghx_header in df.columns:
-                    mapping_data_map.append(
-                        {
-                            "GHX Header": ghx_header,
-                            "Supplier Header": supplier_header_clean,
-                        }
-                    )
-                    if supplier_header_clean:
-                        mapped_supplier_headers_clean.add(supplier_header_clean)
-                elif ghx_header in ghx_mandatory_fields:
-                    mapping_data_map.append(
-                        {
+            mapped_originals = set()
+            
+            # 1. Toon alle succesvol gemapte headers
+            for ghx_header, original_header in original_column_mapping.items():
+                mapping_data_map.append({
+                    "GHX Header": ghx_header,
+                    "Supplier Header": original_header,
+                })
+                # Normaliseer originele header voor vergelijking
+                from .price_tool import normalize_template_header
+                normalized_original = normalize_template_header(original_header)
+                mapped_originals.add(normalized_original)
+            
+            # 2. Toon verplichte velden die ontbreken
+            if not validation_config:
+                print("WARNING: validation_config is None, kan Sheet 8 niet volledig genereren.")
+            else:
+                # Check voor v20 vs v18 structuur
+                if "field_validations" in validation_config:
+                    # v20 structuur
+                    ghx_headers_in_config = list(validation_config.get("field_validations", {}).keys())
+                else:
+                    # v18 structuur (fallback)  
+                    ghx_headers_in_config = list(validation_config.get("fields", {}).keys())
+                
+                for ghx_header in ghx_headers_in_config:
+                    if ghx_header in ghx_mandatory_fields and ghx_header not in original_column_mapping:
+                        mapping_data_map.append({
                             "GHX Header": ghx_header,
                             "Supplier Header": "--- ONTBREKEND (VERPLICHT) ---",
-                        }
-                    )
-            all_original_headers_clean = set(
-                clean_header(col)
-                for col in df_original.columns
-                if not col.lower().startswith("algemeen")
-            )
-            unmapped_supplier_headers = (
-                all_original_headers_clean - mapped_supplier_headers_clean
-            )
-            for sh in sorted(list(unmapped_supplier_headers)):
-                mapping_data_map.append(
-                    {
+                        })
+            
+            # 3. Vind alle originele headers die NIET gemapt werden
+            for original_header in df_original.columns:
+                if original_header.lower().startswith("algemeen"):
+                    continue  # Skip algemeen kolommen
+                    
+                # Normaliseer en vergelijk
+                normalized_original = normalize_template_header(original_header) 
+                if normalized_original not in mapped_originals:
+                    mapping_data_map.append({
                         "GHX Header": "--- ONBEKEND / NIET GEMAPT ---",
-                        "Supplier Header": sh,
-                    }
-                )
+                        "Supplier Header": normalized_original,
+                    })
             mapping_df_sheet = pd.DataFrame(mapping_data_map)
 
             mapping_df_sheet.to_excel(
@@ -2118,6 +2278,7 @@ Deze score bestaat uit drie onderdelen:
                 ghx_mandatory_fields,
                 original_column_mapping,
                 JSON_CONFIG_PATH,
+                validation_config,
             )
 
             # ==================================================================
