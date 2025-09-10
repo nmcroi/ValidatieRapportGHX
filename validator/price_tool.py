@@ -578,10 +578,17 @@ def validate_uom_relationships(df: pd.DataFrame, validation_results: list, valid
 
     uom_relation_errors_found = False # Flag om te zien of we code 724 fouten toevoegen
     uom_red_flag_config = None
-    for flag_config in validation_config.get("red_flags", []):
-         if flag_config.get("condition") == "uom_relation":
+    uom_description_flag_config = None
+    
+    # Zoek naar beide red flag configs - support v18 and v20
+    flags_to_search = validation_config.get("red_flags", []) if "red_flags" in validation_config else validation_config.get("global_validations", [])
+    
+    for flag_config in flags_to_search:
+         condition = flag_config.get("condition")
+         if condition in ["uom_relation", "uom_relation_conflict"]:
              uom_red_flag_config = flag_config
-             break
+         elif condition in ["uom_description_format", "uom_description_format_mismatch"]:
+             uom_description_flag_config = flag_config
 
     omschrijving_format_mismatch_count = 0
     rij_offset = 3 # Start rijnummer in Excel (1-based) na header(s) en instructie(s)
@@ -683,20 +690,24 @@ def validate_uom_relationships(df: pd.DataFrame, validation_results: list, valid
 
     # --- Na de loop ---
 
-    # Voeg geconsolideerde Red Flag toe voor Omschrijving Verpakkingseenheid mismatch (conform Notebook tekst)
-    if omschrijving_format_mismatch_count > 0:
-         notebook_omschrijving_message = "Verschillende 'Omschrijving Verpakkingseenheid' velden komen mogelijk niet overeen met de verwachte notatie. Controleer of deze velden de juiste UOM code bevatten."
+    # Voeg geconsolideerde Red Flag toe voor Omschrijving Verpakkingseenheid mismatch
+    if omschrijving_format_mismatch_count > 0 and uom_description_flag_config:
+         # Gebruik bericht uit JSON config - v20 gebruikt 'message', v18 gebruikt 'error_message'
+         json_omschrijving_message = (uom_description_flag_config.get("message") or 
+                                      uom_description_flag_config.get("error_message") or
+                                      "Verschillende 'Omschrijving Verpakkingseenheid' velden komen mogelijk niet overeen met de verwachte notatie. Controleer of deze velden de juiste UOM code bevatten.")
          validation_results.append({
              "Rij": 0, "GHX Kolom": "RED FLAG",
              "Supplier Kolom": "Omschrijving Verpakkingseenheid",
              "Veldwaarde": "",
-             "Foutmelding": notebook_omschrijving_message,
-             "code": "721"
+             "Foutmelding": json_omschrijving_message,
+             "code": uom_description_flag_config.get("code", "721")
          })
 
     # Voeg Red Flag toe als er UOM-relatie fouten (code 724) waren EN er een config voor is
     if uom_relation_errors_found and uom_red_flag_config:
-        message = uom_red_flag_config.get("error_message")
+        # v20 gebruikt 'message', v18 gebruikt 'error_message'
+        message = uom_red_flag_config.get("message") or uom_red_flag_config.get("error_message")
         if message:
             # Voorkom duplicaten van deze specifieke red flag
             flag_exists = any(r.get("GHX Kolom") == "RED FLAG" and r.get("Foutmelding") == message for r in validation_results)
@@ -885,7 +896,7 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
     invalid_values = [str(val).lower() for val in invalid_values_config]
     filled_counts = {} # Houdt telling bij per veld
     field_validation_results = {} # Houdt per veld een lijst van error dicts bij
-    red_flag_messages_list = [] # Verzamelt Red Flag berichten
+    red_flag_messages_list = [] # Verzamelt Red Flag berichten met codes: [{"message": str, "code": str}, ...]
     total_rows = len(df)
     rij_offset = 3 # Start rijnummer in Excel na header(s)/instructie(s)
 
@@ -965,15 +976,23 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
                                  field_validation_results[field].append(result_item)
 
         # --- Red Flag Checks per rij (uit JSON config) ---
-        # Voorbeeld: Check 'both_empty' conditie
-        red_flags_config = validation_config.get("red_flags", [])
+        # Support both v18 red_flags and v20 global_validations
+        if "field_validations" in validation_config:
+            # v20 structure - gebruik global_validations
+            red_flags_config = validation_config.get("global_validations", [])
+            logging.info(f"Gebruik v20 global_validations: {len(red_flags_config)} validaties gevonden")
+        else:
+            # v18 structure - gebruik red_flags
+            red_flags_config = validation_config.get("red_flags", [])
+            logging.info(f"Gebruik v18 red_flags: {len(red_flags_config)} validaties gevonden")
         for flag in red_flags_config:
             try:
                 condition = flag.get("condition")
-                message = flag.get("error_message")
+                # v20 gebruikt 'message', v18 gebruikt 'error_message'
+                message = flag.get("message") or flag.get("error_message")
                 flag_fields = flag.get("fields", [])
 
-                if condition == "both_empty":
+                if condition == "both_empty" or condition == "all_fields_empty":
                     # Check alleen als de velden daadwerkelijk bestaan in de dataframe
                     relevant_flag_fields = [f for f in flag_fields if f in df.columns]
                     if len(relevant_flag_fields) == len(flag_fields): # Alleen checken als alle velden aanwezig zijn
@@ -986,11 +1005,13 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
                         )
                         if all_empty:
                             # Voeg alleen toe als het bericht nog niet globaal is toegevoegd
-                            if message and message not in red_flag_messages_list:
-                                red_flag_messages_list.append(message)
+                            existing_messages = [item["message"] for item in red_flag_messages_list]
+                            if message and message not in existing_messages:
+                                code = flag.get("code", "800")  # v20 en v18 ondersteuning
+                                red_flag_messages_list.append({"message": message, "code": code})
                                 logging.debug(f"Red flag '{condition}' getriggerd voor rij {excel_row_num}")
                 
-                elif condition == "uom_match":
+                elif condition == "uom_match" or condition == "uom_match_if_base_and_orderable":
                     # Check of UOM codes gelijk moeten zijn als base=orderable beide 1 zijn
                     required_fields = ["Is BestelbareEenheid", "Is BasisEenheid", "UOM Code Verpakkingseenheid", "UOM Code Basiseenheid"]
                     if all(f in df.columns for f in required_fields):
@@ -1001,11 +1022,13 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
                         
                         if is_base == "1" and is_orderable == "1":
                             if uom_trade and uom_base and uom_trade != uom_base:
-                                if message and message not in red_flag_messages_list:
-                                    red_flag_messages_list.append(message)
+                                existing_messages = [item["message"] for item in red_flag_messages_list]
+                                if message and message not in existing_messages:
+                                    code = flag.get("code", "801")  # v20 en v18 ondersteuning
+                                    red_flag_messages_list.append({"message": message, "code": code})
                                     logging.debug(f"Red flag UOM mismatch getriggerd voor rij {excel_row_num}: {uom_trade} != {uom_base}")
                 
-                elif condition == "content_match":
+                elif condition == "content_match" or condition == "content_match_if_base_and_orderable":
                     # Check of Inhoud velden gelijk moeten zijn als base=orderable beide 1 zijn
                     required_fields = ["Is BestelbareEenheid", "Is BasisEenheid", "Inhoud Verpakkingseenheid", "Inhoud Basiseenheid"]
                     if all(f in df.columns for f in required_fields):
@@ -1016,9 +1039,42 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
                         
                         if is_base == "1" and is_orderable == "1":
                             if content_trade and content_base and content_trade != content_base:
-                                if message and message not in red_flag_messages_list:
-                                    red_flag_messages_list.append(message)
+                                existing_messages = [item["message"] for item in red_flag_messages_list]
+                                if message and message not in existing_messages:
+                                    code = flag.get("code", "805")  # v20 en v18 ondersteuning
+                                    red_flag_messages_list.append({"message": message, "code": code})
                                     logging.debug(f"Red flag Content mismatch getriggerd voor rij {excel_row_num}: {content_trade} != {content_base}")
+                
+                elif condition == "uom_relation" or condition == "uom_relation_conflict":
+                    # Check voor UOM relatie conflicten - wordt al gehandeld door validate_uom_relationships
+                    # Deze flag wordt toegevoegd in validate_uom_relationships functie als er UOM errors zijn
+                    pass
+                    
+                elif condition == "uom_description_format" or condition == "uom_description_format_mismatch":
+                    # Check wordt al gehandeld in validate_uom_relationships functie
+                    # Slaat deze check over om dubbele meldingen te voorkomen
+                    pass
+                                    
+                elif condition == "incomplete_dimensions" or condition == "incomplete_set":
+                    # Check of afmetingen set compleet is
+                    required_fields = ["Hoogte", "Breedte", "Diepte"]
+                    available_fields = [f for f in required_fields if f in df.columns]
+                    if available_fields:  # Als minimaal één afmeting veld beschikbaar is
+                        values = []
+                        for field in available_fields:
+                            value = str(row_data.get(field, "")).strip()
+                            values.append(value)
+                        
+                        # Tel hoeveel velden ingevuld zijn (niet leeg en niet invalid)
+                        filled_count = sum(1 for v in values if v and v.lower() not in invalid_values)
+                        
+                        # Als er minimaal 1 ingevuld is maar niet alle beschikbare velden
+                        if filled_count > 0 and filled_count < len(available_fields):
+                            existing_messages = [item["message"] for item in red_flag_messages_list]
+                            if message and message not in existing_messages:
+                                code = flag.get("code", "804")  # v20 en v18 ondersteuning
+                                red_flag_messages_list.append({"message": message, "code": code})
+                                logging.debug(f"Red flag Incomplete dimensions voor rij {excel_row_num}")
                 
                 # Voeg hier checks toe voor andere per-rij condities indien nodig
 
@@ -1066,42 +1122,53 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
     validation_red_flags_dicts = [r for r in results if r.get("GHX Kolom") == "RED FLAG"]
     for flag_dict in validation_red_flags_dicts:
          msg = flag_dict.get("Foutmelding")
-         if msg and msg not in red_flag_messages_list:
-              red_flag_messages_list.append(msg)
+         existing_messages = [item["message"] for item in red_flag_messages_list]
+         if msg and msg not in existing_messages:
+              code = flag_dict.get("code", "724")  # UOM relaties meestal
+              red_flag_messages_list.append({"message": msg, "code": code})
 
     # Voeg globale staffel check toe als Red Flag
-    staffel_check_flag = next((flag for flag in validation_config.get("red_flags", []) if flag.get("condition") == "has_staffel"), None)
+    # Support both v18 and v20 structures
+    flags_for_global = validation_config.get("red_flags", []) if "red_flags" in validation_config else validation_config.get("global_validations", [])
+    staffel_check_flag = next((flag for flag in flags_for_global if flag.get("condition") == "has_staffel"), None)
     if staffel_check_flag:
          staffel_fields = staffel_check_flag.get("fields", [])
          # Check of een van de staffel kolommen data bevat
          has_staffel_data = any(df[f].notna().any() for f in staffel_fields if f in df.columns)
          if has_staffel_data:
-              msg = staffel_check_flag.get("error_message")
-              if msg and msg not in red_flag_messages_list:
-                   red_flag_messages_list.append(msg)
+              # v20 gebruikt 'message', v18 gebruikt 'error_message'
+              msg = staffel_check_flag.get("message") or staffel_check_flag.get("error_message")
+              existing_messages = [item["message"] for item in red_flag_messages_list]
+              if msg and msg not in existing_messages:
+                   code = staffel_check_flag.get("code", "850")  # Staffel code
+                   red_flag_messages_list.append({"message": msg, "code": code})
 
     # Template check conditie: controleer of alle vereiste kolommen voor de nieuwe template aanwezig zijn
-    template_check_flag = next((flag for flag in validation_config.get("red_flags", []) 
-                              if flag.get("condition") == "template_check"), None)
+    template_check_flag = next((flag for flag in flags_for_global 
+                              if flag.get("condition") in ["template_check", "template_column_missing"]), None)
     if template_check_flag:
         template_fields = template_check_flag.get("fields", [])
         # Controleer of alle template-specifieke velden aanwezig zijn in de dataframe
         template_fields_missing = [f for f in template_fields if f not in df.columns]
         # Als er velden missen, is het niet de nieuwste template
         if template_fields_missing:
-            msg = template_check_flag.get("error_message")
-            if msg and msg not in red_flag_messages_list:
-                red_flag_messages_list.append(msg)
+            # v20 gebruikt 'message', v18 gebruikt 'error_message'
+            msg = template_check_flag.get("message") or template_check_flag.get("error_message")
+            existing_messages = [item["message"] for item in red_flag_messages_list]
+            if msg and msg not in existing_messages:
+                code = template_check_flag.get("code", "802")  # Template check code
+                red_flag_messages_list.append({"message": msg, "code": code})
                 logging.info(f"Red flag 'template_check' getriggerd: ontbrekende velden: {template_fields_missing}")
 
-    # Verwijder duplicaten uit de verzamelde lijst
+    # Verwijder duplicaten uit de verzamelde lijst (behoud dict structuur)
     seen_messages = set()
     unique_red_flags = []
-    for msg in red_flag_messages_list:
+    for item in red_flag_messages_list:
+        msg = item["message"]
         if msg not in seen_messages:
             seen_messages.add(msg)
-            unique_red_flags.append(msg)
-    red_flag_messages = unique_red_flags # Dit is de uiteindelijke lijst
+            unique_red_flags.append(item)
+    red_flag_messages = unique_red_flags # Dit is de uiteindelijke lijst met {"message": str, "code": str}
 
     logging.info(f"Validatie analyse voltooid. Gevonden meldingen: {len(results)}, Unieke Red Flags: {len(red_flag_messages)}")
 

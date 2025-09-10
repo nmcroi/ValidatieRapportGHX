@@ -1,4 +1,4 @@
-{
+ {
     "version": "2.0",
     "global_settings": {
       "null_values": [
@@ -250,7 +250,7 @@
                     "code": "751",
                     "condition": "is_empty_when_dependency_filled",
                     "params": ["Artikelomschrijving"],
-                    "message": "Het veld 'Artikelomschrijving Taal Code' is niet ingevuld, terwijl het veld 'Artikelomschrijving' wel is ingevuld. Deze combinatie is verplicht."
+                    "message": "Het veld 'Artikelomschrijving Taal Code' is niet ingevuld, terwijl het veld 'Artikelomschrijving' wel is ingevuld. Deze combinatie is verplicht voor het aanleveren aan GS1."
                 }
             ]
         },
