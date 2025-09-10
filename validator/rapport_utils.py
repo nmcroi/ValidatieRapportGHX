@@ -177,8 +177,28 @@ def update_validation_log(
     if not ENABLE_VALIDATION_LOG:
         return
 
-    # Bereken extra statistieken
-    score = f"{template_type}{present_columns_count}.{percentage_correct}"
+    # Bereken extra statistieken - Nieuwe intuïtieve score berekening
+    # Score componenten:
+    # 1. Volledigheid: Percentage van verplichte kolommen aanwezig (0-100)
+    # 2. Kwaliteit: Percentage van data correct ingevuld zonder rejection errors (0-100)  
+    # 3. Template bonus: +5 punten voor nieuwste template
+    
+    # Volledigheid score (0-40 punten)
+    completeness_score = (present_columns_count / len(ghx_mandatory_fields_list)) * 40 if len(ghx_mandatory_fields_list) > 0 else 0
+    
+    # Kwaliteit score (0-50 punten) - gebaseerd op percentage correct 
+    quality_score = (percentage_correct / 100) * 50 if percentage_correct > 0 else 0
+    
+    # Template bonus (0-10 punten)  
+    template_bonus = 10 if template_type == "N" else 5  # Nieuwe template krijgt bonus
+    
+    # Totaal score (0-100)
+    total_score = min(100, completeness_score + quality_score + template_bonus)
+    
+    # Formateer score als hele getal met beschrijving
+    score_int = round(total_score)
+    score_grade = "A+" if score_int >= 90 else "A" if score_int >= 80 else "B" if score_int >= 70 else "C" if score_int >= 60 else "D"
+    score = f"{score_int}/100 ({score_grade})"
     validation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # Bereken percentages
@@ -772,7 +792,15 @@ def genereer_rapport(
             percentage_correct = 0
         else:
             percentage_correct = 0
-        score_suffix = f"_{template_type}{M_found}.{percentage_correct}"
+        # Bereken nieuwe score ook hier voor bestandsnaam
+        completeness_score_file = (M_found / len(ghx_mandatory_fields)) * 40 if len(ghx_mandatory_fields) > 0 else 0
+        quality_score_file = (percentage_correct / 100) * 50 if percentage_correct > 0 else 0
+        template_bonus_file = 10 if template_type == "N" else 5
+        total_score_file = min(100, completeness_score_file + quality_score_file + template_bonus_file)
+        score_int_file = round(total_score_file)
+        score_grade_file = "A+" if score_int_file >= 90 else "A" if score_int_file >= 80 else "B" if score_int_file >= 70 else "C" if score_int_file >= 60 else "D"
+        
+        score_suffix = f"_{template_type}{M_found}_{score_int_file}({score_grade_file})"
 
         # --- Output Bestandsnaam ---
         output_filename = (
@@ -789,7 +817,7 @@ def genereer_rapport(
             fmt_header_green = workbook.add_format(
                 {
                     "bold": True,
-                    "font_size": 12,
+                    "font_size": 14,
                     "font_color": "#006100",
                     "bg_color": "#C6EFCE",
                     "border": 1,
@@ -799,22 +827,25 @@ def genereer_rapport(
             fmt_header_red = workbook.add_format(
                 {
                     "bold": True,
-                    "font_size": 12,
-                    "font_color": "#9C0006",
-                    "bg_color": "#FFC7CE",
+                    "font_size": 14,
+                    "font_color": "white",      # Was: "#9C0006"
+                    "bg_color": "#D32F2F",      # Was: "#FFC7CE" 
                     "border": 1,
                     "valign": "vcenter",
+                    "align": "left",
+                    "indent": 1,  # Inspringing toegevoegd
                 }
             )
             fmt_header_blue = workbook.add_format(
                 {
                     "bold": True,
-                    "font_size": 12,
+                    "font_size": 14,
                     "font_color": "#FFFFFF",
                     "bg_color": "#4F81BD",
                     "border": 1,
                     "align": "left",
                     "valign": "vcenter",
+                    "indent": 1,  # Inspringing toegevoegd
                 }
             )
             fmt_label_green = workbook.add_format(
@@ -863,13 +894,15 @@ def genereer_rapport(
             fmt_error_table_header = workbook.add_format(
                 {
                     "bold": True,
-                    "font_size": 12,
+                    "font_size": 14,
                     "bg_color": "#D9D9D9",
                     "border": 1,
                     "align": "left",
+                    "indent": 1,
                 }
             )
-            fmt_error_table_cell = workbook.add_format({"font_size": 12, "border": 1})
+            fmt_error_table_cell = workbook.add_format({"font_size": 12, "border": 1, "align": "left", "indent": 1})
+            fmt_error_table_cell_right = workbook.add_format({"font_size": 12, "border": 1, "align": "right", "indent": 1})
             fmt_error_table_code = workbook.add_format(
                 {"font_size": 12, "border": 1, "align": "right"}
             )
@@ -884,7 +917,7 @@ def genereer_rapport(
                     "bg_color": "#f79645",
                     "font_color": "white",
                     "border": 1,
-                    "font_size": 12,
+                    "font_size": 14,
                 }
             )  # Voor andere tabellen
 
@@ -897,32 +930,95 @@ def genereer_rapport(
             # Verberg rij 1
             ws_dash.set_row(0, None, None, {"hidden": True})  # Verberg rij 1 (index 0)
 
-            # --- Kolombreedtes Instellen ---
-            ws_dash.set_column("A:A", 130)
-            ws_dash.set_column("B:B", 10)
-            ws_dash.set_column("C:C", 5)
-            ws_dash.set_column("D:D", 75)
-            ws_dash.set_column(
-                "E:E",
-            )
-            ws_dash.set_column("F:F", 18)
-            ws_dash.set_column("G:G", 8)
-            # Kolom H en verder eventueel voor grafieken rechts
+            # --- Kolombreedtes Instellen voor nieuwe layout ---
+            # LINKER KANT (A-E): Statistieken + Foutmeldingen
+            ws_dash.set_column("A:A", 90)   # Foutmeldingen beschrijving (90 pixels)
+            ws_dash.set_column("B:B", 10)   # Aantal (65 pixels)
+            ws_dash.set_column("C:C", 5)    # Smaller column C
+            # FOUTMELDINGEN KOLOMMEN: Aangepaste breedtes voor nieuwe layout
+            ws_dash.set_column("D:D", 40)   # Beschrijving deel 1 (D-F samen)
+            ws_dash.set_column("E:E", 40)   # Beschrijving deel 2 (D-F samen)
+            ws_dash.set_column("F:F", 40)   # Beschrijving deel 3 (D-F samen)
+            ws_dash.set_column("G:G", 10)   # Aantal
+            ws_dash.set_column("H:H", 15)   # Type
+            ws_dash.set_column("I:I", 15)   # Type Sheet (aangepast van 10 naar 15)
+            ws_dash.set_column("J:J", 10)   # Foutcode (aangepast van 15 naar 10)
+            ws_dash.set_column("K:K", 20)   # Aandachtspunten deel 5
+            ws_dash.set_column("L:L", 45)   # Aandachtspunten deel 6 (45 pixels)
+            ws_dash.set_column("M:M", 10)   # Foutcode kolom voor aandachtspunten
 
-            # --- Start direct met Blok 1 op rij 3 ---
+            # --- NIEUWE LAYOUT: Links Statistieken, Rechts Actiepunten ---
             current_row = 2  # Start schrijven op rij 3 (0-based index 2)
+            
+            # Nieuw format voor Statistieken header - donkergroen #4f6228
+            fmt_header_stats = workbook.add_format({
+                'bold': True,
+                'font_color': 'white',
+                'font_size': 14,
+                'bg_color': '#4f6228',
+                'border': 1,
+                'align': 'left',  # Links uitlijnen
+                'valign': 'vcenter',
+                'indent': 1  # Kleine inspringing
+            })
+            
+            # LINKER KANT: Statistieken (A3-B3, C blijft leeg)
             ws_dash.merge_range(
-                f"A{current_row+1}:B{current_row+1}",
+                f"A{current_row+1}:B{current_row+1}",  # A tot B (C blijft leeg)
                 "Belangrijkste Statistieken",
-                fmt_header_green,
+                fmt_header_stats,
             )
             ws_dash.set_row(current_row, 18)  # Hoogte header rij
-            current_row += 1  # Ga naar de volgende rij voor de data
-            ws_dash.set_row(current_row, 18)
+            
+            # RECHTER KANT: Foutmeldingen header (D3-J3) - header over D t/m J
+            ws_dash.merge_range(
+                f"D{current_row+1}:J{current_row+1}",  # D tot J voor foutmeldingen header
+                "Foutmeldingen",
+                fmt_header_blue,  # Blauwe header voor foutmeldingen
+            )
+            
+            # Voeg grijze subheader toe - ALLEEN voor foutmeldingen rechts
+            fmt_subheader_grey = workbook.add_format({
+                "bold": True,
+                "bg_color": "#D9D9D9",  # Grijs
+                "font_color": "black",
+                "border": 1,
+                "font_size": 12,  # Subheader terug naar 12
+                "align": "left",  # Links uitgelijnd
+                "valign": "vcenter",
+                "indent": 1  # Inspringing toegevoegd
+            })
+            
+            # RECHTER KANT: Foutmeldingen subheaders (D-H) - op rij 4
+            current_row += 1  # Ga naar rij 4 voor foutmeldingen subheaders
+            # Beschrijving spreidt over D, E, F
+            ws_dash.merge_range(
+                f"D{current_row+1}:F{current_row+1}",  # D-F voor Beschrijving
+                "Beschrijving",
+                fmt_subheader_grey
+            )
+            ws_dash.write(current_row, 6, "Aantal", fmt_subheader_grey)         # G (was E)
+            ws_dash.write(current_row, 7, "Type", fmt_subheader_grey)           # H (was F)
+            ws_dash.write(current_row, 8, "Type (Sheet)", fmt_subheader_grey)   # I (was G)  
+            ws_dash.write(current_row, 9, "Foutcode", fmt_subheader_grey)       # J (was H)
+            ws_dash.set_row(current_row, 18)  # Normale rijhoogte
+            
+            # Voor statistieken: ga terug naar rij 4 (direct na header, geen subheader)
+            stats_start_row = 3  # Rij 4 (0-based index 3)
+            current_row += 1  # Rij 5 voor foutmeldingen data
             aantal_velden_totaal = total_rows * total_original_cols
             aantal_aanw_verpl_velden = M_found * total_rows
             aantal_afw_verpl_velden = M_missing * total_rows
             aantal_aanw_lege_verpl_velden = empty_in_present
+
+            # Tel rejection errors (afkeuringen) - alleen regels die door Gatekeeper zouden worden afgewezen
+            aantal_afkeuringen = 0
+            if not df_errors.empty and "code" in df_errors.columns:
+                # Tel unieke rijen met rejection errors (codes 700-749)
+                rejection_rows = df_errors[
+                    df_errors["code"].apply(lambda x: str(x).strip().isdigit() and 700 <= int(float(str(x).strip())) <= 749)
+                ]["Rij"].nunique()
+                aantal_afkeuringen = rejection_rows
 
             stats_data_original = [
                 ("Aantal rijen", total_rows),
@@ -935,24 +1031,76 @@ def genereer_rapport(
                     "Aantal aanwezige lege verplichte velden",
                     aantal_aanw_lege_verpl_velden,
                 ),
+                ("Aantal regels mogelijk afgewezen door Gatekeeper", aantal_afkeuringen),
             ]
+            # EERSTE PRIORITEIT: Herstel de originele Belangrijkste Statistieken data!
+            # Statistieken data CORRECT positioneren: A=labels, B=numbers, C=LEEG
+            # Start direct op rij 4 (stats_start_row = 3)
+            stats_current_row = stats_start_row
             for key, value in stats_data_original:
-                ws_dash.write_string(f"A{current_row+1}", key, fmt_label_green)
-                ws_dash.write_number(f"B{current_row+1}", value, fmt_value_green)
-                current_row += 1
-            stats_end_row = current_row
+                ws_dash.write(stats_current_row, 0, key, fmt_label_green)      # Kolom A - Labels
+                ws_dash.write_number(stats_current_row, 1, value, fmt_value_green)  # Kolom B - Numbers
+                # Kolom C blijft LEEG zoals gespecificeerd
+                stats_current_row += 1
+            stats_end_row = stats_current_row
 
-            # --- Blok 2: Belangrijkste Actiepunten (Rood) ---
-            current_row += 2  # Witregel tussen blokken
-            action_start_row = current_row
-            ws_dash.merge_range(
-                f"A{current_row+1}:B{current_row+1}",
-                "Belangrijkste Actiepunten",
-                fmt_header_red,
+            # Gebruik actions_end_row van de nieuwe A-B Actiepunten voor aandachtspunten positionering
+
+            # --- LINKER KANT: Ontbrekende verplichte kolommen onder Statistieken (A-B) ---
+            # Definieer format eerst - met inspringing
+            fmt_missing_col_header = workbook.add_format(
+                {'bold': True, 'font_color': 'white', 'font_size': 14, 'bg_color': '#D32F2F', 'border': 1, 'align': 'left', 'indent': 1}
             )
-            ws_dash.set_row(current_row, 18)
-            current_row += 1
-            actions_data_original = [  # <<< CORRECTE INSPRINGING
+            
+            # Positioneer op A14 (regel 1078 wijzigen): 1 witte regel onder statistieken
+            missing_start_row = stats_end_row + 1  # 1 witte regel onder statistieken
+            ws_dash.merge_range(
+                f"A{missing_start_row+1}:B{missing_start_row+1}",  # A-B, niet A-E
+                "Ontbrekende verplichte kolommen",
+                fmt_missing_col_header,  # Rode header
+            )
+            ws_dash.set_row(missing_start_row, 18)
+            
+            # Data onder header: schrijf de ontbrekende kolommen
+            fmt_missing_col_item = workbook.add_format(
+                {'color': '#000000', 'bg_color': '#F2DCDB', 'font_size': 12, 'border': 1, 'align': 'left', 'indent': 1}
+            )
+            
+            missing_data_row = missing_start_row + 1  # Direct onder header
+            if M_missing > 0 and missing_mandatory_columns:
+                for col_name in missing_mandatory_columns:
+                    # Merge rijen A-B net zoals de header
+                    ws_dash.merge_range(
+                        f"A{missing_data_row+1}:B{missing_data_row+1}",
+                        col_name,
+                        fmt_missing_col_item
+                    )
+                    ws_dash.set_row(missing_data_row, 18)
+                    missing_data_row += 1
+            else:
+                # Merge ook de "Geen ontbrekende kolommen" regel
+                ws_dash.merge_range(
+                    f"A{missing_data_row+1}:B{missing_data_row+1}",
+                    "Geen ontbrekende kolommen",
+                    fmt_missing_col_item
+                )
+                missing_data_row += 1
+            
+            missing_end_row = missing_data_row
+
+            # --- LINKER KANT: Belangrijkste Actiepunten onder Ontbrekende (A-B) ---
+            # Header voor Actiepunten - 1 witte regel onder Ontbrekende kolommen
+            actions_start_row = missing_end_row + 1  # 1 witte regel tussen
+            ws_dash.merge_range(
+                f"A{actions_start_row+1}:B{actions_start_row+1}",  # A-B
+                "Belangrijkste Actiepunten",
+                fmt_missing_col_header,  # Zelfde rode header als Ontbrekende kolommen
+            )
+            ws_dash.set_row(actions_start_row, 18)
+            
+            # Data voor Actiepunten - direct onder header
+            actions_data_row = actions_start_row + 1  # Direct onder header
+            actions_data_original = [
                 (
                     "Aantal lege verplichte velden (incl. ontbrekende)",
                     aantal_leeg_incl_missing,
@@ -960,113 +1108,35 @@ def genereer_rapport(
                 (
                     "Percentage ingevulde verplichte velden (incl. ontbrekende)",
                     percentage_ingevuld_incl_missing / 100,
-                ),  # Deel door 100 blijft
+                ),
                 ("Aantal ontbrekende verplichte kolommen", M_missing),
             ]
 
-            # Definieer een basis format voor de rode waarden (zonder specifiek num_format)
-            fmt_value_red_base = workbook.add_format(
-                {"font_size": 12, "bg_color": "#F2DCDB", "border": 1, "align": "right"}
+            # Format voor Actiepunten data - met inspringing
+            fmt_action_label = workbook.add_format(
+                {'color': '#000000', 'bg_color': '#F2DCDB', 'font_size': 12, 'border': 1, 'align': 'left', 'indent': 1}
             )
-            fmt_label_red = workbook.add_format(
-                {"font_size": 12, "bg_color": "#F2DCDB", "border": 1, "indent": 1}
-            )  # Zorg dat label format ook bestaat
+            fmt_action_value = workbook.add_format(
+                {'color': '#000000', 'bg_color': '#F2DCDB', 'font_size': 12, 'border': 1, 'align': 'right'}
+            )
 
             for key, value in actions_data_original:
-                ws_dash.write_string(f"A{current_row+1}", key, fmt_label_red)
+                # Kolom A voor beschrijving, Kolom B voor waarde
+                ws_dash.write(actions_data_row, 0, key, fmt_action_label)  # Kolom A
+                
                 # Controleer of het de percentage regel is
-                if "Percentage" in key:  # Check op woord 'Percentage' is robuuster
-                    # Formatteer de waarde als string met 2 decimalen en % teken
-                    # value bevat al waarde / 100, dus * 100 voor weergave
+                if "Percentage" in key:
+                    # Formatteer als percentage string
                     value_str = f"{value * 100:.2f}%"
-                    # Schrijf deze string naar de cel met het basis rode format
-                    ws_dash.write_string(
-                        f"B{current_row+1}", value_str, fmt_value_red_base
-                    )  # <-- Gebruik write_string!
+                    ws_dash.write_string(actions_data_row, 1, value_str, fmt_action_value)  # Kolom B
                 else:
-                    # Schrijf andere waarden als getal met het basis rode format
-                    ws_dash.write_number(f"B{current_row+1}", value, fmt_value_red_base)
-                current_row += 1
-            action_end_row = current_row
-
-            # --- Blok 3: Aandachtspunten (Rood) ---
-            # Ga één rij verder na het vorige blok.
-            current_row += 2
-            attention_start_row = current_row  # Startrij voor header
-
-            # Schrijf header voor Aandachtspunten (merged over A:B)
-            ws_dash.merge_range(
-                f"A{attention_start_row+1}:B{attention_start_row+1}",
-                "Aandachtspunten",
-                fmt_header_red,
-            )
-            ws_dash.set_row(attention_start_row, 18)  # Header hoogte
-            current_row += 1  # Ga naar de rij onder de header
-
-            # Format met RODE rand, font size (aanpassen?), wrap, etc.
-            fmt_attention_item = workbook.add_format(
-                {
-                    "font_size": 12,  # <<<<<<< Zet eventueel op 12
-                    "bg_color": "#F2DCDB",  # Licht rood
-                    "border": 1,  # Rand rondom de hele cel
-                    "text_wrap": True,  # Zorg dat tekst terugloopt
-                    "align": "left",
-                    "valign": "top",
-                    "indent": 1,
-                }
-            )
-
-            # Controleer of er aandachtspunten zijn
-            if red_flag_messages:
-                # Loop door elke individuele melding
-                for msg in red_flag_messages:
-                    # Schat aantal benodigde regels (100 tekens/regel)
-                    estimated_lines = max(1, len(msg) // 100 + msg.count("\n"))
-
-                    # Stel hoogte in: 32pt als > 1 regel nodig, anders 16pt
-                    if estimated_lines > 1:
-                        ws_dash.set_row(
-                            current_row, 32
-                        )  # Vaste hoogte (32pt) voor lange tekst
-                    else:
-                        ws_dash.set_row(
-                            current_row, 16
-                        )  # Vaste hoogte (16pt) voor korte tekst
-
-                    # Merge cellen A en B en schrijf de tekst
-                    ws_dash.merge_range(
-                        f"A{current_row+1}:B{current_row+1}",
-                        f"{msg}",
-                        fmt_attention_item,
-                    )
-
-                    current_row += 1  # Ga naar de volgende rij voor de volgende melding
-            else:
-                # Geen meldingen: ook hier vaste hoogte 16 en rode randen A-G
-                ws_dash.set_row(current_row, 16)  # Vaste hoogte 16pt
-                ws_dash.merge_range(
-                    f"A{current_row+1}:B{current_row+1}",
-                    "Geen specifieke aandachtspunten gevonden.",
-                    fmt_attention_item,
-                )
-                # Schrijf ook hier blanco cellen C t/m G met de rode border
-                for col_idx in range(2, 7):
-                    ws_dash.write_blank(current_row, col_idx, None, fmt_attention_item)
-                current_row += 1
-
-            # Onthoud de laatst gebruikte rij-index (0-based)
-            attention_end_row = current_row - 1
-            col_d_end_row = attention_end_row  # Initialize col_d_end_row here
-            # --- Einde Blok 3 ---
-
-            # --- Blok 4: Fout Meldingen Tabel (Blauw, D3:Gxx) ---
-            table_start_row = 2
-            ws_dash.merge_range(
-                f"D{table_start_row+1}:H{table_start_row+1}",
-                "Fout Meldingen",
-                fmt_header_blue,
-            )
-            ws_dash.set_row(table_start_row, 18)
+                    # Schrijf als getal
+                    ws_dash.write_number(actions_data_row, 1, value, fmt_action_value)  # Kolom B
+                    
+                ws_dash.set_row(actions_data_row, 18)
+                actions_data_row += 1
+            
+            actions_end_row = actions_data_row
 
             # Load error code descriptions - support both v18 and v20 structure  
             if "global_settings" in config and "error_code_descriptions" in config["global_settings"]:
@@ -1084,6 +1154,9 @@ def genereer_rapport(
                 )
 
             df_foutcodes_top = pd.DataFrame()
+            # Voor foutmeldingen tabel
+            table_subheader_row = current_row - 1  # De subheader rij voor foutmeldingen
+            table_start_row = current_row  # De rij na de subheader voor foutmeldingen
             table_end_row = table_start_row + 1  # Default end row
             if not df_errors.empty:
                 # Check of 'code' kolom bestaat voor we verder gaan
@@ -1152,91 +1225,171 @@ def genereer_rapport(
                         columns={"code": "Foutcode"}
                     )
 
-                    table_header_row = table_start_row + 1
-                    # Schrijf header
-                    for c_idx, col_name in enumerate(df_foutcodes_top.columns):
-                        ws_dash.write(
-                            table_header_row,
-                            3 + c_idx,
-                            col_name,
-                            fmt_error_table_header,
-                        )
-                    # Schrijf data
+                    table_header_row = table_subheader_row + 1  # Start na subheader
+                    # Data wordt direct geschreven met nieuwe kolom mapping
+                    # Nieuwe mapping: Beschrijving=D-F(merged), Aantal=G(6), Type=H(7), Type(Sheet)=I(8), Foutcode=J(9)
                     for r_idx, row_data in df_foutcodes_top.iterrows():
-                        current_table_row = table_header_row + 1 + r_idx
+                        current_table_row = table_header_row + r_idx
+                        
+                        # Custom kolom mapping voor nieuwe layout
                         for c_idx, cell_value in enumerate(row_data):
+                            col_name = df_foutcodes_top.columns[c_idx]
                             fmt = (
                                 fmt_error_table_code
-                                if df_foutcodes_top.columns[c_idx] == "Foutcode"
+                                if col_name == "Foutcode"
+                                else fmt_error_table_cell_right
+                                if col_name == "Aantal"
                                 else fmt_error_table_cell
                             )
-                            try:
-                                # Probeer integer te maken voor Aantal en Foutcode voor juiste weergave/sortering
-                                if df_foutcodes_top.columns[c_idx] in [
-                                    "Aantal",
-                                    "Foutcode",
-                                ]:
-                                    num_val = int(cell_value)
-                                    ws_dash.write_number(
-                                        current_table_row, 3 + c_idx, num_val, fmt
-                                    )
-                                else:
-                                    ws_dash.write_string(
-                                        current_table_row,
-                                        3 + c_idx,
-                                        str(cell_value),
-                                        fmt,
-                                    )
-                            except (
-                                ValueError,
-                                TypeError,
-                            ):  # Fallback naar string als conversie mislukt
-                                ws_dash.write_string(
-                                    current_table_row, 3 + c_idx, str(cell_value), fmt
+                            
+                            if col_name == "Beschrijving":
+                                # Beschrijving spreidt over D-F (kolommen 3-5)
+                                ws_dash.merge_range(
+                                    f"D{current_table_row+1}:F{current_table_row+1}",
+                                    str(cell_value),
+                                    fmt
                                 )
+                            elif col_name == "Aantal":
+                                # Aantal naar kolom G (6)
+                                try:
+                                    num_val = int(cell_value)
+                                    ws_dash.write_number(current_table_row, 6, num_val, fmt)
+                                except (ValueError, TypeError):
+                                    ws_dash.write_string(current_table_row, 6, str(cell_value), fmt)
+                            elif col_name == "Type":
+                                # Type naar kolom H (7)
+                                ws_dash.write_string(current_table_row, 7, str(cell_value), fmt)
+                            elif col_name == "Type (Sheet)":
+                                # Type (Sheet) naar kolom I (8)
+                                ws_dash.write_string(current_table_row, 8, str(cell_value), fmt)
+                            elif col_name == "Foutcode":
+                                # Foutcode naar kolom J (9)
+                                try:
+                                    num_val = int(cell_value)
+                                    ws_dash.write_number(current_table_row, 9, num_val, fmt)
+                                except (ValueError, TypeError):
+                                    ws_dash.write_string(current_table_row, 9, str(cell_value), fmt)
                     table_end_row = table_header_row + len(df_foutcodes_top)
                 else:
-                    ws_dash.write(
-                        table_start_row + 1,
-                        3,
+                    # 'code' kolom mist - schrijf over D-F (merged)
+                    ws_dash.merge_range(
+                        f"D{table_subheader_row + 2}:F{table_subheader_row + 2}",  # Na subheader, D-F merged
                         "'code' kolom mist in validatieresultaten.",
                         fmt_error_table_cell,
                     )
-                    table_end_row = table_start_row + 1
+                    table_end_row = table_subheader_row + 1
             else:
-                ws_dash.write(
-                    table_start_row + 1, 3, "Geen fouten gevonden", fmt_error_table_cell
+                # Geen fouten - schrijf over D-F (merged)
+                ws_dash.merge_range(
+                    f"D{table_subheader_row + 2}:F{table_subheader_row + 2}",  # Na subheader, D-F merged
+                    "Geen fouten gevonden",
+                    fmt_error_table_cell
                 )
-                table_end_row = table_start_row + 1
+                table_end_row = table_subheader_row + 1
 
             # --- Ontbrekende verplichte kolommen in Kolom D --- #
-            # Definieer formats lijkend op 'Actiepunten' blok
+            # Definieer formats als echte tabel headers (rood met witte letters)
             fmt_missing_col_header = workbook.add_format(
-                {'bold': True, 'color': '#C00000', 'font_size': 12, 'bg_color': '#FFC7CE', 'border': 1} # Stijl zoals Actiepunten header
+                {'bold': True, 'font_color': 'white', 'font_size': 12, 'bg_color': '#D32F2F', 'border': 1} # Zelfde stijl als hoofdheaders
             )
             fmt_missing_col_item = workbook.add_format(
                 {'color': '#000000', 'bg_color': '#F2DCDB', 'font_size': 12, 'border': 1, 'align': 'left'} # Stijl zoals Actiepunten data
             )
 
-            # Controleer of er ontbrekende verplichte kolommen zijn
-            if M_missing > 0:
-                # Bepaal de eindrij van de vorige tabel (Foutmeldingen Samenvatting)
-                # De tabel start op 'startrow_err_sum' en heeft 'max_row_err_sum' datarijen
-                table_end_row = table_start_row + len(df_foutcodes_top) # Index van laatste rij
-                # Bepaal startrij voor de nieuwe lijst in kolom D (minimaal rij 12 = index 11)
-                col_d_start_row = action_start_row
+            # Gebruik table_end_row (einde van Foutmeldingen tabel) voor aandachtspunten positionering
+            col_d_end_row = table_end_row  # Voor aandachtspunten positionering
 
-                #HIER!!!
+            # --- RECHTER KANT: Aandachtspunten onder Foutmeldingen (D-K) ---
+            attention_start_row = col_d_end_row + 1  # 1 witte regel onder Foutmeldingen
 
-                # Schrijf de header
-                ws_dash.write(col_d_start_row, 3, "Ontbrekende verplichte kolommen", fmt_missing_col_header)
-                # Schrijf de kolomnamen
-                current_col_d_row = col_d_start_row + 1
-                for col_name in missing_mandatory_columns:
-                    ws_dash.write(current_col_d_row, 3, f"{col_name}", fmt_missing_col_item)
-                    ws_dash.set_row(current_col_d_row, 18) # Match hoogte Actiepunten rij
-                    current_col_d_row += 1
-                col_d_end_row = current_col_d_row - 1
+            # Schrijf hoofdheader voor Aandachtspunten (D-J)
+            ws_dash.merge_range(
+                f"D{attention_start_row+1}:J{attention_start_row+1}",  # D-J voor Aandachtspunten
+                "Aandachtspunten",
+                fmt_header_red,  # Behoud donkerrode hoofdheader
+            )
+            ws_dash.set_row(attention_start_row, 18)  # Hoofdheader hoogte
+            
+            # Voeg GRIJZE subheaders toe - melding over D-I, foutcode alleen in J
+            attention_subheader_row = attention_start_row + 1
+            ws_dash.merge_range(
+                f"D{attention_subheader_row+1}:I{attention_subheader_row+1}",  # D-I voor Melding (6 kolommen)
+                "Melding",
+                fmt_subheader_grey  # Gebruik grijze subheader zoals bij foutmeldingen
+            )
+            ws_dash.write(attention_subheader_row, 9, "Foutcode", fmt_subheader_grey)  # J voor Foutcode
+            ws_dash.set_row(attention_subheader_row, 18)  # Normale rijhoogte
+            
+            attention_data_start_row = attention_subheader_row + 1  # Start van data
+
+            # Format met RODE rand, font size (aanpassen?), wrap, etc.
+            fmt_attention_item = workbook.add_format(
+                {
+                    "font_size": 12,
+                    "bg_color": "#F2DCDB",  # Licht rood
+                    "border": 1,  # Rand rondom de hele cel
+                    "text_wrap": True,  # Zorg dat tekst terugloopt
+                    "align": "left",
+                    "valign": "top",
+                    "indent": 1,
+                }
+            )
+
+            # Controleer of er aandachtspunten zijn
+            current_attention_row = attention_data_start_row
+            if red_flag_messages:
+                # Loop door elke individuele melding (nu dict met message + code)
+                for item in red_flag_messages:
+                    if isinstance(item, dict):
+                        msg = item.get("message", str(item))
+                        code = item.get("code", "")
+                    else:
+                        # Backward compatibility - als het nog een string is
+                        msg = str(item)
+                        code = ""
+                    # Vaste rijhoogte voor alle Aandachtspunten regels
+                    ws_dash.set_row(current_attention_row, 16)
+
+                    # Schrijf bericht over kolommen D-I (laat J vrij voor foutcode)
+                    ws_dash.merge_range(
+                        f"D{current_attention_row+1}:I{current_attention_row+1}",
+                        f"{msg}",
+                        fmt_attention_item,
+                    )
+                    
+                    # Format voor foutcode kolom - rechts uitgelijnd en niet bold
+                    fmt_code_item = workbook.add_format(
+                        {
+                            "font_size": 12,
+                            "bg_color": "#F2DCDB",  # Licht rood (zelfde als message)
+                            "border": 1,
+                            "align": "right",  # Rechts uitlijnen voor codes
+                            "valign": "vcenter",
+                            "bold": False,  # Niet bold
+                        }
+                    )
+                    
+                    # Schrijf foutcode in kolom J
+                    ws_dash.write(
+                        current_attention_row, 9,  # Kolom J (9)
+                        code if code else "N/A",
+                        fmt_code_item
+                    )
+
+                    current_attention_row += 1  # Ga naar de volgende rij
+            else:
+                # Geen meldingen: schrijf over kolom D-J
+                ws_dash.set_row(current_attention_row, 16)  # Vaste hoogte 16pt
+                ws_dash.merge_range(
+                    f"D{current_attention_row+1}:J{current_attention_row+1}",  # D-J uniform
+                    "Geen specifieke aandachtspunten gevonden.",
+                    fmt_attention_item,
+                )
+                current_attention_row += 1
+
+            # Onthoud de laatst gebruikte rij-index (0-based)
+            attention_end_row = current_attention_row - 1
+            # --- Einde Aandachtspunten ---
 
 
             # ============================
@@ -1314,7 +1467,10 @@ def genereer_rapport(
             total_donut_all = sum(item[1] for item in donut_all_data[1:])
 
             # --- Grafieken Toevoegen ---
-            chart_start_row = max(attention_end_row, col_d_end_row) + 3
+            # Bepaal de laatste rij van beide kanten (links: foutmeldingen, rechts: aandachtspunten)
+            left_side_end_row = table_end_row  # Einde van foutmeldingen tabel
+            right_side_end_row = attention_end_row  # Einde van aandachtspunten
+            chart_start_row = max(left_side_end_row, right_side_end_row) + 4  # 4 voor echt 3 lege regels onder laatste tabel
 
             # Grafiek 1: Stacked Bar Verplichte Velden (MET GECORRIGEERDE LEGENDA)
             stacked_chart = workbook.add_chart({"type": "column", "subtype": "stacked"})
@@ -1354,11 +1510,22 @@ def genereer_rapport(
                 {"name": "Aantal", "major_gridlines": {"visible": False}}
             )
             stacked_chart.set_legend({"position": "bottom", "font": {"size": 11}})
-            stacked_chart.set_size({"width": 950, "height": 500})
-            ws_dash.insert_chart(f"A{chart_start_row + 1}", stacked_chart)
+            # Breedte geoptimaliseerd voor A-J kolommen (totaal ~280px * 7 = ~2000px voor goede proportie)  
+            stacked_chart.set_size({"width": 2000, "height": 500})  # Optimaal voor A-J breedte
+            # Voeg een subtiele rand toe rond de chart
+            stacked_chart.set_chartarea({
+                'border': {'color': '#D32F2F', 'width': 2},  # Rode rand, 2px
+                'fill':   {'color': '#FFFFFF'}  # Witte achtergrond
+            })
+            ws_dash.insert_chart(f"A{chart_start_row + 1}", stacked_chart)  # Terug naar kolom A
 
             # Donut charts verwijderd - alleen tabellen blijven bestaan voor overzicht
             # Data blijft beschikbaar in donut_mand_row en donut_all_row tabellen
+            
+            # --- EINDE DASHBOARD: Nu rijhoogtes forceren voor eerste 50 rijen ---
+            for row in range(1, 51):  # Rijen 2-51 (0-based: 1-50) - laatste override
+                ws_dash.set_row(row, 18)
+            
             pass
 
             # ==================================================================
@@ -1410,7 +1577,7 @@ def genereer_rapport(
                 }
             )  # << Indent verhoogd naar 4
             fmt_section_header = workbook.add_format(
-                {"font_size": 12, "indent": 2, "bold": True}
+                {"font_size": 14, "indent": 2, "bold": True}
             )
             # Format for URL (based on standard, maar blauw/onderstreept + indent)
             fmt_url = workbook.add_format(
@@ -1435,21 +1602,36 @@ def genereer_rapport(
 
             # <<<<<< DE TWEEDE (FOUTE) DEFINITIE VAN fmt_title IS HIER VERWIJDERD >>>>>>
 
-            # Score Uitleg
-            # Zorg dat deze variabelen bestaan vóór dit punt:
-            # template_type, M_found, percentage_correct, volledigheids_percentage, juistheid_percentage, ghx_mandatory_fields
-            score_uitleg_tekst = f"""SCORE: {template_type}{M_found}.{percentage_correct}%
+            # Score Uitleg - Nieuwe score berekening
+            # Bereken score componenten voor uitleg
+            completeness_score_uitleg = (M_found / len(ghx_mandatory_fields)) * 40 if len(ghx_mandatory_fields) > 0 else 0
+            quality_score_uitleg = (percentage_correct / 100) * 50 if percentage_correct > 0 else 0  
+            template_bonus_uitleg = 10 if template_type == "N" else 5
+            total_score_uitleg = min(100, completeness_score_uitleg + quality_score_uitleg + template_bonus_uitleg)
+            score_int_uitleg = round(total_score_uitleg)
+            score_grade_uitleg = "A+" if score_int_uitleg >= 90 else "A" if score_int_uitleg >= 80 else "B" if score_int_uitleg >= 70 else "C" if score_int_uitleg >= 60 else "D"
+            
+            score_uitleg_tekst = f"""KWALITEITSSCORE: {score_int_uitleg}/100 ({score_grade_uitleg})
 
-Deze score bestaat uit drie onderdelen:
-- {template_type}: Dit geeft aan of de Nieuwe (N) of Oude (O) GHX template wordt gebruikt
-- {M_found}: Het aantal aanwezige verplichte kolommen (van de {len(ghx_mandatory_fields)} totaal)
-- {percentage_correct}%: De kwaliteitsscore (volledigheid {volledigheids_percentage:.1f}% × juistheid {juistheid_percentage:.1f}%)"""
+Deze score wordt berekend op basis van drie componenten:
+
+🏗️ VOLLEDIGHEID ({completeness_score_uitleg:.1f}/40 punten)
+   Gebaseerd op aanwezige verplichte kolommen: {M_found} van {len(ghx_mandatory_fields)} ({(M_found/len(ghx_mandatory_fields)*100):.0f}%)
+
+🎯 KWALITEIT ({quality_score_uitleg:.1f}/50 punten)  
+   Gebaseerd op correcte data-invulling: {percentage_correct:.1f}% foutloos
+   (Volledigheid {volledigheids_percentage:.1f}% × Juistheid {juistheid_percentage:.1f}%)
+
+📋 TEMPLATE BONUS ({template_bonus_uitleg}/10 punten)
+   {"Nieuwe GHX Template gebruikt (+10)" if template_type == "N" else "Oude template gebruikt (+5)"}
+
+Cijfertoekenning: A+ (90+), A (80-89), B (70-79), C (60-69), D (<60)"""
             ws_inleiding.merge_range(
-                f"A{current_row_intro+1}:A{current_row_intro + 9}",
+                f"A{current_row_intro+1}:A{current_row_intro + 15}",
                 score_uitleg_tekst,
                 fmt_score,
             )
-            current_row_intro += 9
+            current_row_intro += 15
 
             # Witregel
             current_row_intro += 1
