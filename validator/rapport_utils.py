@@ -632,6 +632,7 @@ def genereer_rapport(
     summary_data: dict,  # VERWIJDERDE PARAMETER TERUGGEZET
     errors_per_field: dict = None,
     validation_config: dict = None,  # Geconverteerde config voor Sheet 9
+    template_context: dict = None,  # Template Generator context
 ):
     """
     Genereert het volledige Excel validatierapport, inclusief alle sheets,
@@ -1202,7 +1203,24 @@ def genereer_rapport(
                 ]["Rij"].nunique()
                 aantal_afkeuringen = rejection_rows
 
+            # Template context informatie toevoegen
+            template_type_info = "Default Template"
+            if template_context:
+                template_choice = template_context.get("template_choice", "besteleenheid")
+                product_type = template_context.get("product_type", "facilitair")
+                institutions = template_context.get("institutions", [])
+                
+                template_type_info = f"Template Generator - {template_choice} ({product_type})"
+                if institutions:
+                    template_type_info += f" [{', '.join(institutions)}]"
+                    
+                # Voeg ingeklapte velden informatie toe
+                collapsed_count = summary_data.get('collapsed_fields_count', 0)
+                if collapsed_count > 0:
+                    template_type_info += f" | {collapsed_count} velden ingeklapt"
+            
             stats_data_original = [
+                ("Template Type", template_type_info),
                 ("Aantal rijen", total_rows),
                 ("Aantal kolommen", total_original_cols),
                 ("Aantal velden", aantal_velden_totaal),
@@ -1221,7 +1239,13 @@ def genereer_rapport(
             stats_current_row = 8  # Direct na header (Excel rij 9 = 0-based index 8)
             for key, value in stats_data_original:
                 ws_dash.write(stats_current_row, 1, key, fmt_label_green)      # Kolom B - Labels (was A)
-                ws_dash.write_number(stats_current_row, 2, value, fmt_value_green)  # Kolom C - Numbers (was B)
+                
+                # Template Type is string, andere waarden zijn numeriek
+                if key == "Template Type":
+                    ws_dash.write(stats_current_row, 2, value, fmt_value_green)  # String waarde
+                else:
+                    ws_dash.write_number(stats_current_row, 2, value, fmt_value_green)  # Numerieke waarde
+                    
                 # Kolom A blijft LEEG als gutter
                 stats_current_row += 1
             stats_end_row = stats_current_row

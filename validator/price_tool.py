@@ -27,33 +27,246 @@ except ImportError:
 # TEMPLATE-AWARE HELPER FUNCTIES
 # -----------------------------
 
+def has_template_generator_stamp(excel_path: str) -> bool:
+    """
+    Controleert of Excel bestand een Template Generator stamp heeft.
+    
+    Zoekt naar:
+    - _GHX_META sheet 
+    - GHX_STAMP named range
+    
+    Returns:
+        True als template generator stamp gevonden
+    """
+    try:
+        import openpyxl
+        wb = openpyxl.load_workbook(excel_path, data_only=True, read_only=True)
+        
+        # Check voor _GHX_META sheet
+        has_meta_sheet = "_GHX_META" in wb.sheetnames
+        
+        # Check voor GHX_STAMP named range
+        has_stamp_range = "GHX_STAMP" in wb.defined_names
+        
+        wb.close()
+        
+        # Template Generator stamp vereist beide
+        return has_meta_sheet and has_stamp_range
+        
+    except Exception as e:
+        logging.warning(f"Fout bij stamp detection: {e}")
+        return False
+
+def extract_template_generator_context(excel_path: str) -> Optional[Dict[str, Any]]:
+    """
+    Extraheert Template Generator context uit _GHX_META sheet.
+    
+    Returns:
+        Dictionary met template context of None bij fout
+    """
+    try:
+        import openpyxl
+        wb = openpyxl.load_workbook(excel_path, data_only=True, read_only=True)
+        
+        if "_GHX_META" not in wb.sheetnames:
+            return None
+            
+        meta_ws = wb["_GHX_META"]
+        json_str = meta_ws["A1"].value
+        
+        if not json_str:
+            logging.warning("Geen metadata gevonden in _GHX_META cel A1")
+            return None
+            
+        # Parse JSON metadata
+        context = json.loads(json_str)
+        
+        # Valideer minimum vereiste velden
+        required_fields = ['template_choice', 'product_type']
+        if not all(field in context for field in required_fields):
+            logging.warning(f"Template context mist vereiste velden: {required_fields}")
+            return None
+            
+        wb.close()
+        return context
+        
+    except json.JSONDecodeError as e:
+        logging.error(f"Fout bij parsen template context JSON: {e}")
+        return None
+    except Exception as e:
+        logging.error(f"Fout bij extracten template context: {e}")
+        return None
+
+def get_context_mandatory_fields(template_config: Dict, context: Dict[str, Any]) -> List[str]:
+    """
+    Bepaalt mandatory fields gebaseerd op template generator context.
+    
+    Args:
+        template_config: Template configuratie dictionary
+        context: Template generator context
+        
+    Returns:
+        Lijst van mandatory field names
+    """
+    try:
+        # Start met GHX standaard mandatory fields
+        base_mandatory = template_config.get("default_template", {}).get("mandatory_fields", [])
+        mandatory_fields = base_mandatory.copy()
+        
+        # Haal institution-specific extra mandatory fields op
+        institutions = context.get("institutions", [])
+        institution_extra = get_institution_mandatory_fields(institutions)
+        
+        # Voeg extra mandatory fields toe (zonder duplicaten)
+        for field in institution_extra:
+            if field not in mandatory_fields:
+                mandatory_fields.append(field)
+        
+        logging.info(f"Template Generator mandatory fields: {len(base_mandatory)} GHX + {len(institution_extra)} institutie = {len(mandatory_fields)} totaal")
+        
+        return mandatory_fields
+        
+    except Exception as e:
+        logging.error(f"Fout bij bepalen context mandatory fields: {e}")
+        # Fallback naar default
+        return template_config.get("default_template", {}).get("mandatory_fields", [])
+
+def get_institution_mandatory_fields(institutions: List[str]) -> List[str]:
+    """
+    Geeft extra mandatory fields terug per zorginstelling.
+    
+    Args:
+        institutions: Lijst van instellingscodes (bijv. ['UU', 'Leiden'])
+        
+    Returns:
+        Lijst van extra mandatory field names
+    """
+    extra_mandatory = []
+    
+    try:
+        # Laad institution rules uit template_config.json
+        template_config_path = "template_config.json"
+        if os.path.exists(template_config_path):
+            with open(template_config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            
+            institution_rules = config.get("template_generator", {}).get("institution_mandatory_fields", {})
+        else:
+            # Fallback als config bestand niet bestaat
+            institution_rules = {
+                'Leiden': ['Duurzaamheid Score', 'CO2 Footprint'],
+                'UU': ['Milieu Impact Score'],
+                'AMC': ['Circulaire Economie Score'],
+                'Erasmus': ['Sociale Impact Score']
+            }
+        
+        for institution in institutions:
+            if institution in institution_rules:
+                extra_fields = institution_rules[institution]
+                for field in extra_fields:
+                    if field not in extra_mandatory:
+                        extra_mandatory.append(field)
+                        
+    except Exception as e:
+        logging.error(f"Fout bij laden institution mandatory fields: {e}")
+                    
+    return extra_mandatory
+
+def get_collapsed_fields(template_context: Dict[str, Any]) -> List[str]:
+    """
+    Bepaalt welke velden ingeklapt zijn in template generator template.
+    
+    Deze velden moeten worden weggelaten uit statistieken maar zijn wel aanwezig in Excel.
+    
+    Returns:
+        Lijst van field names die ingeklapt zijn
+    """
+    collapsed_fields = []
+    
+    try:
+        # Laad collapsed fields configuratie
+        template_config_path = "template_config.json"
+        collapsed_config = {}
+        
+        if os.path.exists(template_config_path):
+            with open(template_config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            collapsed_config = config.get("template_generator", {}).get("collapsed_fields_by_context", {})
+        
+        # GS1 velden zijn ingeklapt als gs1_mode = "none" 
+        gs1_mode = template_context.get("gs1_mode", "none")
+        if gs1_mode == "none":
+            gs1_fields = collapsed_config.get("gs1_mode_none", [
+                "GTIN", "GLN Fabrikant", "GLN Leverancier", "Doelmarkt Landcode",
+                "GS1 Synchronisatie Status", "GDSN Publication Status"
+            ])
+            collapsed_fields.extend(gs1_fields)
+        
+        # Staffel-specifieke velden alleen zichtbaar bij staffel templates
+        is_staffel = template_context.get("is_staffel_file", False) 
+        if not is_staffel:
+            staffel_fields = collapsed_config.get("non_staffel", ["Hoeveelheid Van", "Hoeveelheid Tot"])
+            collapsed_fields.extend(staffel_fields)
+            
+        # Product type specifieke velden
+        product_type = template_context.get("product_type", "")
+        if product_type != "medisch":
+            medical_fields = collapsed_config.get("non_medisch", ["GMDN Code", "EMDN Code", "MDR Klasse"])
+            collapsed_fields.extend(medical_fields)
+            
+        if product_type != "lab":
+            lab_fields = collapsed_config.get("non_lab", ["Chemische Samenstelling", "Gevaarlijke Stoffen Klasse"])
+            collapsed_fields.extend(lab_fields)
+            
+        # Verwijder duplicaten
+        collapsed_fields = list(set(collapsed_fields))
+            
+        logging.info(f"Ingeklapte velden: {len(collapsed_fields)} velden weggelaten uit statistieken")
+        return collapsed_fields
+        
+    except Exception as e:
+        logging.error(f"Fout bij bepalen ingeklapte velden: {e}")
+        return []
+
 def determine_mandatory_fields_for_template(excel_path: str) -> List[str]:
     """
     Bepaalt welke velden verplicht zijn voor de gegeven template.
     
-    Phase 1: Default template (hardcoded 17 velden)
-    Phase 2: Template Generator stamp detection (toekomstig)
+    Ondersteunt 3 scenario's:
+    1. Template Generator templates (met stamp) - Context-aware mandatory fields
+    2. Default templates (geen stamp) - 17 GHX mandatory fields  
+    3. Oude leverancier templates - Gebruik aanwezige velden
     """
     try:
         # Laad template configuratie
         template_config_path = "template_config.json"
         if not os.path.exists(template_config_path):
             logging.warning(f"Template config {template_config_path} niet gevonden, gebruik fallback.")
-            # Fallback naar hardcoded lijst
             return get_fallback_mandatory_fields()
         
         with open(template_config_path, 'r', encoding='utf-8') as f:
             template_config = json.load(f)
         
-        # Phase 1: Gebruik altijd default template
-        # Phase 2: Hier komt stamp detection logica
+        # SCENARIO 3: Template Generator templates
+        if has_template_generator_stamp(excel_path):
+            logging.info("Template Generator stamp gedetecteerd")
+            context = extract_template_generator_context(excel_path)
+            
+            if context:
+                # Template Generator context gevonden
+                template_choice = context.get("template_choice", "besteleenheid")
+                product_type = context.get("product_type", "facilitair") 
+                institutions = context.get("institutions", [])
+                
+                logging.info(f"Template type: Template Generator - {template_choice} ({product_type})")
+                if institutions:
+                    logging.info(f"Instellingen: {', '.join(institutions)}")
+                
+                return get_context_mandatory_fields(template_config, context)
+            else:
+                logging.warning("Template Generator stamp gevonden maar context extractie gefaald, gebruik default")
         
-        # TODO: Implementeer stamp detection
-        # if has_template_generator_stamp(excel_path):
-        #     context = read_template_context(excel_path)
-        #     return get_context_mandatory_fields(template_config, context)
-        
-        # Voor nu: gebruik default template
+        # SCENARIO 1: Default template (geen stamp)
         default_config = template_config.get("default_template", {})
         mandatory_fields = default_config.get("mandatory_fields", [])
         
@@ -877,9 +1090,16 @@ def validate_field_v20_native(field_name: str, value: Any, field_config: dict, i
     
     return errors
 
-def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_column_mapping: dict) -> Tuple[list, dict, list, dict]:
+def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_column_mapping: dict, template_context: Dict[str, Any] = None) -> Tuple[list, dict, list, dict]:
     """
-    Valideert het DataFrame en berekent statistieken.
+    Valideert het DataFrame en berekent template-aware statistieken.
+    
+    Args:
+        df: DataFrame om te valideren
+        validation_config: Validatie configuratie
+        original_column_mapping: Kolom mapping
+        template_context: Template Generator context (None voor default templates)
+    
     Retourneert: (results, filled_percentages, red_flag_messages, errors_per_field)
     """
     results = [] # Lijst met alle individuele fout/warning dicts
@@ -900,6 +1120,12 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
     total_rows = len(df)
     rij_offset = 3 # Start rijnummer in Excel na header(s)/instructie(s)
 
+    # Bepaal ingeklapte velden voor Template Generator templates
+    collapsed_fields = []
+    if template_context:
+        collapsed_fields = get_collapsed_fields(template_context)
+        logging.info(f"Template-aware statistieken: {len(collapsed_fields)} ingeklapte velden uitgesloten")
+    
     # Initialiseer summary_stats (zal worden geretourneerd als filled_percentages)
     summary_stats = {
         'counts_mandatory': {
@@ -914,11 +1140,18 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
             'total_defined_optional_fields': 0, 
             'total_possible_optional_occurrences': 0
         },
-        'total_rows_in_df': total_rows
+        'total_rows_in_df': total_rows,
+        'collapsed_fields_count': len(collapsed_fields),
+        'template_context': template_context
     }
 
     # Initialiseer tellers en resultaatlijsten
     for field_name in fields_config:
+        # Skip ingeklapte velden in Template Generator templates
+        if field_name in collapsed_fields:
+            logging.debug(f"Overslaan ingeklapt veld: {field_name}")
+            continue
+            
         # Controleer of 'importance' bestaat en 'Verplicht' is, anders default naar optioneel
         rules = fields_config[field_name]
         is_mandatory = rules.get('importance') == 'Verplicht'
@@ -940,6 +1173,10 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
 
         # Valideer elk veld in de rij
         for field, rules in fields_config.items():
+            # Skip ingeklapte velden in Template Generator templates
+            if field in collapsed_fields:
+                continue
+                
             if field in df.columns:
                 value = row[field]
                 value_str = '' if pd.isnull(value) else str(value).strip()
@@ -1096,6 +1333,10 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
     # 2. Bereken summary_stats NA ALLE validaties ---
     logging.info("Berekenen vullingspercentages...") # Hergebruik logging message, past nu beter
     for field_name, rules in fields_config.items():
+        # Skip ingeklapte velden in Template Generator templates
+        if field_name in collapsed_fields:
+            continue
+            
         is_mandatory = rules.get('importance') == 'Verplicht'
 
         if field_name in df.columns:
@@ -1240,6 +1481,19 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
         # Template-aware mandatory fields bepaling
         ghx_mandatory_fields = determine_mandatory_fields_for_template(input_excel_path)
         logging.info(f"GHX Verplichte velden geladen: {len(ghx_mandatory_fields)} velden.")
+        
+        # Template context extraheren voor rapportage
+        template_context = None
+        if has_template_generator_stamp(input_excel_path):
+            template_context = extract_template_generator_context(input_excel_path)
+            if template_context:
+                # Log product type informatie voor toekomstige cross-validation
+                product_types = template_context.get("product_type", "onbekend")
+                institutions = template_context.get("institutions", [])
+                logging.info(f"Product types: {product_types} (voor toekomstige UNSPSC cross-validatie)")
+                if institutions:
+                    logging.info(f"Instellingen: {', '.join(institutions)}")
+            logging.info("Template Generator context geëxtraheerd voor rapportage")
 
         # 2. Lees Excel in
         logging.info(f"Lezen Excel bestand: {input_excel_path}")
@@ -1321,7 +1575,7 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
         config_for_validation = validation_config_raw if json_version == "v20" else validation_config
         
         results, filled_percentages, red_flag_messages, errors_per_field = validate_dataframe(
-            df, config_for_validation, original_column_mapping
+            df, config_for_validation, original_column_mapping, template_context
         )
 
 
@@ -1355,6 +1609,7 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
             JSON_CONFIG_PATH=validation_json_path, # Nodig voor laden config in rapport
             summary_data=filled_percentages,  # Doorgeven van summary_data
             validation_config=validation_config,  # Genormaliseerde config in plaats van validation_config_raw
+            template_context=template_context,  # Template Generator context voor rapportage
         )
 
         if output_path:

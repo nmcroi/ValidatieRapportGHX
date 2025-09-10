@@ -33,6 +33,43 @@
             "stamp_range": "GHX_STAMP",
             "fallback_to_default": true
         },
+        "collapsed_fields_by_context": {
+            "gs1_mode_none": [
+                "GTIN", "GLN Fabrikant", "GLN Leverancier", "Doelmarkt Landcode",
+                "GS1 Synchronisatie Status", "GDSN Publication Status"
+            ],
+            "non_staffel": [
+                "Hoeveelheid Van", "Hoeveelheid Tot"
+            ],
+            "non_medisch": [
+                "GMDN Code", "EMDN Code", "MDR Klasse"
+            ],
+            "non_lab": [
+                "Chemische Samenstelling", "Gevaarlijke Stoffen Klasse"
+            ]
+        },
+        "institution_mandatory_fields": {
+            "Leiden": ["Duurzaamheid Score", "CO2 Footprint"],
+            "UU": ["Milieu Impact Score"],
+            "AMC": ["Circulaire Economie Score"],
+            "Erasmus": ["Sociale Impact Score"]
+        },
+        "product_type_rules": {
+            "facilitair": {
+                "description": "Facilitaire producten - basis template",
+                "excluded_fields": ["GMDN Code", "EMDN Code", "MDR Klasse"]
+            },
+            "medisch": {
+                "description": "Medische producten - met medische codes",
+                "extra_mandatory": ["GMDN Code"],
+                "excluded_fields": []
+            },
+            "lab": {
+                "description": "Lab producten - met chemische informatie", 
+                "extra_mandatory": ["Chemische Samenstelling"],
+                "excluded_fields": []
+            }
+        },
         "context_rules": {
             "gs1": {
                 "mandatory_fields": ["Artikelnummer", "GTIN", "GLN Fabrikant"],
