@@ -824,42 +824,45 @@ def genereer_rapport(
                     "valign": "vcenter",
                 }
             )
-            fmt_header_red = workbook.add_format(
-                {
-                    "bold": True,
-                    "font_size": 14,
-                    "font_color": "white",      # Was: "#9C0006"
-                    "bg_color": "#D32F2F",      # Was: "#FFC7CE" 
-                    "border": 1,
-                    "valign": "vcenter",
-                    "align": "left",
-                    "indent": 1,  # Inspringing toegevoegd
-                }
-            )
-            fmt_header_blue = workbook.add_format(
-                {
-                    "bold": True,
-                    "font_size": 14,
-                    "font_color": "#FFFFFF",
-                    "bg_color": "#4F81BD",
-                    "border": 1,
-                    "align": "left",
-                    "valign": "vcenter",
-                    "indent": 1,  # Inspringing toegevoegd
-                }
-            )
-            fmt_label_green = workbook.add_format(
-                {"font_size": 12, "bg_color": "#E2EFDA", "border": 1, "indent": 1}
-            )
-            fmt_value_green = workbook.add_format(
-                {
-                    "font_size": 12,
-                    "bg_color": "#E2EFDA",
-                    "border": 1,
-                    "align": "right",
-                    "num_format": "#,##0",
-                }
-            )
+            fmt_header_red = workbook.add_format({
+                "bold": True,
+                "font_size": 14,
+                "font_color": "#FFFFFF",  # Witte tekst
+                "bg_color": "#E06666",  # Lichtere rood voor Aandachtspunten volgens spec
+                "border": 1,
+                "border_color": "#000000",  # Zwarte rand
+                "valign": "vcenter",
+                "align": "left",
+                "indent": 1
+            })
+            fmt_header_blue = workbook.add_format({
+                "bold": True,
+                "font_size": 14,
+                "font_color": "#FFFFFF",  # Witte tekst
+                "bg_color": "#C00000",  # Rood header voor Foutmeldingen volgens spec
+                "border": 1,
+                "border_color": "#000000",  # Zwarte rand
+                "align": "left",
+                "valign": "vcenter",
+                "indent": 1
+            })
+            fmt_label_green = workbook.add_format({
+                "font_size": 12, 
+                "bg_color": "#E2EFDA",  # Groen data achtergrond
+                "font_color": "#000000",  # Zwarte tekst
+                "border": 1,
+                "border_color": "#000000",  # Zwarte rand
+                "indent": 1
+            })
+            fmt_value_green = workbook.add_format({
+                "font_size": 12,
+                "bg_color": "#E2EFDA",  # Groen data achtergrond
+                "font_color": "#000000",  # Zwarte tekst
+                "border": 1,
+                "border_color": "#000000",  # Zwarte rand
+                "align": "right",
+                "num_format": "#,##0"
+            })
             fmt_label_red = workbook.add_format(
                 {"font_size": 12, "bg_color": "#F2DCDB", "border": 1, "indent": 1}
             )  # Zorg dat label format ook bestaat
@@ -930,36 +933,55 @@ def genereer_rapport(
             # Verberg rij 1
             ws_dash.set_row(0, None, None, {"hidden": True})  # Verberg rij 1 (index 0)
 
-            # --- Kolombreedtes Instellen voor nieuwe layout ---
-            # LINKER KANT (A-E): Statistieken + Foutmeldingen
-            ws_dash.set_column("A:A", 90)   # Foutmeldingen beschrijving (90 pixels)
-            ws_dash.set_column("B:B", 10)   # Aantal (65 pixels)
-            ws_dash.set_column("C:C", 5)    # Smaller column C
-            # FOUTMELDINGEN KOLOMMEN: Aangepaste breedtes voor nieuwe layout
-            ws_dash.set_column("D:D", 40)   # Beschrijving deel 1 (D-F samen)
-            ws_dash.set_column("E:E", 40)   # Beschrijving deel 2 (D-F samen)
-            ws_dash.set_column("F:F", 40)   # Beschrijving deel 3 (D-F samen)
-            ws_dash.set_column("G:G", 10)   # Aantal
-            ws_dash.set_column("H:H", 15)   # Type
-            ws_dash.set_column("I:I", 15)   # Type Sheet (aangepast van 10 naar 15)
-            ws_dash.set_column("J:J", 10)   # Foutcode (aangepast van 15 naar 10)
-            ws_dash.set_column("K:K", 20)   # Aandachtspunten deel 5
-            ws_dash.set_column("L:L", 45)   # Aandachtspunten deel 6 (45 pixels)
-            ws_dash.set_column("M:M", 10)   # Foutcode kolom voor aandachtspunten
+            # --- Kolombreedtes Instellen - Kolom opschuiving: nieuwe kolom A (gutter) ---
+            ws_dash.set_column("A:A", 5)    # NIEUWE lege gutter kolom (5 pixels)
+            # ALLE OUDE KOLOMMEN SCHUIVEN 1 NAAR RECHTS:
+            # LINKER KANT (B-F): Statistieken + Foutmeldingen (was A-E)
+            ws_dash.set_column("B:B", 90)   # Statistieken/ontbrekende (was A: 90 pixels)
+            ws_dash.set_column("C:C", 10)   # Statistieken waarden (was B: 10 pixels)  
+            ws_dash.set_column("D:D", 5)    # Smaller column D (was C: 5 pixels)
+            # FOUTMELDINGEN KOLOMMEN: Aangepaste breedtes voor nieuwe layout (alles +1)
+            ws_dash.set_column("E:E", 40)   # Beschrijving deel 1 (was D: 40 pixels)
+            ws_dash.set_column("F:F", 40)   # Beschrijving deel 2 (was E: 40 pixels)
+            ws_dash.set_column("G:G", 40)   # Beschrijving deel 3 (was F: 40 pixels)
+            ws_dash.set_column("H:H", 10)   # Aantal (was G: 10 pixels)
+            ws_dash.set_column("I:I", 15)   # Type (was H: 15 pixels)
+            ws_dash.set_column("J:J", 15)   # Type Sheet (was I: 15 pixels)
+            ws_dash.set_column("K:K", 10)   # Foutcode (was J: 10 pixels)
+            ws_dash.set_column("L:L", 20)   # Aandachtspunten deel 5 (was K: 20 pixels)
+            ws_dash.set_column("M:M", 45)   # Aandachtspunten deel 6 (was L: 45 pixels)
+            ws_dash.set_column("N:N", 10)   # Foutcode kolom aandachtspunten (was M: 10 pixels)
 
-            # --- NIEUWE LAYOUT: Links Statistieken, Rechts Actiepunten ---
-            current_row = 2  # Start schrijven op rij 3 (0-based index 2)
+            # --- TOPMARGE & LOGO: Start content op rij 11+ ---
+            # Reserveer B2:G8 voor logo headerzone (rijen 1-8)  
+            current_row = 10  # Start content op rij 11 (0-based index 10)
             
-            # Nieuw format voor Statistieken header - donkergroen #4f6228
+            # Voeg GAX logo toe op B2 (rij 1, kolom 1)
+            try:
+                logo_path = "/Users/ncroiset/Vibe Coding Projecten/Cursor Projecten/Project PrijsValGem_WS app/static/ghx_logo_2.png"
+                # Plaats logo op B2 met aspect ratio lock en niet gekoppeld aan cellen
+                ws_dash.insert_image("B2", logo_path, {
+                    'positioning': 0,  # Move & size with cells = OFF (absolute positioning)
+                    'x_scale': 0.5,    # Schaal logo naar 50% voor betere pasvorm
+                    'y_scale': 0.5,    # Behoud aspect ratio 
+                })
+            except Exception as logo_err:
+                # Log error maar ga door met rapport generatie
+                logging.warning(f"Logo kon niet worden toegevoegd: {logo_err}")
+            
+            # --- NIEUWE LAYOUT: Links Statistieken, Rechts Actiepunten ---
+            
+            # Nieuw format voor Statistieken header - groen volgens specificaties
             fmt_header_stats = workbook.add_format({
                 'bold': True,
-                'font_color': 'white',
+                'font_color': '#FFFFFF',
                 'font_size': 14,
-                'bg_color': '#4f6228',
+                'bg_color': '#4F6229',  # Groen header
                 'border': 1,
-                'align': 'left',  # Links uitlijnen
+                'border_color': '#000000',  # Zwarte rand
+                'align': 'left',
                 'valign': 'vcenter',
-                'indent': 1  # Kleine inspringing
+                'indent': 1
             })
             
             # LINKER KANT: Statistieken (A3-B3, C blijft leeg)
@@ -980,13 +1002,14 @@ def genereer_rapport(
             # Voeg grijze subheader toe - ALLEEN voor foutmeldingen rechts
             fmt_subheader_grey = workbook.add_format({
                 "bold": True,
-                "bg_color": "#D9D9D9",  # Grijs
-                "font_color": "black",
+                "bg_color": "#D9D9D9",  # Grijs subheader volgens spec
+                "font_color": "#000000",  # Zwarte tekst
                 "border": 1,
-                "font_size": 12,  # Subheader terug naar 12
-                "align": "left",  # Links uitgelijnd
+                "border_color": "#000000",  # Zwarte rand
+                "font_size": 12,
+                "align": "left",
                 "valign": "vcenter",
-                "indent": 1  # Inspringing toegevoegd
+                "indent": 1
             })
             
             # RECHTER KANT: Foutmeldingen subheaders (D-H) - op rij 4
@@ -1048,9 +1071,16 @@ def genereer_rapport(
 
             # --- LINKER KANT: Ontbrekende verplichte kolommen onder Statistieken (A-B) ---
             # Definieer format eerst - met inspringing
-            fmt_missing_col_header = workbook.add_format(
-                {'bold': True, 'font_color': 'white', 'font_size': 14, 'bg_color': '#D32F2F', 'border': 1, 'align': 'left', 'indent': 1}
-            )
+            fmt_missing_col_header = workbook.add_format({
+                'bold': True, 
+                'font_color': '#FFFFFF',  # Witte tekst
+                'font_size': 14, 
+                'bg_color': '#E26B09',  # Oranje header volgens spec
+                'border': 1,
+                'border_color': '#000000',  # Zwarte rand
+                'align': 'left', 
+                'indent': 1
+            })
             
             # Positioneer op A14 (regel 1078 wijzigen): 1 witte regel onder statistieken
             missing_start_row = stats_end_row + 1  # 1 witte regel onder statistieken
@@ -1062,9 +1092,15 @@ def genereer_rapport(
             ws_dash.set_row(missing_start_row, 18)
             
             # Data onder header: schrijf de ontbrekende kolommen
-            fmt_missing_col_item = workbook.add_format(
-                {'color': '#000000', 'bg_color': '#F2DCDB', 'font_size': 12, 'border': 1, 'align': 'left', 'indent': 1}
-            )
+            fmt_missing_col_item = workbook.add_format({
+                'font_color': '#000000',  # Zwarte tekst
+                'bg_color': '#FBD5B5',  # Oranje data achtergrond volgens spec
+                'font_size': 12, 
+                'border': 1,
+                'border_color': '#000000',  # Zwarte rand
+                'align': 'left', 
+                'indent': 1
+            })
             
             missing_data_row = missing_start_row + 1  # Direct onder header
             if M_missing > 0 and missing_mandatory_columns:
@@ -1113,12 +1149,23 @@ def genereer_rapport(
             ]
 
             # Format voor Actiepunten data - met inspringing
-            fmt_action_label = workbook.add_format(
-                {'color': '#000000', 'bg_color': '#F2DCDB', 'font_size': 12, 'border': 1, 'align': 'left', 'indent': 1}
-            )
-            fmt_action_value = workbook.add_format(
-                {'color': '#000000', 'bg_color': '#F2DCDB', 'font_size': 12, 'border': 1, 'align': 'right'}
-            )
+            fmt_action_label = workbook.add_format({
+                'font_color': '#000000',  # Zwarte tekst
+                'bg_color': '#FBD5B5',  # Oranje data achtergrond zoals ontbrekende kolommen
+                'font_size': 12, 
+                'border': 1,
+                'border_color': '#000000',  # Zwarte rand
+                'align': 'left', 
+                'indent': 1
+            })
+            fmt_action_value = workbook.add_format({
+                'font_color': '#000000',  # Zwarte tekst
+                'bg_color': '#FBD5B5',  # Oranje data achtergrond
+                'font_size': 12, 
+                'border': 1,
+                'border_color': '#000000',  # Zwarte rand
+                'align': 'right'
+            })
 
             for key, value in actions_data_original:
                 # Kolom A voor beschrijving, Kolom B voor waarde
@@ -1323,17 +1370,17 @@ def genereer_rapport(
             attention_data_start_row = attention_subheader_row + 1  # Start van data
 
             # Format met RODE rand, font size (aanpassen?), wrap, etc.
-            fmt_attention_item = workbook.add_format(
-                {
-                    "font_size": 12,
-                    "bg_color": "#F2DCDB",  # Licht rood
-                    "border": 1,  # Rand rondom de hele cel
-                    "text_wrap": True,  # Zorg dat tekst terugloopt
-                    "align": "left",
-                    "valign": "top",
-                    "indent": 1,
-                }
-            )
+            fmt_attention_item = workbook.add_format({
+                "font_size": 12,
+                "bg_color": "#F4CCCC",  # Aandachtspunten data achtergrond volgens spec
+                "font_color": "#000000",  # Zwarte tekst
+                "border": 1,
+                "border_color": "#000000",  # Zwarte rand
+                "text_wrap": True,
+                "align": "left",
+                "valign": "top",
+                "indent": 1
+            })
 
             # Controleer of er aandachtspunten zijn
             current_attention_row = attention_data_start_row
@@ -1517,14 +1564,19 @@ def genereer_rapport(
                 'border': {'color': '#D32F2F', 'width': 2},  # Rode rand, 2px
                 'fill':   {'color': '#FFFFFF'}  # Witte achtergrond
             })
-            ws_dash.insert_chart(f"A{chart_start_row + 1}", stacked_chart)  # Terug naar kolom A
+            ws_dash.insert_chart(f"B{chart_start_row + 1}", stacked_chart)  # Kolom B (na gutter A)
 
             # Donut charts verwijderd - alleen tabellen blijven bestaan voor overzicht
             # Data blijft beschikbaar in donut_mand_row en donut_all_row tabellen
             
-            # --- EINDE DASHBOARD: Nu rijhoogtes forceren voor eerste 50 rijen ---
-            for row in range(1, 51):  # Rijen 2-51 (0-based: 1-50) - laatste override
+            # --- EINDE DASHBOARD: Nu rijhoogtes forceren voor content rijen (vanaf rij 11) ---
+            # Eerste 50 rijen van content (rij 11-60) krijgen hoogte 18
+            for row in range(10, 60):  # Rijen 11-60 (0-based: 10-59) - content area
                 ws_dash.set_row(row, 18)
+            
+            # Header area (rijen 1-10) blijft standaard hoogte voor logo ruimte
+            for row in range(0, 10):  # Rijen 1-10 (0-based: 0-9) - header area
+                ws_dash.set_row(row, None)  # Standaard rijhoogte
             
             pass
 
