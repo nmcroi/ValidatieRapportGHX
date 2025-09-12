@@ -9,4 +9,9 @@ __pycache__/
 # macOS system files
 .DS_Store
 .env
-Project TemplateTree app v3/
+
+# Virtual environments in subprojects
+Project TemplateTree app v3/new_venv/
+Project TemplateTree app v3/venv/
+Project TemplateTree app v3/out/
+validation_venv/

@@ -49,10 +49,12 @@
             ]
         },
         "institution_mandatory_fields": {
-            "Leiden": ["Duurzaamheid Score", "CO2 Footprint"],
-            "UU": ["Milieu Impact Score"],
-            "AMC": ["Circulaire Economie Score"],
-            "Erasmus": ["Sociale Impact Score"]
+            "Leiden": ["Levertijd", "Duurzaamheid Score", "CO2 Footprint"],
+            "UU": ["Levertijd", "Milieu Impact Score"],
+            "AMC": ["Levertijd", "Circulaire Economie Score"],
+            "Erasmus": ["Sociale Impact Score"],
+            "Maastricht": ["Levertijd", "Regionale Inkoop Score"],
+            "Groningen": ["Levertijd", "Noordelijke Samenwerking Score"]
         },
         "product_type_rules": {
             "facilitair": {

@@ -5,7 +5,7 @@ import json
 import pandas as pd
 import re
 from datetime import datetime
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Optional
 import logging
 
 # Importeer de rapporteerfunctie (ervan uitgaande dat die in rapport_utils.py staat)
@@ -144,20 +144,29 @@ def get_institution_mandatory_fields(institutions: List[str]) -> List[str]:
     extra_mandatory = []
     
     try:
-        # Laad institution rules uit template_config.json
-        template_config_path = "template_config.json"
-        if os.path.exists(template_config_path):
-            with open(template_config_path, 'r', encoding='utf-8') as f:
+        # Laad institution rules uit field_validation_v20.json
+        validation_config_path = "field_validation_v20.json"
+        if os.path.exists(validation_config_path):
+            with open(validation_config_path, 'r', encoding='utf-8') as f:
                 config = json.load(f)
             
             institution_rules = config.get("template_generator", {}).get("institution_mandatory_fields", {})
         else:
             # Fallback als config bestand niet bestaat
             institution_rules = {
-                'Leiden': ['Duurzaamheid Score', 'CO2 Footprint'],
-                'UU': ['Milieu Impact Score'],
-                'AMC': ['Circulaire Economie Score'],
-                'Erasmus': ['Sociale Impact Score']
+                'leids_universitair_medisch_centrum_(lumc,_leiden)': ['Levertijd', 'Duurzaamheid Score', 'CO2 Footprint'],
+                'universitair_medisch_centrum_utrecht_(umc_utrecht)': ['Levertijd', 'Milieu Impact Score'],
+                'amsterdam_umc_(locaties_amc_en_vumc)': ['Levertijd', 'Circulaire Economie Score'],
+                'erasmus_mc': ['Sociale Impact Score'],
+                'maastricht_umc+': ['Levertijd', 'Regionale Inkoop Score'],
+                'universitair_medisch_centrum_groningen_(umcg)': ['Levertijd', 'Noordelijke Samenwerking Score'],
+                # Fallback voor oude codes
+                'Leiden': ['Levertijd', 'Duurzaamheid Score', 'CO2 Footprint'],
+                'UU': ['Levertijd', 'Milieu Impact Score'],
+                'AMC': ['Levertijd', 'Circulaire Economie Score'],
+                'Erasmus': ['Sociale Impact Score'],
+                'Maastricht': ['Levertijd', 'Regionale Inkoop Score'],
+                'Groningen': ['Levertijd', 'Noordelijke Samenwerking Score']
             }
         
         for institution in institutions:
@@ -184,12 +193,12 @@ def get_collapsed_fields(template_context: Dict[str, Any]) -> List[str]:
     collapsed_fields = []
     
     try:
-        # Laad collapsed fields configuratie
-        template_config_path = "template_config.json"
+        # Laad collapsed fields configuratie uit field_validation_v20.json
+        validation_config_path = "field_validation_v20.json"
         collapsed_config = {}
         
-        if os.path.exists(template_config_path):
-            with open(template_config_path, 'r', encoding='utf-8') as f:
+        if os.path.exists(validation_config_path):
+            with open(validation_config_path, 'r', encoding='utf-8') as f:
                 config = json.load(f)
             collapsed_config = config.get("template_generator", {}).get("collapsed_fields_by_context", {})
         
@@ -238,13 +247,13 @@ def determine_mandatory_fields_for_template(excel_path: str) -> List[str]:
     3. Oude leverancier templates - Gebruik aanwezige velden
     """
     try:
-        # Laad template configuratie
-        template_config_path = "template_config.json"
-        if not os.path.exists(template_config_path):
-            logging.warning(f"Template config {template_config_path} niet gevonden, gebruik fallback.")
+        # Laad template configuratie uit field_validation_v20.json
+        validation_config_path = "field_validation_v20.json"
+        if not os.path.exists(validation_config_path):
+            logging.warning(f"Validation config {validation_config_path} niet gevonden, gebruik fallback.")
             return get_fallback_mandatory_fields()
         
-        with open(template_config_path, 'r', encoding='utf-8') as f:
+        with open(validation_config_path, 'r', encoding='utf-8') as f:
             template_config = json.load(f)
         
         # SCENARIO 3: Template Generator templates
@@ -1610,6 +1619,7 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
             summary_data=filled_percentages,  # Doorgeven van summary_data
             validation_config=validation_config,  # Genormaliseerde config in plaats van validation_config_raw
             template_context=template_context,  # Template Generator context voor rapportage
+            excel_path=input_excel_path,  # Pad naar origineel Excel bestand voor template detectie
         )
 
         if output_path:

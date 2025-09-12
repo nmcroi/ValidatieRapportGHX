@@ -53,28 +53,42 @@ def suppress_excel_errors(worksheet, max_row=1000, max_col=50):
 # TEMPLATE DETECTIE FUNCTIES  
 # -----------------------------
 
-def has_template_generator_stamp(df: pd.DataFrame) -> bool:
+def has_template_generator_stamp(df: pd.DataFrame, excel_path: str = None) -> bool:
     """
     Detecteert of een DataFrame een Template Generator stamp heeft.
     
-    Phase 1: Simpele heuristiek (later vervangen door stamp reading)
-    Phase 2: Echte stamp detection uit Excel metadata
+    Gebruikt echte stamp detection via Excel metadata wanneer mogelijk.
     """
-    # TODO: Implementeer echte stamp detection
-    # Voor nu: simpele heuristiek gebaseerd op kolom patterns
+    if excel_path:
+        try:
+            import openpyxl
+            wb = openpyxl.load_workbook(excel_path, data_only=True, read_only=True)
+            
+            # Check voor _GHX_META sheet en GHX_STAMP named range
+            has_meta_sheet = "_GHX_META" in wb.sheetnames
+            has_stamp_range = "GHX_STAMP" in wb.defined_names
+            
+            wb.close()
+            
+            # Template Generator stamp vereist beide
+            if has_meta_sheet and has_stamp_range:
+                logging.info("Template Generator stamp gedetecteerd via Excel metadata")
+                return True
+                
+        except Exception as e:
+            logging.warning(f"Fout bij stamp detection: {e}")
     
-    # Template Generator templates hebben vaak unieke kolom combinaties
+    # Fallback: simpele heuristiek gebaseerd op kolom patterns
     tg_indicators = [
         "Context Labels",  # Mogelijk TG kolom
         "Template Preset", # Mogelijk TG kolom  
         "GHX_STAMP",      # Mogelijk TG metadata kolom
     ]
     
-    # Check of specifieke TG indicators aanwezig zijn
     has_tg_indicators = any(col in df.columns for col in tg_indicators)
     
     if has_tg_indicators:
-        logging.info("Template Generator indicatoren gedetecteerd")
+        logging.info("Template Generator indicatoren gedetecteerd via heuristiek")
         return True
         
     return False
@@ -96,7 +110,7 @@ def is_old_template(df: pd.DataFrame) -> bool:
     """
     return not is_new_template(df)
 
-def determine_template_type(df: pd.DataFrame) -> str:
+def determine_template_type(df: pd.DataFrame, excel_path: str = None) -> str:
     """
     Bepaalt het template type op basis van DataFrame kolommen.
     
@@ -106,7 +120,7 @@ def determine_template_type(df: pd.DataFrame) -> str:
         'O'  - Oude GHX template of supplier template
     """
     # Prioriteit 1: Template Generator detection
-    if has_template_generator_stamp(df):
+    if has_template_generator_stamp(df, excel_path):
         logging.info("Template type gedetecteerd: Template Generator (TG)")
         return "TG"
     
@@ -633,6 +647,7 @@ def genereer_rapport(
     errors_per_field: dict = None,
     validation_config: dict = None,  # Geconverteerde config voor Sheet 9
     template_context: dict = None,  # Template Generator context
+    excel_path: str = None,  # Pad naar origineel Excel bestand voor template detectie
 ):
     """
     Genereert het volledige Excel validatierapport, inclusief alle sheets,
@@ -847,7 +862,7 @@ def genereer_rapport(
         )
 
         # Score berekening - Template Type Detectie
-        template_type = determine_template_type(df)  # Nieuwe functie
+        template_type = determine_template_type(df, excel_path)  # Nieuwe functie
 
         percentage_correct = 0
         volledigheids_percentage = 0
@@ -1204,7 +1219,6 @@ def genereer_rapport(
                 aantal_afkeuringen = rejection_rows
 
             # Template context informatie toevoegen
-            template_type_info = "Default Template"
             if template_context:
                 template_choice = template_context.get("template_choice", "besteleenheid")
                 product_type = template_context.get("product_type", "facilitair")
@@ -1218,6 +1232,10 @@ def genereer_rapport(
                 collapsed_count = summary_data.get('collapsed_fields_count', 0)
                 if collapsed_count > 0:
                     template_type_info += f" | {collapsed_count} velden ingeklapt"
+            elif template_type == "TG":
+                template_type_info = "Template Generator"
+            else:
+                template_type_info = "Default Template"
             
             stats_data_original = [
                 ("Template Type", template_type_info),
@@ -1642,7 +1660,11 @@ def genereer_rapport(
             for i, f in enumerate(ghx_mandatory_fields):
                 row_num = bar_chart_row + 1 + i
                 if f not in df.columns:
-                    correct, error, empty, missing = 0, 0, 0, total_rows
+                    # Voor lege templates, toon als "leeg" (geel) in plaats van "missing" (zwart)
+                    if total_rows == 0:
+                        correct, error, empty, missing = 0, 0, 1, 0  # Toon minimaal 1 voor zichtbaarheid
+                    else:
+                        correct, error, empty, missing = 0, 0, 0, total_rows
                 else:
                     filled = filled_counts.get(f, 0)
                     errors = corrected_errors.get(f, 0)
@@ -1650,6 +1672,10 @@ def genereer_rapport(
                     error = errors
                     empty = total_rows - filled
                     missing = 0
+                    
+                    # Voor lege templates met kolommen aanwezig, toon als "leeg"
+                    if total_rows == 0:
+                        empty = 1  # Toon minimaal 1 voor zichtbaarheid
                 ws_dash.write(row_num, 0, f)
                 ws_dash.write(row_num, 1, correct)
                 ws_dash.write(row_num, 2, error)

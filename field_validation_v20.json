@@ -1916,5 +1916,171 @@
             "fields": ["Hoogte", "Breedte", "Diepte"],
             "message": "Minstens één afmeting (hoogte, breedte, of diepte) is ingevuld, maar de set is niet compleet. Voor een volledige specificatie wordt aangeraden alle drie de afmetingen in te vullen."
         }
-    ]
+    ],
+    "template_generator": {
+        "detection": {
+            "stamp_sheet": "_GHX_META",
+            "stamp_range": "GHX_STAMP",
+            "fallback_to_default": true
+        },
+        "institution_mapping": {
+            "amcu": "Amsterdam UMC (AMC & VUmc)",
+            "lumc": "Leids Universitair Medisch Centrum (LUMC)",
+            "mumc": "Maastricht UMC+",
+            "umcg": "Universitair Medisch Centrum Groningen (UMCG)",
+            "umcu": "Universitair Medisch Centrum Utrecht (UMCU)",
+            "pmc": "Prinses Máxima Centrum",
+            "pb": "Prothya Biosolutions",
+            "sq": "Sanquin",
+            "ul": "Universiteit Leiden",
+            "uu": "Universiteit Utrecht",
+            "uva": "Universiteit van Amsterdam",
+            "zxl": "Zorgservice XL",
+            "algemeen": "Algemeen gebruik"
+        },
+        "collapsed_fields_by_context": {
+            "gs1_mode_none": [
+                "GTIN", "GLN Fabrikant", "GLN Leverancier", "Doelmarkt Landcode",
+                "GS1 Synchronisatie Status", "GDSN Publication Status"
+            ],
+            "non_staffel": [
+                "Hoeveelheid Van", "Hoeveelheid Tot"
+            ],
+            "non_medisch": [
+                "GMDN Code", "EMDN Code", "MDR Klasse"
+            ],
+            "non_lab": [
+                "Chemische Samenstelling", "Gevaarlijke Stoffen Klasse"
+            ]
+        },
+        "institution_mandatory_fields": {
+            "lumc": ["Levertijd"],
+            "umcu": ["Levertijd"], 
+            "amcu": ["Levertijd"],
+            "mumc": ["Levertijd"],
+            "umcg": ["Levertijd"],
+            "sq": ["Bevat het Artikel Menselijk Weefsel"]
+        },
+        "product_type_code_mapping": {
+            "F": "Alleen Facilitair",
+            "M": "Alleen Medisch", 
+            "L": "Alleen Lab",
+            "O": "Alleen Overige",
+            "FM": "Facilitair + Medisch",
+            "FL": "Facilitair + Lab",
+            "FO": "Facilitair + Overige",
+            "ML": "Medisch + Lab",
+            "MO": "Medisch + Overige",
+            "LO": "Lab + Overige",
+            "FML": "Facilitair + Medisch + Lab",
+            "FMO": "Facilitair + Medisch + Overige",
+            "FLO": "Facilitair + Lab + Overige",
+            "MLO": "Medisch + Lab + Overige",
+            "FMLO": "Alle vier product types",
+            "N": "Geen product types geselecteerd"
+        },
+        "product_type_rules": {
+            "facilitair": {
+                "description": "Facilitaire producten - basis template",
+                "excluded_fields": ["GMDN Code", "EMDN Code", "MDR Klasse"]
+            },
+            "medisch": {
+                "description": "Medische producten - met medische codes",
+                "extra_mandatory": ["GMDN Code"],
+                "excluded_fields": []
+            },
+            "lab": {
+                "description": "Lab producten - met chemische informatie", 
+                "extra_mandatory": ["Chemische Samenstelling"],
+                "excluded_fields": []
+            }
+        },
+        "context_rules": {
+            "gs1": {
+                "mandatory_fields": ["Artikelnummer", "GTIN", "GLN Fabrikant"],
+                "excluded_fields": ["EMDN Code", "GMDN Code"],
+                "excluded_from_stats": ["EMDN Code", "GMDN Code"]
+            },
+            "medisch": {
+                "mandatory_fields": ["Artikelnummer", "GMDN Code", "EMDN Code"],
+                "excluded_fields": ["GTIN"],
+                "excluded_from_stats": ["GTIN"]
+            }
+        },
+        "code_system": {
+            "description": "Template Generator configuratie codes - Format: S-PT-CHEM-STAF-GS1-INST-V91-M20",
+            "version": "2.0.0",
+            "format_positions": {
+                "1": {
+                    "name": "template_type",
+                    "options": {
+                        "S": "Standard template", 
+                        "F": "Staffel template"
+                    }
+                },
+                "2": {
+                    "name": "product_types",
+                    "description": "Uses product_type_code_mapping above",
+                    "examples": ["F", "M", "L", "O", "FM", "FML", "FMLO"]
+                },
+                "3": {
+                    "name": "chemicals",
+                    "options": {
+                        "0": "Geen chemicals",
+                        "1": "Met chemicals"
+                    }
+                },
+                "4": {
+                    "name": "staffel",
+                    "options": {
+                        "0": "Geen staffel",
+                        "1": "Met staffel"
+                    }
+                },
+                "5": {
+                    "name": "gs1_mode",
+                    "options": {
+                        "0": "none - Nee, alleen voor GHX",
+                        "1": "gs1 - Ja, ook aanleveren aan GS1 GDSN"
+                    }
+                },
+                "6": {
+                    "name": "institutions",
+                    "description": "Specifieke institution codes, gescheiden door +. Uses institution_mapping above",
+                    "examples": ["none", "algemeen", "umcu", "lumc", "amcu+lumc+mumc"]
+                },
+                "7-8": {
+                    "name": "statistics",
+                    "format": "V{visible_count}-M{mandatory_count}",
+                    "description": "Visible en mandatory fields counts"
+                }
+            },
+            "changelog": {
+                "v2.0.0": "Removed orderable position (was between chemicals and staffel), condensed format",
+                "v1.0.0": "Original format with orderable position"
+            }
+        }
+    },
+    "default_template": {
+        "name": "GHX Standard Template v2.0",
+        "mandatory_fields": [
+            "Artikelnummer",
+            "Artikelnaam", 
+            "Brutoprijs",
+            "Nettoprijs",
+            "Is BestelbareEenheid",
+            "Is BasisEenheid",
+            "Omschrijving Verpakkingseenheid",
+            "UOM Code Verpakkingseenheid",
+            "Inhoud Verpakkingseenheid",
+            "UOM Code Basiseenheid",
+            "Inhoud Basiseenheid",
+            "UOM Code Inhoud Basiseenheid",
+            "Omrekenfactor",
+            "GHX BTW Code",
+            "UNSPSC Code",
+            "Startdatum Prijs Artikel",
+            "Einddatum Prijs Artikel"
+        ]
+    }
 }
