@@ -93,6 +93,86 @@ def has_template_generator_stamp(df: pd.DataFrame, excel_path: str = None) -> bo
         
     return False
 
+def extract_template_generator_info(excel_path: str) -> Dict[str, Any]:
+    """
+    Extraheert uitgebreide Template Generator informatie inclusief parsed codes.
+    
+    Args:
+        excel_path: Pad naar Excel bestand
+        
+    Returns:
+        Dictionary met template informatie of empty dict bij fout
+    """
+    try:
+        from pathlib import Path
+        import sys
+        import os
+        
+        # Setup path voor stamp module import
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        template_tree_path = os.path.join(project_root, "Project TemplateTree app v3", "src")
+        
+        if template_tree_path not in sys.path:
+            sys.path.append(template_tree_path)
+        
+        try:
+            from stamp import TemplateStamp, TemplateCodeParser
+        except ImportError:
+            logging.warning("Kon stamp module niet importeren voor rapport template info")
+            return {}
+        
+        # Laad field validation config voor code parsing
+        field_validation_config = None
+        validation_config_path = os.path.join(project_root, "field_validation_v20.json")
+        if os.path.exists(validation_config_path):
+            with open(validation_config_path, 'r', encoding='utf-8') as f:
+                field_validation_config = json.load(f)
+        
+        # Extracteer stamp informatie
+        stamp_data = TemplateStamp.extract_stamp(Path(excel_path), field_validation_config)
+        
+        if not stamp_data:
+            return {}
+            
+        context_dict, preset_code, parsed_code = stamp_data
+        
+        # Bouw template informatie op
+        template_info = {
+            "has_stamp": True,
+            "preset_code": preset_code,
+            "is_valid": False,
+            "context": {},
+            "parsed_code": {}
+        }
+        
+        if context_dict:
+            template_info["context"] = context_dict.get("context", {})
+            template_info["generator_info"] = context_dict.get("generator", {})
+        
+        if parsed_code:
+            template_info["parsed_code"] = parsed_code
+            template_info["template_type"] = parsed_code.get("template_type", "unknown")
+            template_info["product_types"] = parsed_code.get("product_types", [])
+            template_info["institutions"] = parsed_code.get("institutions", [])
+            template_info["gs1_mode"] = parsed_code.get("gs1_mode", "none")
+            template_info["statistics"] = parsed_code.get("statistics", {})
+            
+            # Cross-validatie indien beide beschikbaar
+            if context_dict and preset_code:
+                original_context = context_dict.get("context", {})
+                is_valid, errors = TemplateCodeParser.validate_code_against_context(preset_code, original_context)
+                template_info["is_valid"] = is_valid
+                template_info["validation_errors"] = errors
+            else:
+                template_info["is_valid"] = True
+        
+        logging.info(f"Template Generator info geëxtraheerd: {preset_code}")
+        return template_info
+        
+    except Exception as e:
+        logging.error(f"Fout bij extracten Template Generator info: {e}")
+        return {}
+
 def is_new_template(df: pd.DataFrame) -> bool:
     """
     Bepaalt of een DataFrame een nieuwe GHX template structuur heeft.
@@ -110,27 +190,115 @@ def is_old_template(df: pd.DataFrame) -> bool:
     """
     return not is_new_template(df)
 
-def determine_template_type(df: pd.DataFrame, excel_path: str = None) -> str:
+def determine_template_type(df: pd.DataFrame, excel_path: str = None) -> Tuple[str, Dict[str, Any]]:
     """
-    Bepaalt het template type op basis van DataFrame kolommen.
+    Bepaalt het template type op basis van DataFrame kolommen en extraheert metadata.
     
     Returns:
-        'TG' - Template Generator gegenereerde template
-        'N'  - Nieuwe GHX standaard template  
-        'O'  - Oude GHX template of supplier template
+        Tuple van (template_type, template_info)
+        template_type:
+            'TG' - Template Generator gegenereerde template
+            'N'  - Nieuwe GHX standaard template  
+            'O'  - Oude GHX template of supplier template
+        template_info: Dictionary met template metadata
     """
-    # Prioriteit 1: Template Generator detection
+    # Prioriteit 1: Template Generator detection met uitgebreide info
     if has_template_generator_stamp(df, excel_path):
-        logging.info("Template type gedetecteerd: Template Generator (TG)")
-        return "TG"
+        template_info = extract_template_generator_info(excel_path) if excel_path else {}
+        
+        # Enhanced logging voor Template Generator templates
+        if template_info.get("preset_code"):
+            preset_code = template_info["preset_code"]
+            product_types = template_info.get("product_types", [])
+            institutions = template_info.get("institutions", [])
+            
+            logging.info(f"Template Generator gedetecteerd: {preset_code}")
+            if product_types:
+                logging.info(f"Product types: {', '.join(product_types)}")
+            if institutions:
+                logging.info(f"Instellingen: {', '.join(institutions)}")
+        else:
+            logging.info("Template Generator stamp gedetecteerd (geen code info)")
+        
+        return "TG", template_info
     
     # Prioriteit 2: Nieuwe vs Oude template
+    template_info = {
+        "has_stamp": False,
+        "template_type": "standard" if is_new_template(df) else "legacy"
+    }
+    
     if is_new_template(df):
         logging.info("Template type gedetecteerd: Nieuwe GHX template (N)")
-        return "N"
+        return "N", template_info
     else:
         logging.info("Template type gedetecteerd: Oude/Supplier template (O)")
-        return "O"
+        return "O", template_info
+
+def get_template_display_info(template_type: str, template_info: Dict[str, Any]) -> Dict[str, str]:
+    """
+    Genereert display informatie voor template in rapport.
+    
+    Args:
+        template_type: Template type code ('TG', 'N', 'O')
+        template_info: Template metadata dictionary
+        
+    Returns:
+        Dictionary met display informatie voor rapport
+    """
+    display_info = {
+        "type_description": "",
+        "code_info": "",
+        "context_info": "",
+        "institution_info": "",
+        "statistics_info": ""
+    }
+    
+    try:
+        if template_type == "TG":
+            # Template Generator info
+            preset_code = template_info.get("preset_code", "UNKNOWN")
+            display_info["type_description"] = f"Template Generator Template ({preset_code})"
+            
+            if template_info.get("parsed_code"):
+                parsed = template_info["parsed_code"]
+                
+                # Code components
+                template_choice = parsed.get("template_type", "standard")
+                gs1_mode = parsed.get("gs1_mode", "none")
+                product_types = parsed.get("product_types", [])
+                
+                display_info["code_info"] = f"Type: {template_choice.capitalize()}, GS1: {gs1_mode}"
+                
+                # Product types
+                if product_types:
+                    display_info["context_info"] = f"Product types: {', '.join(product_types).title()}"
+                
+                # Institutions
+                institutions = parsed.get("institutions", [])
+                if institutions:
+                    display_info["institution_info"] = f"Instellingen: {', '.join(institutions).upper()}"
+                
+                # Statistics
+                stats = parsed.get("statistics", {})
+                if stats:
+                    visible = stats.get("visible_fields", 0)
+                    mandatory = stats.get("mandatory_fields", 0)
+                    display_info["statistics_info"] = f"Velden: {visible} zichtbaar, {mandatory} verplicht"
+            
+        elif template_type == "N":
+            display_info["type_description"] = "Nieuwe GHX Standaard Template"
+            display_info["context_info"] = "17 verplichte velden, alle product types"
+            
+        elif template_type == "O":
+            display_info["type_description"] = "Oude GHX Template / Supplier Template"
+            display_info["context_info"] = "Backwards compatibility modus"
+    
+    except Exception as e:
+        logging.error(f"Fout bij genereren template display info: {e}")
+        display_info["type_description"] = f"Template Type {template_type}"
+    
+    return display_info
 
 # --- Configuratie Constanten (Vervangen globale variabelen uit notebook) ---
 # Deze kunnen later eventueel uit een centraal config bestand of env variabelen komen
@@ -156,14 +324,14 @@ def load_validation_config(json_path):
         with open(json_path, "r", encoding="utf-8") as file:
             return json.load(file)
     except FileNotFoundError:
-        print(f"FOUT: Validatie configuratiebestand niet gevonden op {json_path}")
+        logging.error(f"Validatie configuratiebestand niet gevonden op {json_path}")
         # Je zou hier kunnen kiezen om een lege config terug te geven of de error te raisen
         # raise
         return (
             {}
         )  # Geeft lege dictionary terug om door te gaan, maar rapport kan incompleet zijn
     except json.JSONDecodeError:
-        print(f"FOUT: Ongeldig JSON-formaat in {json_path}")
+        logging.error(f"Ongeldig JSON-formaat in {json_path}")
         # raise
         return {}
 
@@ -203,8 +371,13 @@ def update_validation_log(
     # Kwaliteit score (0-50 punten) - gebaseerd op percentage correct 
     quality_score = (percentage_correct / 100) * 50 if percentage_correct > 0 else 0
     
-    # Template bonus (0-10 punten)  
-    template_bonus = 10 if template_type == "N" else 5  # Nieuwe template krijgt bonus
+    # Template bonus (0-15 punten) - Enhanced voor Template Generator
+    if template_type == "TG":
+        template_bonus = 15  # Template Generator krijgt hoogste bonus
+    elif template_type == "N":
+        template_bonus = 10  # Nieuwe template krijgt goede bonus
+    else:
+        template_bonus = 5   # Oude template krijgt basis bonus
     
     # Totaal score (0-100)
     total_score = min(100, completeness_score + quality_score + template_bonus)
@@ -242,7 +415,7 @@ def update_validation_log(
         "Score": score,
         "Rijen": total_rows,
         "Kolommen": total_cols,
-        "Template Type": "Nieuw" if template_type == "N" else "Oud",
+        "Template Type": "Template Generator" if template_type == "TG" else "Nieuw" if template_type == "N" else "Oud",
         "Verplichte kolommen Aanwezig": present_columns_count,  # Hernoemd voor duidelijkheid
         "Verplichte kolommen Ontbrekend": M_missing,  # Hernoemd voor duidelijkheid
         # Verplichte velden statistieken
@@ -278,8 +451,8 @@ def update_validation_log(
                     if col not in existing_df.columns:
                         existing_df[col] = pd.NA  # Gebruik NA voor missende waarden
             except Exception as e:
-                print(
-                    f"Waarschuwing: Kon bestaand validatielogboek niet lezen ({VALIDATION_LOG_FILE}): {e}"
+                logging.warning(
+                    f"Kon bestaand validatielogboek niet lezen ({VALIDATION_LOG_FILE}): {e}"
                 )
                 existing_df = pd.DataFrame(columns=list(new_row_data.keys()))
         else:
@@ -343,10 +516,10 @@ def update_validation_log(
                 },
             )
 
-        print(f"Validatie toegevoegd aan logboek: {VALIDATION_LOG_FILE}")
+        logging.info(f"Validatie toegevoegd aan logboek: {VALIDATION_LOG_FILE}")
 
     except Exception as e:
-        print(f"Fout bij het bijwerken van het validatielogboek: {e}")
+        logging.error(f"Fout bij het bijwerken van het validatielogboek: {e}")
 
 
 def add_colored_dataset_sheet(
@@ -357,6 +530,7 @@ def add_colored_dataset_sheet(
     original_column_mapping,
     JSON_CONFIG_PATH,
     validation_config=None,
+    template_context=None,
 ):
     """Voeg een sheet toe met de volledige dataset in kleurcodering."""
     # Gebruik de doorgegeven validation_config of val terug op laden van bestand
@@ -366,8 +540,8 @@ def add_colored_dataset_sheet(
         # Fallback: laad van bestand (backwards compatibility)
         config = load_validation_config(JSON_CONFIG_PATH)
         if not config:  # Als config laden mislukt is
-            print(
-                "WARNING: Kan gekleurde dataset sheet niet toevoegen omdat validatie config mist."
+            logging.warning(
+                "Kan gekleurde dataset sheet niet toevoegen omdat validatie config mist."
             )
             return
 
@@ -382,14 +556,12 @@ def add_colored_dataset_sheet(
         ]
     )
 
-    if not is_new_template:
-        print(
-            "INFO: Gekleurde dataset sheet (9) wordt overgeslagen, lijkt geen nieuwe template te zijn."
-        )
-        return  # Geen sheet toevoegen als oude template
+    # Dataset Validatie sheet is nu beschikbaar voor ALLE template types
+    # Geen beperking meer op basis van is_new_template
+    logging.info("Genereren Dataset Validatie sheet voor alle template types.")
 
     try:
-        worksheet = workbook.add_worksheet("9. Dataset Validatie")
+        worksheet = workbook.add_worksheet("7. Dataset Validatie")
         
         # Onderdruk Excel groene driehoekjes
         suppress_excel_errors(worksheet, max_row=len(df)+10, max_col=len(df.columns)+5)
@@ -532,8 +704,20 @@ def add_colored_dataset_sheet(
                             error_lookup[row_idx] = set()
                         error_lookup[row_idx].add(col_idx)
 
-        # Schrijf headers
-        for col, header in enumerate(df.columns):
+        # Bepaal welke kolommen zichtbaar zijn (Template Generator filtering)
+        visible_columns = list(df.columns)
+        if template_context and template_context.get("decisions"):
+            decisions = template_context.get("decisions", {})
+            visible_list = decisions.get("visible_list", [])
+            # Filter kolommen gebaseerd op visible_list uit Template Generator  
+            visible_columns = [col for col in df.columns if col in visible_list or col == "Legenda:"]
+            # Template Generator kolom filtering toegepast
+        else:
+            # Template Generator filtering overgeslagen
+            visible_columns = df.columns
+        
+        # Schrijf alleen zichtbare headers
+        for col, header in enumerate(visible_columns):
             worksheet.write(start_row, col, str(header), header_format)
 
         # Schrijf data met kleuren (limiteer rijen)
@@ -558,8 +742,10 @@ def add_colored_dataset_sheet(
             )
 
         for row_idx in range(max_rows_sheet):
-            for col_idx, field_name in enumerate(df.columns):
-                value = df.iloc[row_idx, col_idx]
+            for col_idx, field_name in enumerate(visible_columns):
+                # Get original column index for df.iloc
+                orig_col_idx = df.columns.get_loc(field_name)
+                value = df.iloc[row_idx, orig_col_idx]
                 value_str = "" if pd.isna(value) else str(value).strip()
                 is_empty = value_str == ""
 
@@ -588,13 +774,13 @@ def add_colored_dataset_sheet(
                 cell_format = correct_format  # Default
                 if (
                     row_idx in uom_relation_error_lookup
-                    and col_idx in uom_relation_error_lookup[row_idx]
+                    and orig_col_idx in uom_relation_error_lookup[row_idx]
                 ):
                     cell_format = uom_relation_error_format
                 elif is_empty and (is_mandatory or has_dependency):
                     # PRIORITEIT: Verplichte velden die leeg zijn zijn ALTIJD geel
                     cell_format = empty_mandatory_format
-                elif row_idx in error_lookup and col_idx in error_lookup[row_idx]:
+                elif row_idx in error_lookup and orig_col_idx in error_lookup[row_idx]:
                     # Onderscheid maken tussen verplichte en niet-verplichte fouten
                     if is_mandatory:
                         cell_format = error_format  # Rood voor verplichte fouten
@@ -607,8 +793,14 @@ def add_colored_dataset_sheet(
                 )
 
         # Stel kolombreedte in - A is al ingesteld op 25, rest op 20
-        if len(df.columns) > 1:
-            worksheet.set_column(1, len(df.columns) - 1, 20)
+        if len(visible_columns) > 1:
+            worksheet.set_column(1, len(visible_columns) - 1, 20)
+
+        # Voeg Excel AutoFilter toe voor betere filtering mogelijkheden
+        # AutoFilter bereik: van header rij tot laatste data rij
+        last_col = len(visible_columns) - 1
+        last_row = start_row + max_rows_sheet  # start_row + aantal data rijen
+        worksheet.autofilter(start_row, 0, last_row, last_col)
 
         worksheet.write(
             start_row - 1,
@@ -618,12 +810,12 @@ def add_colored_dataset_sheet(
         )
 
     except Exception as e:
-        print(f"Fout tijdens genereren gekleurde dataset sheet: {e}")
+        logging.error(f"Fout tijdens genereren gekleurde dataset sheet: {e}")
         # Optioneel: voeg een sheet toe met de foutmelding
         try:
-            error_sheet = workbook.add_worksheet("9. Dataset Fout")
+            error_sheet = workbook.add_worksheet("8. Dataset Fout")
             suppress_excel_errors(error_sheet)
-            error_sheet.write(0, 0, f"Kon '9. Dataset Validatie' sheet niet genereren.")
+            error_sheet.write(0, 0, f"Kon '7. Dataset Validatie' sheet niet genereren.")
             error_sheet.write(1, 0, f"Foutmelding: {e}")
         except:
             pass  # Voorkom errors in de error handling
@@ -655,6 +847,9 @@ def genereer_rapport(
     """
     if errors_per_field is None:
         errors_per_field = {}  # Voorkom None errors
+
+    # Early Template Type Detectie (voorkom UnboundLocalError)
+    template_type, template_info = determine_template_type(df, excel_path)
 
     # Constanten voor rapportage limieten (uit notebook Code 5)
     ERROR_LIMIT = 50000  # Maximaal aantal errors per sheet
@@ -721,7 +916,7 @@ def genereer_rapport(
         else:
             config = load_validation_config(JSON_CONFIG_PATH)
             if not config:
-                print("FOUT: Kan rapport niet genereren zonder validatie configuratie.")
+                logging.error("Kan rapport niet genereren zonder validatie configuratie.")
                 return None
 
         # Check voor v20 vs v18 structuur voor non_mandatory_fields
@@ -735,10 +930,21 @@ def genereer_rapport(
         non_mandatory_fields = [
             f for f in all_fields if f not in ghx_mandatory_fields
         ]
-        present_mandatory_columns = [f for f in ghx_mandatory_fields if f in df.columns]
-        missing_mandatory_columns = [
-            f for f in ghx_mandatory_fields if f not in df.columns
-        ]
+        # Voor TG templates: gebruik template_context mandatory_list
+        # Voor ALT/DT templates: gebruik ghx_mandatory_fields
+        if template_type == "TG" and template_context and "decisions" in template_context:
+            template_mandatory_fields = template_context["decisions"]["mandatory_list"]
+            present_mandatory_columns = [f for f in template_mandatory_fields if f in df.columns]
+            missing_mandatory_columns = [
+                f for f in template_mandatory_fields if f not in df.columns
+            ]
+        else:
+            # ALT/DT templates: gebruik ghx_mandatory_fields
+            present_mandatory_columns = [f for f in ghx_mandatory_fields if f in df.columns]
+            missing_mandatory_columns = [
+                f for f in ghx_mandatory_fields if f not in df.columns
+            ]
+        
         M_found = len(present_mandatory_columns)
         M_missing = len(missing_mandatory_columns)
 
@@ -780,7 +986,13 @@ def genereer_rapport(
 
         # Statistieken voor Blok 2 ("Actiepunten" uit origineel)
         aantal_leeg_incl_missing = empty_in_present + (M_missing * total_rows)
-        total_possible_mandatory_fields = len(ghx_mandatory_fields) * total_rows
+        
+        # Voor TG templates: gebruik template_mandatory_fields count
+        # Voor ALT/DT templates: gebruik ghx_mandatory_fields count
+        if template_type == "TG" and template_context and "decisions" in template_context:
+            total_possible_mandatory_fields = len(template_context["decisions"]["mandatory_list"]) * total_rows
+        else:
+            total_possible_mandatory_fields = len(ghx_mandatory_fields) * total_rows
         percentage_ingevuld_incl_missing = (
             (total_filled_in_present / total_possible_mandatory_fields * 100)
             if total_possible_mandatory_fields > 0
@@ -861,8 +1073,15 @@ def genereer_rapport(
             else 0
         )
 
-        # Score berekening - Template Type Detectie
-        template_type = determine_template_type(df, excel_path)  # Nieuwe functie
+        # Score berekening - Enhanced Template Type Detectie (al gedaan aan begin functie)
+        template_display_info = get_template_display_info(template_type, template_info)
+
+        # Voor Template Generator: gebruik gefilterde kolom count
+        if template_context and template_context.get("decisions"):
+            visible_fields_count = template_context["decisions"].get("visible_fields", len(df.columns))
+            total_original_cols = visible_fields_count  # Use filtered count for TG templates
+        else:
+            total_original_cols = len(df.columns)  # Use actual columns for other templates
 
         percentage_correct = 0
         volledigheids_percentage = 0
@@ -884,7 +1103,12 @@ def genereer_rapport(
         # Bereken nieuwe score ook hier voor bestandsnaam
         completeness_score_file = (M_found / len(ghx_mandatory_fields)) * 40 if len(ghx_mandatory_fields) > 0 else 0
         quality_score_file = (percentage_correct / 100) * 50 if percentage_correct > 0 else 0
-        template_bonus_file = 10 if template_type == "N" else 5
+        if template_type == "TG":
+            template_bonus_file = 15
+        elif template_type == "N":
+            template_bonus_file = 10
+        else:
+            template_bonus_file = 5
         total_score_file = min(100, completeness_score_file + quality_score_file + template_bonus_file)
         score_int_file = round(total_score_file)
         score_grade_file = "A+" if score_int_file >= 90 else "A" if score_int_file >= 80 else "B" if score_int_file >= 70 else "C" if score_int_file >= 60 else "D"
@@ -897,7 +1121,7 @@ def genereer_rapport(
         )
         output_path = os.path.join(output_dir, output_filename)
 
-        print(f"Schrijven rapport naar: {output_path}")
+        logging.info(f"Schrijven rapport naar: {output_path}")
         with pd.ExcelWriter(output_path, engine="xlsxwriter") as writer:
             workbook = writer.book
             workbook.set_size(2500, 1500)
@@ -1068,16 +1292,6 @@ def genereer_rapport(
                 'valign': 'vcenter'
             })
             
-            fmt_score_number = workbook.add_format({
-                'font_size': 28,  # Groot numeriek cijfer
-                'font_color': '#1F1F1F',  # Donkere tekst
-                'bold': True,
-                'align': 'center',
-                'valign': 'vcenter',
-                'bg_color': '#F2F2F2',
-                'border': 1,
-                'border_color': '#D0D0D0'
-            })
             
             fmt_score_label = workbook.add_format({
                 'font_size': 12,  # Klein label
@@ -1101,48 +1315,263 @@ def genereer_rapport(
             })
             
             # Bereken scores eerst voor weergave (zonder Config sheet links om pop-up te voorkomen)
+            # Zorg voor fallback waarden - gebruik try/except voor veilige toegang tot variabelen
+            try:
+                M_found_safe = M_found
+            except NameError:
+                M_found_safe = 0
+            
+            try:
+                ghx_mandatory_fields_safe = ghx_mandatory_fields
+            except NameError:
+                ghx_mandatory_fields_safe = []
+            
+            try:
+                df_errors_mand_safe = df_errors_mand
+            except NameError:
+                df_errors_mand_safe = pd.DataFrame()
+            
+            try:
+                df_errors_non_mand_safe = df_errors_non_mand
+            except NameError:
+                df_errors_non_mand_safe = pd.DataFrame()
+            
+            try:
+                total_rows_safe = total_rows
+            except NameError:
+                total_rows_safe = 0
+            
             # Bereken volledigheidscore (0-40 punten)
-            if M_found > 0:
-                volledigheids_percentage = min(100, (M_found / len(ghx_mandatory_fields)) * 100)
+            if M_found_safe > 0 and len(ghx_mandatory_fields_safe) > 0:
+                volledigheids_percentage = min(100, (M_found_safe / len(ghx_mandatory_fields_safe)) * 100)
                 volledigheids_score_display = int((volledigheids_percentage / 100) * 40)
             else:
                 volledigheids_score_display = 0
                 
             # Bereken kwaliteitscore (0-45 punten)  
-            if total_rows > 0:
-                total_fouten_display = len(df_errors_mand) + len(df_errors_non_mand)
-                fout_percentage_display = min(100, (total_fouten_display / total_rows) * 100)
+            if total_rows_safe > 0:
+                total_fouten_display = len(df_errors_mand_safe) + len(df_errors_non_mand_safe)
+                fout_percentage_display = min(100, (total_fouten_display / total_rows_safe) * 100)
                 kwaliteits_score_display = int(max(0, 45 - (fout_percentage_display / 100 * 45)))
             else:
                 kwaliteits_score_display = 45  # Perfect als geen data
                 
             # Template score (10 punten)
-            template_check_display = len(ghx_mandatory_fields) > 0 and M_found >= len(ghx_mandatory_fields) // 2
+            template_check_display = len(ghx_mandatory_fields_safe) > 0 and M_found_safe >= len(ghx_mandatory_fields_safe) // 2
             template_score_display = 10 if template_check_display else 0
             
-            # Versie score (5 punten)
-            versie_score_display = 5
+            # Versie score (5 punten) - voorlopig 5 punten (nieuwste versie)
+            versie_score_display = 5  # Tijdelijke waarde tot versiedetectie geïmplementeerd is
             
-            # Totale score
-            totale_score_display = volledigheids_score_display + kwaliteits_score_display + template_score_display + versie_score_display
+            # Bereken totale score en cijfer
+            totale_score_display = volledigheids_score_display + kwaliteits_score_display + template_score_display
             
-            # Score badge op E2:G4 met SCORE: X/100 format (optie 1)
-            score_grade = "A+" if totale_score_display >= 90 else "A" if totale_score_display >= 80 else "B" if totale_score_display >= 70 else "C" if totale_score_display >= 60 else "D"
+            # Nieuwe cijferlogica: A+ (≥95), A (90-94), B (80-89), C (70-79), D (60-69), E (50-59), F (<50)
+            if totale_score_display >= 95:
+                score_grade = "A+"
+            elif totale_score_display >= 90:
+                score_grade = "A"
+            elif totale_score_display >= 80:
+                score_grade = "B"
+            elif totale_score_display >= 70:
+                score_grade = "C"
+            elif totale_score_display >= 60:
+                score_grade = "D"
+            elif totale_score_display >= 50:
+                score_grade = "E"
+            else:
+                score_grade = "F"
             
-            # Hoofdscore cel E2:G3
-            ws_dash.merge_range("E2:G3", f"KWALITEITSCORE: {totale_score_display}/100 - CIJFER {score_grade}", fmt_score_number)
+            # Bepaal randkleur: groen voor C/B/A/A+, rood voor D/E/F
+            is_passing_grade = score_grade in ["C", "B", "A", "A+"]
+            border_color = "#4f6229" if is_passing_grade else "#c00000"
             
-            # Cijfertoekenning regel (E4:G4) - bold, zwart, groter
+            # Update format voor KWALITEITSCORE met dynamische randkleur
+            fmt_score_number = workbook.add_format({
+                'font_size': 26,
+                'font_color': '#1F1F1F',
+                'bold': True,
+                'align': 'center',
+                'valign': 'vcenter',
+                'bg_color': '#FFFFFF',
+                'top': 2, 'left': 2, 'right': 2,  # Alleen boven/links/rechts rand
+                'top_color': border_color,
+                'left_color': border_color,
+                'right_color': border_color
+            })
+            
+            # Hoofdscore cel E3:F4 (alleen kolommen E en F)
+            ws_dash.merge_range("E3:F4", f"KWALITEITSCORE: {totale_score_display}/100 - CIJFER {score_grade}", fmt_score_number)
+            
+            # Cijfertoekenning regel (E4:F4) - bold, zwart, groter, met dynamische randkleur
             fmt_score_small = workbook.add_format({
                 'font_size': 11,
                 'bold': True,
                 'align': 'center',
                 'valign': 'vcenter',
-                'font_color': '#000000'
+                'font_color': '#000000',
+                'bg_color': '#FFFFFF',  # Witte achtergrond
+                'bottom': 2, 'left': 2, 'right': 2,  # Alleen onder/links/rechts rand
+                'bottom_color': border_color,
+                'left_color': border_color,
+                'right_color': border_color
             })
-            ws_dash.merge_range("E4:G4", f"Cijfer: {score_grade} | A+(90+) A(80-89) B(70-79) C(60-69) D(<60)", fmt_score_small)
+            ws_dash.merge_range("E5:F5", f"Cijfer: {score_grade} | A+(≥95) A(90-94) B(80-89) C(70-79) D(60-69) E(50-59) F(<50)", fmt_score_small)
             
             # --- NIEUWE LAYOUT: Links Statistieken, Rechts Actiepunten ---
+            
+            # --- APARTE TEMPLATE TABEL (voor alle template types) ---
+            template_table_end_row = current_row - 1  # Default: geen template tabel
+            
+            # Template-tabel ALTIJD tonen (voor TG, TD, ALT)
+            if True:  # Altijd uitvoeren
+                # VASTE POSITIES voor Template tabel: rij 8-11 (Excel 8-11)
+                template_start_row = 7  # 0-based rij 7 = Excel rij 8
+                
+                # Template tabel header format - zelfde thema als statistieken
+                fmt_template_header = workbook.add_format({
+                    'bold': True,
+                    'font_color': '#FFFFFF',
+                    'font_size': 14,
+                    'bg_color': '#4F6229',  # Zelfde groen als statistieken
+                    'border': 1,
+                    'border_color': '#000000',
+                    'align': 'left',
+                    'valign': 'vcenter',
+                    'indent': 1
+                })
+                
+                # Template data format - zelfde als statistieken data
+                fmt_template_label = workbook.add_format({
+                    "font_size": 12, 
+                    "bg_color": "#E2EFDA",  # Zelfde groen als statistieken
+                    "font_color": "#000000",
+                    "border": 1,
+                    "border_color": "#000000",
+                    "indent": 1
+                })
+                fmt_template_value = workbook.add_format({
+                    "font_size": 12,
+                    "bg_color": "#E2EFDA",  # Zelfde groen als statistieken
+                    "font_color": "#000000",
+                    "border": 1,
+                    "border_color": "#000000",
+                    "align": "left",  # Links uitlijnen voor template info
+                    "indent": 1  # Inspringen zoals andere tabellen
+                })
+                
+                # Template tabel header - VASTE POSITIE rij 8 (Excel rij 8)
+                ws_dash.merge_range(
+                    f"B{template_start_row + 1}:C{template_start_row + 1}",  # Excel 1-based, rij 8
+                    "Template",
+                    fmt_template_header,
+                )
+                ws_dash.set_row(template_start_row, 18)
+                
+                # ALTIJD EERSTE REGEL: Bestandsnaam 
+                template_filename_row = 8
+                ws_dash.merge_range(
+                    f"B{template_filename_row + 1}:C{template_filename_row + 1}",  # Excel 1-based
+                    bestandsnaam,  # Gebruik originele bestandsnaam
+                    fmt_template_value,
+                )
+                
+                # ALTIJD TWEEDE REGEL: Template Type (alleen het type, geen code)
+                template_type_row = 9
+                # Template Type informatie genereren - alleen het basis type
+                if template_type == "TG":
+                    template_type_display = "Template Generator"
+                elif template_type == "N": 
+                    template_type_display = "Nieuw GHX Template"
+                elif template_type == "O":
+                    template_type_display = "Oud/Leverancier Template"
+                else:
+                    template_type_display = f"Template Type {template_type}"
+                
+                ws_dash.merge_range(
+                    f"B{template_type_row + 1}:C{template_type_row + 1}",  # Excel 1-based
+                    template_type_display,
+                    fmt_template_value,
+                )
+                
+                # EXTRA REGELS ALLEEN VOOR TG TEMPLATES
+                current_template_row = 10  # Start bij rij 10 voor TG-specifieke content
+                
+                if template_type == "TG" and template_context:
+                    # Template Code (zoals S-LM-0-0-0-umcu-V77-M19)  
+                    # Probeer eerst uit template_context, anders uit enhanced template display
+                    template_code = template_context.get("template_code")
+                    if not template_code and template_display_info:
+                        # Parse uit type_description als het daar in staat
+                        type_desc = template_display_info.get("type_description", "")
+                        if "(" in type_desc and ")" in type_desc:
+                            # Bijvoorbeeld: "Template Generator (S-LM-0-0-0-umcu-V77-M19)"
+                            template_code = type_desc.split("(")[1].split(")")[0]
+                    
+                    if not template_code:
+                        template_code = "Onbekende Template Code"
+                        
+                    ws_dash.merge_range(
+                        f"B{current_template_row + 1}:C{current_template_row + 1}",
+                        template_code,
+                        fmt_template_value,
+                    )
+                    current_template_row += 1
+                    
+                    # Template info regels - samengevoegd op één regel
+                    template_info_parts = []
+                    
+                    # Type info
+                    template_choice = template_context.get("template_choice", "unknown")
+                    gs1_mode = template_context.get("gs1_mode", "none")
+                    template_info_parts.append(f"Type: {template_choice.title()}, GS1: {gs1_mode}")
+                    
+                    # Product types
+                    product_types = template_context.get("product_types", [])
+                    if product_types:
+                        if isinstance(product_types, list):
+                            product_types_str = ", ".join([pt.title() for pt in product_types])
+                        else:
+                            product_types_str = str(product_types).title()
+                        template_info_parts.append(f"Product types: {product_types_str}")
+                    
+                    # Institutions
+                    institutions = template_context.get("institutions", [])
+                    if institutions:
+                        if isinstance(institutions, list):
+                            inst_str = ", ".join([inst.upper() for inst in institutions])
+                        else:
+                            inst_str = str(institutions).upper()
+                        template_info_parts.append(f"Instellingen: {inst_str}")
+                    
+                    combined_info = " | ".join(template_info_parts)
+                    ws_dash.merge_range(
+                        f"B{current_template_row + 1}:C{current_template_row + 1}",
+                        combined_info,
+                        fmt_template_value,
+                    )
+                    current_template_row += 1
+                    
+                    # Template velden info
+                    if template_context.get("decisions"):
+                        visible_count = template_context["decisions"].get("visible_fields", 0)
+                        mandatory_list = template_context["decisions"].get("mandatory_list", [])
+                        mandatory_count = len(mandatory_list)
+                        velden_info = f"Velden: {visible_count} zichtbaar, {mandatory_count} verplicht"
+                        ws_dash.merge_range(
+                            f"B{current_template_row + 1}:C{current_template_row + 1}",
+                            velden_info,
+                            fmt_template_value,
+                        )
+                        current_template_row += 1
+                
+                # Template tabel eindigt op huidige rij
+                template_table_end_row = current_template_row
+                
+                # Bereken current_row gebaseerd op Template-tabel grootte
+                # Voor TG: rij 9 (bestandsnaam) + 10 (template type) + extra regels
+                # Voor TD/ALT: rij 9 (bestandsnaam) + 10 (template type)
+                current_row = template_table_end_row + 1  # Stats header na Template-tabel + 1 witregel
             
             # Nieuw format voor Statistieken header - groen volgens specificaties
             fmt_header_stats = workbook.add_format({
@@ -1157,17 +1586,18 @@ def genereer_rapport(
                 'indent': 1
             })
             
-            # LINKER KANT: Statistieken (B9-C9, A blijft gutter)
+            # LINKER KANT: Statistieken (B{current_row}-C{current_row}, A blijft gutter)
             ws_dash.merge_range(
-                f"B{current_row}:C{current_row}",  # B tot C op huidige rij (rij 9, index 8)
+                f"B{current_row+1}:C{current_row+1}",  # B tot C op huidige rij Excel-style (1-based)
                 "Belangrijkste Statistieken",
                 fmt_header_stats,
             )
-            ws_dash.set_row(current_row, 18)  # Hoogte header rij
+            ws_dash.set_row(current_row + 1, 18)  # Hoogte header rij (correct rij)
             
-            # RECHTER KANT: Foutmeldingen header (E9-K9) - header over E t/m K
+            # RECHTER KANT: Foutmeldingen header ALTIJD op rij 7 (Excel rij 8) - GECORRIGEERD
+            fout_header_row = 7  # GECORRIGEERD: rij 7 = Excel rij 8
             ws_dash.merge_range(
-                f"E{current_row}:K{current_row}",  # E tot K op huidige rij (rij 9, index 8)
+                f"E{fout_header_row + 1}:K{fout_header_row + 1}",  # E tot K op rij 8 (Excel 1-based)
                 "Foutmeldingen",
                 fmt_header_blue,  # Blauwe header voor foutmeldingen
             )
@@ -1185,28 +1615,30 @@ def genereer_rapport(
                 "indent": 1
             })
             
-            # RECHTER KANT: Foutmeldingen subheaders (E-K) - direct na main header
-            # Remove current_row += 1 to eliminate gap between header and subheader
+            # RECHTER KANT: Foutmeldingen subheaders ALTIJD op rij 8 (Excel rij 9) - GECORRIGEERD
+            fout_subheader_row = 8  # GECORRIGEERD: rij 8 = Excel rij 9
             # Beschrijving spreidt over E, F, G (was D, E, F)
             ws_dash.merge_range(
-                f"E{current_row+1}:G{current_row+1}",  # E-G voor Beschrijving op huidige Excel rij (1-based)
+                f"E{fout_subheader_row + 1}:G{fout_subheader_row + 1}",  # E-G voor Beschrijving op rij 10
                 "Beschrijving",
                 fmt_subheader_grey
             )
-            ws_dash.write(current_row, 7, "Aantal", fmt_subheader_grey)         # H (was G)
-            ws_dash.write(current_row, 8, "Type", fmt_subheader_grey)           # I (was H)
-            ws_dash.write(current_row, 9, "Type (Sheet)", fmt_subheader_grey)   # J (was I)  
-            ws_dash.write(current_row, 10, "Foutcode", fmt_subheader_grey)      # K (was J)
+            ws_dash.write(fout_subheader_row, 7, "Aantal", fmt_subheader_grey)         # H op rij 10
+            ws_dash.write(fout_subheader_row, 8, "Type", fmt_subheader_grey)           # I op rij 10
+            ws_dash.write(fout_subheader_row, 9, "Type (Sheet)", fmt_subheader_grey)   # J op rij 10
+            ws_dash.write(fout_subheader_row, 10, "Foutcode", fmt_subheader_grey)      # K op rij 10
             ws_dash.set_row(current_row, 18)  # Normale rijhoogte
             
             # Statistieken data begint direct na header op rij 10 (header is rij 9)
             stats_start_row = current_row + 1  # Rij 10 (direct na header rij 9)
             
-            # Nu current_row verhogen naar data rows (na subheader)
-            current_row += 1  # Move to data rows after subheader
+            # GEEN current_row increment hier - data moet DIRECT na header
             aantal_velden_totaal = total_rows * total_original_cols
-            aantal_aanw_verpl_velden = M_found * total_rows
-            aantal_afw_verpl_velden = M_missing * total_rows
+            
+            # CORRECTIE: "Aantal aanwezige/afwezige verplichte velden" betekent KOLOMMEN, niet velden
+            # Voor alle template types: tel alleen kolommen (niet kolommen * rijen)
+            aantal_aanw_verpl_velden = M_found        # Aantal verplichte KOLOMMEN die aanwezig zijn
+            aantal_afw_verpl_velden = M_missing       # Aantal verplichte KOLOMMEN die afwezig zijn
             aantal_aanw_lege_verpl_velden = empty_in_present
 
             # Tel rejection errors (afkeuringen) - alleen regels die door Gatekeeper zouden worden afgewezen
@@ -1218,55 +1650,174 @@ def genereer_rapport(
                 ]["Rij"].nunique()
                 aantal_afkeuringen = rejection_rows
 
-            # Template context informatie toevoegen
-            if template_context:
-                template_choice = template_context.get("template_choice", "besteleenheid")
-                product_type = template_context.get("product_type", "facilitair")
-                institutions = template_context.get("institutions", [])
+            # Enhanced Template informatie met parsed code support
+            if template_type == "TG":
+                # Gebruik enhanced template display info
+                template_type_info = template_display_info.get("type_description", "Template Generator")
                 
-                template_type_info = f"Template Generator - {template_choice} ({product_type})"
-                if institutions:
-                    template_type_info += f" [{', '.join(institutions)}]"
-                    
+                # Voeg code info toe indien beschikbaar
+                if template_display_info.get("code_info"):
+                    template_type_info += f" | {template_display_info['code_info']}"
+                
+                # Voeg context info toe indien beschikbaar
+                if template_display_info.get("context_info"):
+                    template_type_info += f" | {template_display_info['context_info']}"
+                
+                # Voeg institution info toe indien beschikbaar
+                if template_display_info.get("institution_info"):
+                    template_type_info += f" | {template_display_info['institution_info']}"
+                
+                # Voeg statistics info toe indien beschikbaar
+                if template_display_info.get("statistics_info"):
+                    template_type_info += f" | {template_display_info['statistics_info']}"
+                
                 # Voeg ingeklapte velden informatie toe
                 collapsed_count = summary_data.get('collapsed_fields_count', 0)
                 if collapsed_count > 0:
                     template_type_info += f" | {collapsed_count} velden ingeklapt"
-            elif template_type == "TG":
-                template_type_info = "Template Generator"
-            else:
-                template_type_info = "Default Template"
-            
-            stats_data_original = [
-                ("Template Type", template_type_info),
-                ("Aantal rijen", total_rows),
-                ("Aantal kolommen", total_original_cols),
-                ("Aantal velden", aantal_velden_totaal),
-                ("Aantal aanwezige verplichte velden", aantal_aanw_verpl_velden),
-                ("Aantal afwezige verplichte velden", aantal_afw_verpl_velden),
-                ("Aantal gevulde verplichte velden", total_filled_in_present),
-                (
-                    "Aantal aanwezige lege verplichte velden",
-                    aantal_aanw_lege_verpl_velden,
-                ),
-                ("Aantal regels mogelijk afgewezen door Gatekeeper", aantal_afkeuringen),
-            ]
-            # EERSTE PRIORITEIT: Herstel de originele Belangrijkste Statistieken data!
-            # Statistieken data CORRECT positioneren: B=labels, C=numbers, A=gutter
-            # Start direct na header (zelfde rij als header in 0-based indexing)
-            stats_current_row = 8  # Direct na header (Excel rij 9 = 0-based index 8)
-            for key, value in stats_data_original:
-                ws_dash.write(stats_current_row, 1, key, fmt_label_green)      # Kolom B - Labels (was A)
-                
-                # Template Type is string, andere waarden zijn numeriek
-                if key == "Template Type":
-                    ws_dash.write(stats_current_row, 2, value, fmt_value_green)  # String waarde
-                else:
-                    ws_dash.write_number(stats_current_row, 2, value, fmt_value_green)  # Numerieke waarde
                     
-                # Kolom A blijft LEEG als gutter
-                stats_current_row += 1
-            stats_end_row = stats_current_row
+                # Fallback naar legacy template_context indien geen enhanced info
+                if not template_display_info.get("type_description") and template_context:
+                    template_choice = template_context.get("template_choice", "standard")
+                    product_types = template_context.get("product_types", ["facilitair"])
+                    institutions = template_context.get("institutions", [])
+                    
+                    if isinstance(product_types, list):
+                        product_types_str = ", ".join(product_types)
+                    else:
+                        product_types_str = str(product_types)
+                    
+                    template_type_info = "TG"  # Template Generator (kort)
+                        
+            elif template_type == "N":
+                template_type_info = "DT"  # Default Template (kort)
+                    
+            elif template_type == "O":
+                template_type_info = "ALT"  # Alternatief Template (kort)
+            else:
+                template_type_info = "UNK"  # Unknown
+            
+            # Helper functie voor Template Generator header matching
+            def normalize_header_for_matching(header):
+                """Normalize complex Template Generator headers to match mandatory field names"""
+                if pd.isna(header) or not str(header).strip():
+                    return header
+                
+                # Voor Template Generator: neem eerste regel en clean het op
+                cleaned = str(header).split("\n")[0].strip()
+                
+                # Verwijder trailing spaties en extra karakters
+                cleaned = cleaned.rstrip()
+                
+                # Specifieke fixes voor bekende problemen
+                # Fix: "verpakkingseenheid" -> "Verpakkingseenheid" (kapitaal V)
+                if "verpakkingseenheid" in cleaned.lower():
+                    cleaned = cleaned.replace("verpakkingseenheid", "Verpakkingseenheid")
+                    cleaned = cleaned.replace("VERPAKKINGSEENHEID", "Verpakkingseenheid")
+                
+                return cleaned
+            
+            def find_matching_column(mandatory_field, df_columns):
+                """Find a Template Generator column that matches the mandatory field name"""
+                # Probeer eerst exacte match
+                if mandatory_field in df_columns:
+                    return mandatory_field
+                    
+                # Voor Template Generator: probeer normalized matching
+                normalized_mandatory = mandatory_field.strip()
+                
+                for col in df_columns:
+                    normalized_col = normalize_header_for_matching(col)
+                    if normalized_col == normalized_mandatory:
+                        return col
+                        
+                    # Extra check: probeer ook zonder haakjes inhoud te matchen
+                    # bijv. "Brutoprijs" zou matchen met "Brutoprijs (extra tekst)"
+                    base_mandatory = normalized_mandatory.split("(")[0].strip()
+                    base_col = normalized_col.split("(")[0].strip() 
+                    if base_mandatory and base_col == base_mandatory:
+                        return col
+                        
+                return None
+
+            # Voor Template Generator: maak aparte Template tabel (geen Template info in stats)
+            # Voor andere templates: voeg Template Type toe aan statistieken
+            if template_type == "TG" and template_context and template_context.get("decisions"):
+                # Template Generator: start statistieken ZONDER Template info
+                stats_data_original = []
+                # Voor TG templates: gebruik alleen mandatory_list uit decisions
+                tg_mandatory_fields = template_context["decisions"].get("mandatory_list", [])
+                
+                # NIEUWE SLIMME MATCHING voor Template Generator headers
+                matched_fields = []
+                missing_fields = []
+                
+                for mandatory_field in tg_mandatory_fields:
+                    matching_col = find_matching_column(mandatory_field, df.columns)
+                    if matching_col:
+                        matched_fields.append(mandatory_field)
+                        # TG match gevonden voor verplicht veld
+                    else:
+                        missing_fields.append(mandatory_field)
+                        # TG verplicht veld niet gevonden
+                
+                tg_aanwezige_verpl = len(matched_fields)
+                tg_ontbrekende_verpl = len(missing_fields)
+                
+                # Update ook de globale missing_mandatory_columns voor TG templates
+                missing_mandatory_columns = missing_fields
+                present_mandatory_columns = matched_fields
+                
+                # Voor TG templates: gebruik template_context mandatory fields voor berekeningen
+                # Update M_found en M_missing met TG specifieke getallen
+                M_found = tg_aanwezige_verpl      # Voor consistentie met globale variabelen 
+                M_missing = tg_ontbrekende_verpl  # Voor actiepunten en missing kolommen lijst
+                
+                # Nu gebruiken we dezelfde berekening als voor andere templates (maar met updated M_found/M_missing)
+                aantal_aanw_verpl_velden = M_found   # Nu correct omdat M_found is bijgewerkt voor TG
+                aantal_afw_verpl_velden = M_missing  # Nu correct omdat M_missing is bijgewerkt voor TG
+                
+                # Voeg statistieken toe met nu correcte globale variabelen
+                stats_data_original.extend([
+                    ("Aantal rijen", total_rows),
+                    ("Aantal kolommen", total_original_cols),  # Nu gefilterde kolom count voor TG
+                    ("Aantal velden", aantal_velden_totaal),
+                    ("Aantal aanwezige verplichte velden", aantal_aanw_verpl_velden),  # Nu consistent
+                    ("Aantal afwezige verplichte velden", aantal_afw_verpl_velden),    # Nu consistent
+                    ("Aantal gevulde verplichte velden", total_filled_in_present),
+                    ("Aantal aanwezige lege verplichte velden", aantal_aanw_lege_verpl_velden),
+                    ("Aantal regels mogelijk afgewezen door Gatekeeper", aantal_afkeuringen),
+                ])
+            else:
+                # Voor andere templates: start ZONDER Template Type (die staat nu in Template-tabel)
+                stats_data_original = []
+                
+                # Voeg reguliere statistieken toe
+                stats_data_original.extend([
+                    ("Aantal rijen", total_rows),
+                    ("Aantal kolommen", total_original_cols),
+                    ("Aantal velden", aantal_velden_totaal),
+                    ("Aantal aanwezige verplichte velden", aantal_aanw_verpl_velden),
+                    ("Aantal afwezige verplichte velden", aantal_afw_verpl_velden),
+                    ("Aantal gevulde verplichte velden", total_filled_in_present),
+                    ("Aantal aanwezige lege verplichte velden", aantal_aanw_lege_verpl_velden),
+                    ("Aantal regels mogelijk afgewezen door Gatekeeper", aantal_afkeuringen),
+                ])
+            # SIMPELE STATISTIEKEN DATA LOGICA - FINAL CORRECTIE
+            # Header staat op current_row+1, data moet DIRECT daaronder op current_row+1  
+            data_row = current_row + 1  # Start DIRECT na header 
+            
+            for i, (key, value) in enumerate(stats_data_original):
+                row = data_row + i  # Gewoon i toevoegen aan startpositie
+                # Simple mapping: item naar Excel rij
+                
+                # Schrijf label en waarde
+                ws_dash.write(row, 1, key, fmt_label_green)
+                if isinstance(value, (int, float)):
+                    ws_dash.write_number(row, 2, value, fmt_value_green)
+                else:
+                    ws_dash.write(row, 2, str(value), fmt_value_green)
+            stats_end_row = data_row + len(stats_data_original) - 1
 
             # Gebruik actions_end_row van de nieuwe A-B Actiepunten voor aandachtspunten positionering
 
@@ -1283,8 +1834,8 @@ def genereer_rapport(
                 'indent': 1
             })
             
-            # Positioneer op B13 (regel 1078 wijzigen): 1 witte regel onder statistieken
-            missing_start_row = stats_end_row + 1  # 1 witte regel onder statistieken
+            # Positioneer met extra lege rij tussen statistieken en ontbrekende kolommen
+            missing_start_row = stats_end_row + 2  # 1 lege rij onder statistieken + 1 voor header
             ws_dash.merge_range(
                 f"B{missing_start_row+1}:C{missing_start_row+1}",  # B-C, A blijft gutter
                 "Ontbrekende verplichte kolommen",
@@ -1402,9 +1953,9 @@ def genereer_rapport(
                 )
 
             df_foutcodes_top = pd.DataFrame()
-            # Voor foutmeldingen tabel
-            table_subheader_row = current_row - 1  # De subheader rij voor foutmeldingen (row where subheaders were written)
-            table_start_row = current_row + 1  # De rij na de subheader voor foutmeldingen
+            # Voor foutmeldingen tabel - VASTE POSITIES
+            table_subheader_row = 8  # Subheader is altijd op rij 8 (Excel rij 9)
+            table_start_row = 9  # Data begint altijd op rij 9 (Excel rij 10)
             table_end_row = table_start_row + 1  # Default end row
             if not df_errors.empty:
                 # Check of 'code' kolom bestaat voor we verder gaan
@@ -1479,9 +2030,17 @@ def genereer_rapport(
                     for r_idx, row_data in df_foutcodes_top.iterrows():
                         current_table_row = table_header_row + r_idx
                         
+                        # Set row height for better readability
+                        ws_dash.set_row(current_table_row, 18)
+                        
                         # Custom kolom mapping voor nieuwe layout
                         for c_idx, cell_value in enumerate(row_data):
                             col_name = df_foutcodes_top.columns[c_idx]
+                            
+                            # Ensure cell_value is never None or NaN
+                            if pd.isna(cell_value) or cell_value is None:
+                                cell_value = ""
+                            
                             fmt = (
                                 fmt_error_table_code
                                 if col_name == "Foutcode"
@@ -1490,33 +2049,45 @@ def genereer_rapport(
                                 else fmt_error_table_cell
                             )
                             
-                            if col_name == "Beschrijving":
-                                # Beschrijving spreidt over E-G (kolommen 4-6, was 3-5)
-                                ws_dash.merge_range(
-                                    f"E{current_table_row+1}:G{current_table_row+1}",
-                                    str(cell_value),
-                                    fmt
-                                )
-                            elif col_name == "Aantal":
-                                # Aantal naar kolom H (7, was 6)
-                                try:
-                                    num_val = int(cell_value)
-                                    ws_dash.write_number(current_table_row, 7, num_val, fmt)
-                                except (ValueError, TypeError):
-                                    ws_dash.write_string(current_table_row, 7, str(cell_value), fmt)
-                            elif col_name == "Type":
-                                # Type naar kolom I (8, was 7)
-                                ws_dash.write_string(current_table_row, 8, str(cell_value), fmt)
-                            elif col_name == "Type (Sheet)":
-                                # Type (Sheet) naar kolom J (9, was 8)
-                                ws_dash.write_string(current_table_row, 9, str(cell_value), fmt)
-                            elif col_name == "Foutcode":
-                                # Foutcode naar kolom K (10, was 9)
-                                try:
-                                    num_val = int(cell_value)
-                                    ws_dash.write_number(current_table_row, 10, num_val, fmt)
-                                except (ValueError, TypeError):
-                                    ws_dash.write_string(current_table_row, 10, str(cell_value), fmt)
+                            try:
+                                if col_name == "Beschrijving":
+                                    # Beschrijving spreidt over E-G (kolommen 4-6, was 3-5)
+                                    ws_dash.merge_range(
+                                        f"E{current_table_row+1}:G{current_table_row+1}",
+                                        str(cell_value),
+                                        fmt
+                                    )
+                                elif col_name == "Aantal":
+                                    # Aantal naar kolom H (7, was 6)
+                                    try:
+                                        if cell_value != "":
+                                            num_val = int(float(str(cell_value)))  # Handle float strings
+                                            ws_dash.write_number(current_table_row, 7, num_val, fmt)
+                                        else:
+                                            ws_dash.write_string(current_table_row, 7, "0", fmt)
+                                    except (ValueError, TypeError):
+                                        ws_dash.write_string(current_table_row, 7, str(cell_value), fmt)
+                                elif col_name == "Type":
+                                    # Type naar kolom I (8, was 7)
+                                    ws_dash.write_string(current_table_row, 8, str(cell_value), fmt)
+                                elif col_name == "Type (Sheet)":
+                                    # Type (Sheet) naar kolom J (9, was 8)
+                                    ws_dash.write_string(current_table_row, 9, str(cell_value), fmt)
+                                elif col_name == "Foutcode":
+                                    # Foutcode naar kolom K (10, was 9)
+                                    try:
+                                        if cell_value != "":
+                                            num_val = int(float(str(cell_value)))  # Handle float strings
+                                            ws_dash.write_number(current_table_row, 10, num_val, fmt)
+                                        else:
+                                            ws_dash.write_string(current_table_row, 10, "", fmt)
+                                    except (ValueError, TypeError):
+                                        ws_dash.write_string(current_table_row, 10, str(cell_value), fmt)
+                            except Exception as e:
+                                # Fallback: write as string if any formatting fails
+                                logging.warning(f"Error formatting cell {col_name} at row {current_table_row}: {e}")
+                                ws_dash.write_string(current_table_row, 7 if col_name == "Aantal" else 8 if col_name == "Type" else 9 if col_name == "Type (Sheet)" else 10, str(cell_value), fmt_error_table_cell)
+                                
                     table_end_row = table_header_row + len(df_foutcodes_top)
                 else:
                     # 'code' kolom mist - schrijf over E-G (merged)
@@ -1527,13 +2098,15 @@ def genereer_rapport(
                     )
                     table_end_row = table_subheader_row + 1
             else:
-                # Geen fouten - schrijf over E-G (merged)
+                # Geen fouten - schrijf DOORLOPEND over E-K (hele breedte) 
+                # GEBRUIK EEN ANDERE RIJ dan de error data om conflicten te voorkomen
+                geen_fouten_row = table_subheader_row + 2  # Dit is rij 10 (Excel rij 11)
                 ws_dash.merge_range(
-                    f"E{table_subheader_row + 2}:G{table_subheader_row + 2}",  # Na subheader, E-G merged (was D-F)
+                    f"E{geen_fouten_row + 1}:K{geen_fouten_row + 1}",  # E11:K11 om conflicten te vermijden
                     "Geen fouten gevonden",
                     fmt_error_table_cell
                 )
-                table_end_row = table_subheader_row + 1
+                table_end_row = geen_fouten_row
 
             # --- Ontbrekende verplichte kolommen in Kolom D --- #
             # Definieer formats als echte tabel headers (rood met witte letters)
@@ -1544,11 +2117,16 @@ def genereer_rapport(
                 {'color': '#000000', 'bg_color': '#F2DCDB', 'font_size': 12, 'border': 1, 'align': 'left'} # Stijl zoals Actiepunten data
             )
 
-            # Gebruik table_end_row (einde van Foutmeldingen tabel) voor aandachtspunten positionering
-            col_d_end_row = table_end_row  # Voor aandachtspunten positionering
-
-            # --- RECHTER KANT: Aandachtspunten onder Foutmeldingen (D-K) ---
-            attention_start_row = col_d_end_row + 1  # 1 witte regel onder Foutmeldingen
+            # DYNAMISCHE POSITIE voor Aandachtspunten: bereken based op einde van Foutmeldingen data
+            # Minimaal 2 regels ruimte tussen Foutmeldingen en Aandachtspunten
+            if validation_results:
+                # Bereken het einde van de Foutmeldingen tabel
+                foutmeldingen_end_row = table_header_row + len(df_foutcodes_top) - 1  # -1 omdat we bij 0 starten
+                attention_start_row = foutmeldingen_end_row + 2  # 1 lege regel + 1 voor de header
+            else:
+                # Als er geen fouten zijn, start vanaf de "Geen fouten gevonden" regel + 2
+                foutmeldingen_end_row = table_subheader_row + 3  # "Geen fouten gevonden" is nu op rij 11
+                attention_start_row = foutmeldingen_end_row + 2
 
             # Schrijf hoofdheader voor Aandachtspunten (E-K)
             ws_dash.merge_range(
@@ -1588,48 +2166,69 @@ def genereer_rapport(
             if red_flag_messages:
                 # Loop door elke individuele melding (nu dict met message + code)
                 for item in red_flag_messages:
-                    if isinstance(item, dict):
-                        msg = item.get("message", str(item))
-                        code = item.get("code", "")
-                    else:
-                        # Backward compatibility - als het nog een string is
-                        msg = str(item)
-                        code = ""
-                    # Vaste rijhoogte voor alle Aandachtspunten regels
-                    ws_dash.set_row(current_attention_row, 16)
+                    try:
+                        if isinstance(item, dict):
+                            msg = item.get("message", str(item))
+                            code = item.get("code", "")
+                        else:
+                            # Backward compatibility - als het nog een string is
+                            msg = str(item)
+                            code = ""
+                        
+                        # Clean up message and code
+                        if pd.isna(msg) or msg is None:
+                            msg = ""
+                        if pd.isna(code) or code is None:
+                            code = ""
+                            
+                        # Vaste rijhoogte voor alle Aandachtspunten regels
+                        ws_dash.set_row(current_attention_row, 18)  # Increased from 16 for better readability
 
-                    # Schrijf bericht over kolommen E-J (laat K vrij voor foutcode, was D-I)
-                    ws_dash.merge_range(
-                        f"E{current_attention_row+1}:J{current_attention_row+1}",
-                        f"{msg}",
-                        fmt_attention_item,
-                    )
-                    
-                    # Format voor foutcode kolom - rechts uitgelijnd en niet bold
-                    fmt_code_item = workbook.add_format(
-                        {
-                            "font_size": 12,
-                            "bg_color": "#F2DCDB",  # Licht rood (zelfde als message)
-                            "border": 1,
-                            "align": "right",  # Rechts uitlijnen voor codes
-                            "valign": "vcenter",
-                            "bold": False,  # Niet bold
-                        }
-                    )
-                    
-                    # Schrijf foutcode in kolom K
-                    ws_dash.write(
-                        current_attention_row, 10,  # Kolom K (10, was 9)
-                        code if code else "N/A",
-                        fmt_code_item
-                    )
+                        # Schrijf bericht over kolommen E-J (laat K vrij voor foutcode, was D-I)
+                        ws_dash.merge_range(
+                            f"E{current_attention_row+1}:J{current_attention_row+1}",
+                            str(msg),
+                            fmt_attention_item,
+                        )
+                        
+                        # Format voor foutcode kolom - rechts uitgelijnd en niet bold
+                        fmt_code_item = workbook.add_format(
+                            {
+                                "font_size": 12,
+                                "bg_color": "#F2DCDB",  # Licht rood (zelfde als message)
+                                "border": 1,
+                                "align": "right",  # Rechts uitlijnen voor codes
+                                "valign": "vcenter",
+                                "bold": False,  # Niet bold
+                            }
+                        )
+                        
+                        # Schrijf foutcode in kolom K
+                        code_value = str(code) if code else "N/A"
+                        ws_dash.write_string(
+                            current_attention_row, 10,  # Kolom K (10, was 9)
+                            code_value,
+                            fmt_code_item
+                        )
 
-                    current_attention_row += 1  # Ga naar de volgende rij
+                        current_attention_row += 1  # Ga naar de volgende rij
+                        
+                    except Exception as e:
+                        logging.warning(f"Error formatting attention point: {e}")
+                        # Write fallback message
+                        ws_dash.set_row(current_attention_row, 18)
+                        ws_dash.merge_range(
+                            f"E{current_attention_row+1}:J{current_attention_row+1}",
+                            "Error formatting attention point",
+                            fmt_attention_item,
+                        )
+                        ws_dash.write_string(current_attention_row, 10, "ERROR", fmt_attention_item)
+                        current_attention_row += 1
             else:
-                # Geen meldingen: schrijf over kolom D-J
-                ws_dash.set_row(current_attention_row, 16)  # Vaste hoogte 16pt
+                # Geen meldingen: schrijf over kolom E-J (consistent met de rest)
+                ws_dash.set_row(current_attention_row, 18)  # Vaste hoogte 18pt
                 ws_dash.merge_range(
-                    f"D{current_attention_row+1}:J{current_attention_row+1}",  # D-J uniform
+                    f"E{current_attention_row+1}:K{current_attention_row+1}",  # E-K doorlopend (hele breedte)
                     "Geen specifieke aandachtspunten gevonden.",
                     fmt_attention_item,
                 )
@@ -1722,11 +2321,32 @@ def genereer_rapport(
             ws_dash.write_row(donut_all_row + 3, 0, donut_all_data[3])
             total_donut_all = sum(item[1] for item in donut_all_data[1:])
 
-            # --- Grafieken Toevoegen ---
-            # Bepaal de laatste rij van beide kanten (links: foutmeldingen, rechts: aandachtspunten)
-            left_side_end_row = table_end_row  # Einde van foutmeldingen tabel
-            right_side_end_row = attention_end_row  # Einde van aandachtspunten
-            chart_start_row = max(left_side_end_row, right_side_end_row) + 4  # 4 voor echt 3 lege regels onder laatste tabel
+            # --- VERBETERDE Grafieken Positionering ---
+            # Scheid linker en rechter kolom voor betere ruimtebenutting
+            left_table_end_rows = [
+                template_table_end_row,  # Template tabel (indien aanwezig)
+                stats_end_row,      # Statistieken tabel (linksboven)
+                missing_end_row,    # Missing data tabel (links midden)  
+                actions_end_row,    # Actions tabel (links onder)
+            ]
+            right_table_end_rows = [
+                table_end_row,      # Foutmeldingen tabel (rechts boven)
+                attention_end_row   # Aandachtspunten tabel (rechts onder)
+            ]
+            
+            left_max_row = max(left_table_end_rows)
+            right_max_row = max(right_table_end_rows)
+            
+            # Chart positionering volgens gebruikerswens:
+            # "2 regels onder belangrijkste actiepunten, tenzij aandachtspunten lager is"
+            if attention_end_row > actions_end_row:
+                # Aandachtspunten tabel eindigt lager, dus gebruik die als basis
+                chart_start_row = attention_end_row + 3  # 3 voor 2 lege regels
+            else:
+                # Belangrijkste actiepunten eindigt lager of gelijk, gebruik die als basis
+                chart_start_row = actions_end_row + 3  # 3 voor 2 lege regels
+            
+            # Chart positionering logica toegepast
 
             # Grafiek 1: Stacked Bar Verplichte Velden (MET GECORRIGEERDE LEGENDA)
             stacked_chart = workbook.add_chart({"type": "column", "subtype": "stacked"})
@@ -1866,7 +2486,22 @@ def genereer_rapport(
             # Score Uitleg - Gebruik dezelfde scores als in Config sheet en dashboard
             # Deze variabelen zijn al berekend eerder in de functie voor de dashboard badge
             score_int_uitleg = totale_score_display
-            score_grade_uitleg = "A+" if totale_score_display >= 90 else "A" if totale_score_display >= 80 else "B" if totale_score_display >= 70 else "C" if totale_score_display >= 60 else "D"
+            
+            # Gebruik DEZELFDE grading logica als Sheet 1 (Dashboard)
+            if totale_score_display >= 95:
+                score_grade_uitleg = "A+"
+            elif totale_score_display >= 90:
+                score_grade_uitleg = "A"
+            elif totale_score_display >= 80:
+                score_grade_uitleg = "B"
+            elif totale_score_display >= 70:
+                score_grade_uitleg = "C"
+            elif totale_score_display >= 60:
+                score_grade_uitleg = "D"
+            elif totale_score_display >= 50:
+                score_grade_uitleg = "E"
+            else:
+                score_grade_uitleg = "F"
             
             # Maak aparte formats voor mooiere opmaak
             fmt_score_title = workbook.add_format({
@@ -1897,22 +2532,13 @@ def genereer_rapport(
             # Titel apart (bold en groot)
             score_title = f"KWALITEITSSCORE: {score_int_uitleg}/100 ({score_grade_uitleg})"
             
-            # Body tekst (meer uitgebreid maar gestructureerd)
-            score_body_tekst = f"""Deze score wordt berekend op basis van vier componenten:
+            # Compacte score interpretatie tekst - alleen score uitleg
+            score_body_tekst = f"""INTERPRETATIE:
+• A+/A (≥90): Uitstekende kwaliteit - gereed voor Gatekeeper
+• B/C (70-89): Goede kwaliteit - kleine verbeteringen mogelijk  
+• D/E/F (<70): Aandacht vereist - controleer foutmeldingen en aandachtspunten
 
-VOLLEDIGHEID ({volledigheids_score_display}/40 punten)
-Gebaseerd op aanwezige verplichte kolommen: {M_found} van {len(ghx_mandatory_fields)} ({(M_found/len(ghx_mandatory_fields)*100):.0f}%)
-
-KWALITEIT ({kwaliteits_score_display}/45 punten)
-Gebaseerd op juistheid van data-invulling: {juistheid_percentage:.1f}% correcte waarden
-
-TEMPLATE ({template_score_display}/10 punten)
-{"Template herkenning: Juiste GHX velden gevonden" if template_score_display > 0 else "Template herkenning: Onvoldoende GHX velden"}
-
-VERSIE ({versie_score_display}/5 punten)
-{"Nieuwste template versie gedetecteerd" if versie_score_display == 5 else "Oudere template versie gedetecteerd" if versie_score_display > 0 else "Template versie onbekend"}
-
-Cijfertoekenning: A+ (90+), A (80-89), B (70-79), C (60-69), D (<60)"""
+Cijfertoekenning: A+ (≥95), A (90-94), B (80-89), C (70-79), D (60-69), E (50-59), F (<50)"""
             # Titel (bold en groot) - 2 rijen
             ws_inleiding.merge_range(
                 f"A{current_row_intro+1}:B{current_row_intro + 2}",
@@ -1921,184 +2547,100 @@ Cijfertoekenning: A+ (90+), A (80-89), B (70-79), C (60-69), D (<60)"""
             )
             current_row_intro += 3  # 2 rijen titel + 1 witregel
             
-            # Body tekst (uitgebreider) - meer ruimte
+            # Body tekst (zeer compact) - minimale ruimte
             ws_inleiding.merge_range(
-                f"A{current_row_intro+1}:B{current_row_intro + 18}",
+                f"A{current_row_intro+1}:B{current_row_intro + 7}",
                 score_body_tekst,
                 fmt_score_body,
             )
-            current_row_intro += 18
+            current_row_intro += 7
 
             # Witregel
             current_row_intro += 1
 
-            # Bestandsnaam
+            # Bestandsnaam wordt nu getoond in Sheet 1 Template-tabel
+            # Geen bestandsnaam meer in Sheet 2
+            
+            # Witregel (behouden voor spacing)
+            current_row_intro += 1
+
+            # Beknopte introductie - verwijst naar Sheet 1 voor details
+            ws_inleiding.write(
+                f"A{current_row_intro+1}", "Geachte leverancier,", fmt_standard
+            )
+            current_row_intro += 1
             ws_inleiding.write(
                 f"A{current_row_intro+1}",
-                f"VALIDATIE RAPPORT: {bestandsnaam}",
-                fmt_filename,
+                "Hartelijk dank voor de aangeleverde GHX-prijslijsttemplate. In dit rapport vindt u de validatieresultaten en interpretatie van uw gegevens.",
+                fmt_standard,
             )
             current_row_intro += 1
 
-            # Witregel
+            # Witregel voor ademruimte
             current_row_intro += 1
 
-            # Introductie tekst
-            ws_inleiding.write(
-                f"A{current_row_intro+1}", "Geachte leverancier,", fmt_standard
-            )  # Met indent 2
-            current_row_intro += 1
-            ws_inleiding.write(
-                f"A{current_row_intro+1}",
-                "Hartelijk dank voor de aangeleverde GHX-prijslijsttemplate. Wij hebben uw gegevens ontvangen en in dit rapport vindt u de meest relevante validaties, aandachtspunten en verbeteropties.",
-                fmt_standard,
-            )  # Met indent 2
-            current_row_intro += 1
-
-            # Witregel
-            current_row_intro += 1
-
-            # Belangrijkste Punten
-            # Zorg dat deze variabelen bestaan: total_rows, total_original_cols
-            ws_inleiding.write(
-                f"A{current_row_intro+1}",
-                "Hieronder vindt u een overzicht van de belangrijkste punten:",
-                fmt_section_header,
-            )  # Bold, geen indent
-            current_row_intro += 1
-            ws_inleiding.write(
-                f"A{current_row_intro+1}",
-                f"• Aantal rijen in de dataset: {total_rows}",
-                fmt_standard,
-            )  # Met indent 2
-            current_row_intro += 1
-            ws_inleiding.write(
-                f"A{current_row_intro+1}",
-                f"• Aantal kolommen in de dataset: {total_original_cols}",
-                fmt_standard,
-            )  # Met indent 2
-            current_row_intro += 1
-
-            # Witregel
-            current_row_intro += 1
-
-            # Kolommen
-            # Zorg dat deze variabelen bestaan: M_found, M_missing, missing_mandatory_columns
-            ws_inleiding.write(
-                f"A{current_row_intro+1}", "KOLOMMEN:", fmt_section_header
-            )  # Bold, geen indent
-            current_row_intro += 1
-            ws_inleiding.write(
-                f"A{current_row_intro+1}",
-                f"- Aantal aanwezige verplichte kolommen: {M_found}",
-                fmt_standard,
-            )  # Met indent 2
-            current_row_intro += 1
-            ws_inleiding.write(
-                f"A{current_row_intro+1}",
-                f"- Aantal ontbrekende verplichte kolommen: {M_missing}",
-                fmt_standard,
-            )  # Met indent 2
-            current_row_intro += 1
-            if M_missing > 0:
-                missing_cols_list = "\n".join(
-                    [f"  - {c}" for c in missing_mandatory_columns]
-                )
-                ws_inleiding.write(
-                    f"A{current_row_intro+1}",
-                    f"De ontbrekende verplichte kolommen zijn:\n{missing_cols_list}",
-                    fmt_standard,
-                )  # Met indent 2
-                current_row_intro += missing_cols_list.count("\n") + 1
-                ws_inleiding.write(
-                    f"A{current_row_intro+1}",
-                    "We verzoeken u deze kolommen ook aan te leveren.",
-                    fmt_standard,
-                )  # Met indent 2
-                current_row_intro += 1
-
-            # Witregel
-            current_row_intro += 1
-
-            # Velden
-            # Zorg dat deze variabelen bestaan: perc_verpl_gevuld, percentage_incorrect_of_filled_present,
-            # M_found, total_rows, total_filled_in_present, empty_in_present
-            ws_inleiding.write(
-                f"A{current_row_intro+1}", "VELDEN:", fmt_section_header
-            )  # Bold, geen indent
-            current_row_intro += 1
-            ws_inleiding.write(
-                f"A{current_row_intro+1}",
-                f"Van de aanwezige GHX-verplichte velden is {perc_verpl_gevuld:.2f}% gevuld,",
-                fmt_standard,
-            )  # Met indent 2
-            current_row_intro += 1
-            ws_inleiding.write(
-                f"A{current_row_intro+1}",
-                f"waarvan {percentage_incorrect_of_filled_present:.2f}% onjuist is ingevuld.",
-                fmt_standard,
-            )  # Met indent 2
-            current_row_intro += 1
-            ws_inleiding.write(
-                f"A{current_row_intro+1}",
-                f"• Aantal aanwezige verplichte velden: {M_found * total_rows}",
-                fmt_standard,
-            )  # Met indent 2
-            current_row_intro += 1
-            ws_inleiding.write(
-                f"A{current_row_intro+1}",
-                f"• Aantal daadwerkelijk gevulde verplichte velden: {total_filled_in_present}",
-                fmt_standard,
-            )  # Met indent 2
-            current_row_intro += 1
-            ws_inleiding.write(
-                f"A{current_row_intro+1}",
-                f"• Aantal lege verplichte velden: {empty_in_present}",
-                fmt_standard,
-            )  # Met indent 2
-            current_row_intro += 1
-
-            # Witregel
-            current_row_intro += 1
-
-            # Rapport Onderdelen
-            ws_inleiding.write(
-                f"A{current_row_intro+1}",
-                "De rest van dit rapport gaat dieper in op alle validaties en de plekken waar er verbeteringen mogelijk zijn.",
-                fmt_standard,
-            )  # Met indent 2
-            current_row_intro += 1
+            # Rapport Onderdelen - dynamisch gebaseerd op template type
             ws_inleiding.write(
                 f"A{current_row_intro+1}",
                 "Dit rapport bestaat uit de volgende onderdelen:",
                 fmt_section_header,
-            )  # Bold, geen indent
+            )
             current_row_intro += 1
+            
+            # Basis onderdelen (altijd aanwezig)
             rapport_onderdelen = [
-                "1. Dashboard\n   Toont de belangrijkste statistieken en aandachtspunten in één oogopslag, inclusief grafieken en tabellen voor snelle analyse.",
-                "2. Inleiding\n   Biedt een overzicht van het validatierapport, inclusief belangrijke statistieken zoals het aantal rijen en kolommen in de dataset, evenals een samenvatting van de voornaamste bevindingen en aandachtspunten.",
-                "3. Verplichte Fouten\n   Bevat een gedetailleerde lijst van alle aangetroffen fouten in verplichte velden.",
-                "4. Verplichte %\n   Toont statistieken over de volledigheid van de verplichte velden.",
-                "5. Optionele Fouten\n   Bevat een overzicht van fouten die zijn gevonden in optionele velden.",
-                "6. Optionele %\n   Presenteert statistieken over de volledigheid van de optionele velden.",
-                "7. Database Aanpassing\n   Hier leest u welke correcties GHX automatisch doorvoert op sommige aangeleverde data. Dit gebeurt om de data toch te kunnen verwerken. Het is belangrijk dat u hiervan op de hoogte bent, omdat we naar een strenger validatieproces gaan waarbij deze data in de toekomst mogelijk wordt afgekeurd.\n\nOnderstaande tabel toont de automatische aanpassingen die zijn toegepast op basis van de gevonden fouten in uw aanlevering. Probeer deze punten te corrigeren in toekomstige uploads.",
-                "8. Kolom Mapping\n   Geeft een overzicht van de mapping tussen de standaard GHX-kolomnamen en de originele kolomnamen van uw organisatie.",
-                "9. Dataset Validatie\n   Toont een visueel overzicht van de volledige dataset met kleurcodering voor correcte, foutieve en lege velden.",
+                "1. Dashboard\n   Belangrijkste statistieken en aandachtspunten in één oogopslag.",
+                "2. Inleiding\n   Score-interpretatie en gebruiksinstructies.",
+                "3. Verplichte Fouten\n   Gedetailleerde lijst van fouten in verplichte velden.",
+                "4. Verplichte %\n   Statistieken over volledigheid verplichte velden.",
+                "5. Optionele Fouten\n   Overzicht van fouten in optionele velden.",
+                "6. Optionele %\n   Statistieken over volledigheid optionele velden.",
             ]
+            
+            # Sheet 7 altijd toevoegen (Dataset Validatie)
+            rapport_onderdelen.append("7. Dataset Validatie\n   Visueel overzicht dataset met kleurcodering.")
+            
+            # Conditioneel: voeg Sheet 8 toe voor oude/leverancier templates
+            if template_type == "O":
+                rapport_onderdelen.append("8. Kolom Mapping\n   Mapping tussen GHX-standaard en uw kolomnamen.")
+            
             for onderdeel in rapport_onderdelen:
                 ws_inleiding.write(
                     f"A{current_row_intro+1}", onderdeel, fmt_standard
-                )  # Met indent 2
-                # GEEN rijhoogte aanpassing meer
-                current_row_intro += 1  # Ga alleen naar volgende rij
-                # GEEN extra witregel meer
+                )
+                current_row_intro += 1
 
-            # Link Template
+            # Witregel
+            current_row_intro += 1
+            
+            # Gebruiksinstructies toevoegen
+            ws_inleiding.write(
+                f"A{current_row_intro+1}",
+                "HOE DIT RAPPORT GEBRUIKEN:",
+                fmt_section_header,
+            )
+            current_row_intro += 1
+            
+            gebruiks_instructies = [
+                "1. Bekijk eerst Sheet 1 voor het overzicht en volledige scores",
+                "2. Controleer Sheet 3-5 voor specifieke foutmeldingen",  
+                "3. Gebruik de aandachtspunten om prioriteiten te stellen"
+            ]
+            
+            for instructie in gebruiks_instructies:
+                ws_inleiding.write(
+                    f"A{current_row_intro+1}", instructie, fmt_standard
+                )
+                current_row_intro += 1
+
+            # Witregel
+            current_row_intro += 1
+            # Nieuwe template link
             ws_inleiding.write(
                 f"A{current_row_intro+1}",
                 "We vragen u om altijd gebruik te maken van de nieuwste versie van de GHX-template, welke te downloaden is via de volgende link:",
                 fmt_standard,
-            )  # Met indent 2
+            )
             current_row_intro += 1
             ws_inleiding.write_url(
                 f"A{current_row_intro+1}",
@@ -2111,22 +2653,22 @@ Cijfertoekenning: A+ (90+), A (80-89), B (70-79), C (60-69), D (<60)"""
             # Witregel
             current_row_intro += 1
 
-            # Slot
+            # Beknopte afsluiting
             ws_inleiding.write(
                 f"A{current_row_intro+1}",
                 "Wij verzoeken u vriendelijk eventuele fouten te corrigeren, ontbrekende informatie aan te vullen, en volledig lege verplichte kolommen te voorzien van data, zodat de prijslijst succesvol kan worden verwerkt.",
                 fmt_standard,
-            )  # Met indent 2
+            )
             current_row_intro += 1
             current_row_intro += 1  # Witregel
             ws_inleiding.write(
                 f"A{current_row_intro+1}", "Met vriendelijke groet,", fmt_standard
-            )  # Met indent 2
+            )
             current_row_intro += 1
             current_row_intro += 1  # Witregel
             ws_inleiding.write(
                 f"A{current_row_intro+1}", "GHX", fmt_standard
-            )  # Met indent 2
+            )
             current_row_intro += 1
             # ==================================================================
             # EINDE CODE VOOR SHEET 2: INLEIDING
@@ -2577,118 +3119,155 @@ Cijfertoekenning: A+ (90+), A (80-89), B (70-79), C (60-69), D (<60)"""
             # ==================================================================
 
             # ==================================================================
-            # START CODE VOOR SHEET 7: DATABASE AANPASSING
+            # DISABLED: DATABASE AANPASSING SHEET - BACKUP CODE (was Sheet 7)
             # ==================================================================
-            ws_db = workbook.add_worksheet("7. Database Aanpassing")
-            suppress_excel_errors(ws_db)
-            writer.sheets["7. Database Aanpassing"] = ws_db
-            ws_db.set_column("A:A", 35)
-            ws_db.set_column("B:B", 115)
-            intro_db_text = """Database Aanpassingen\n\nGHX voert momenteel automatische correcties uit op sommige aangeleverde data. Dit gebeurt om de data toch te kunnen verwerken. Het is belangrijk dat u hiervan op de hoogte bent, omdat we naar een strenger validatieproces gaan waarbij deze data in de toekomst mogelijk wordt afgekeurd.\n\nOnderstaande tabel toont de automatische aanpassingen die zijn toegepast op basis van de gevonden fouten in uw aanlevering. Probeer deze punten te corrigeren in toekomstige uploads."""
-            ws_db.merge_range(
-                "A1:B1",
-                intro_db_text,
-                workbook.add_format(
-                    {
-                        "font_size": 11,
-                        "text_wrap": True,
-                        "align": "left",
-                        "valign": "top",
-                    }
-                ),
-            )  # Simpel format
-            ws_db.set_row(0, 100)
+            # ws_db = workbook.add_worksheet("7. Database Aanpassing")
+            # suppress_excel_errors(ws_db)
+            # writer.sheets["7. Database Aanpassing"] = ws_db
+            # ws_db.set_column("A:A", 35)
+            # ws_db.set_column("B:B", 115)
+            # intro_db_text = """Database Aanpassingen\n\nGHX voert momenteel automatische correcties uit op sommige aangeleverde data. Dit gebeurt om de data toch te kunnen verwerken. Het is belangrijk dat u hiervan op de hoogte bent, omdat we naar een strenger validatieproces gaan waarbij deze data in de toekomst mogelijk wordt afgekeurd.\n\nOnderstaande tabel toont de automatische aanpassingen die zijn toegepast op basis van de gevonden fouten in uw aanlevering. Probeer deze punten te corrigeren in toekomstige uploads."""
+            # ws_db.merge_range(
+            #     "A1:B1",
+            #     intro_db_text,
+            #     workbook.add_format(
+            #         {
+            #             "font_size": 11,
+            #             "text_wrap": True,
+            #             "align": "left",
+            #             "valign": "top",
+            #         }
+            #     ),
+            # )  # Simpel format
+            # ws_db.set_row(0, 100)
+            #
+            # db_correction_data = []
+            # unique_corrections = set()
+            # all_field_names_with_errors = (
+            #     set(df_errors["GHX Kolom"].unique()) if not df_errors.empty else set()
+            # )
+            #
+            # for field_name, field_config in config.get("fields", {}).items():
+            #     if (
+            #         "database_corrections" in field_config
+            #         and field_name in all_field_names_with_errors
+            #     ):
+            #         corrections = field_config["database_corrections"]
+            #         if isinstance(corrections, list):
+            #             for correction in corrections:
+            #                 msg = correction.get("message", "")
+            #                 if msg and (field_name, msg) not in unique_corrections:
+            #                     db_correction_data.append(
+            #                         {"Veld": field_name, "Database Correctie": msg}
+            #                     )
+            #                     unique_corrections.add((field_name, msg))
+            #         elif isinstance(corrections, dict):
+            #             msg = corrections.get("message", "")
+            #             if msg and (field_name, msg) not in unique_corrections:
+            #                 db_correction_data.append(
+            #                     {"Veld": field_name, "Database Correctie": msg}
+            #                 )
+            #                 unique_corrections.add((field_name, msg))
+            #
+            # db_start_row = 3
+            # if db_correction_data:
+            #     df_db_corrections = pd.DataFrame(db_correction_data)
+            #     df_db_corrections.to_excel(
+            #         writer,
+            #         sheet_name="7. Database Aanpassing",
+            #         startrow=db_start_row,
+            #         index=False,
+            #     )
+            #     (max_row_db, max_col_db) = df_db_corrections.shape
+            #     # Header format
+            #     for c_idx, value in enumerate(df_db_corrections.columns.values):
+            #         ws_db.write(db_start_row, c_idx, value, fmt_header_orange)
+            #     # Tabel stijl
+            #     ws_db.add_table(
+            #         db_start_row,
+            #         0,
+            #         db_start_row + max_row_db,
+            #         max_col_db - 1,
+            #         {
+            #             "columns": [{"header": col} for col in df_db_corrections.columns],
+            #             "header_row": True,
+            #             "style": "Table Style Medium 1",
+            #         },
+            #     )
+            # else:
+            #     ws_db.write(
+            #         db_start_row,
+            #         0,
+            #         "Geen automatische database aanpassingen toegepast op basis van gevonden fouten.",
+            #         fmt_default_table,
+            #     )
+            # ==================================================================
+            # EINDE DATABASE AANPASSING BACKUP CODE  
+            # ==================================================================
 
-            db_correction_data = []
-            unique_corrections = set()
-            all_field_names_with_errors = (
-                set(df_errors["GHX Kolom"].unique()) if not df_errors.empty else set()
+            # ==================================================================
+            # START CODE VOOR SHEET 7: DATASET VALIDATIE
+            # ==================================================================
+            # Deze functie wordt nu aangeroepen vanuit dit script
+            add_colored_dataset_sheet(
+                workbook,
+                df,
+                validation_results,
+                ghx_mandatory_fields,
+                original_column_mapping,
+                JSON_CONFIG_PATH,
+                validation_config,
+                template_context,
             )
 
-            for field_name, field_config in config.get("fields", {}).items():
-                if (
-                    "database_corrections" in field_config
-                    and field_name in all_field_names_with_errors
-                ):
-                    corrections = field_config["database_corrections"]
-                    if isinstance(corrections, list):
-                        for correction in corrections:
-                            msg = correction.get("message", "")
-                            if msg and (field_name, msg) not in unique_corrections:
-                                db_correction_data.append(
-                                    {"Veld": field_name, "Database Correctie": msg}
-                                )
-                                unique_corrections.add((field_name, msg))
-                    elif isinstance(corrections, dict):
-                        msg = corrections.get("message", "")
-                        if msg and (field_name, msg) not in unique_corrections:
-                            db_correction_data.append(
-                                {"Veld": field_name, "Database Correctie": msg}
-                            )
-                            unique_corrections.add((field_name, msg))
-
-            db_start_row = 3
-            if db_correction_data:
-                df_db_corrections = pd.DataFrame(db_correction_data)
-                df_db_corrections.to_excel(
-                    writer,
-                    sheet_name="7. Database Aanpassing",
-                    startrow=db_start_row,
-                    index=False,
-                )
-                (max_row_db, max_col_db) = df_db_corrections.shape
-                # Header format
-                for c_idx, value in enumerate(df_db_corrections.columns.values):
-                    ws_db.write(db_start_row, c_idx, value, fmt_header_orange)
-                # Tabel stijl
-                ws_db.add_table(
-                    db_start_row,
-                    0,
-                    db_start_row + max_row_db,
-                    max_col_db - 1,
-                    {
-                        "columns": [{"header": col} for col in df_db_corrections.columns],
-                        "header_row": True,
-                        "style": "Table Style Medium 1",
-                    },
-                )
-            else:
-                ws_db.write(
-                    db_start_row,
-                    0,
-                    "Geen automatische database aanpassingen toegepast op basis van gevonden fouten.",
-                    fmt_default_table,
-                )
-
             # ==================================================================
-            # EINDE CODE VOOR SHEET 7: DATABASE AANPASSING
+            # EINDE CODE VOOR SHEET 7: DATASET VALIDATIE
             # ==================================================================
 
             # ==================================================================
             # START CODE VOOR SHEET 8: KOLOM MAPPING - NIEUWE SIMPELE IMPLEMENTATIE
             # ==================================================================
-            ws_map = workbook.add_worksheet("8. Kolom Mapping")
-            suppress_excel_errors(ws_map)
-            writer.sheets["8. Kolom Mapping"] = ws_map
+            # SKIP Sheet 8 voor Template Generator bestanden - kolom mapping is niet relevant
+            mapping_data_map = []  # Initialize outside of if/else scope
+            ws_map = None  # Initialize ws_map to prevent UnboundLocalError
             
-            # Simpele aanpak: gebruik direct de mapping informatie die we hebben
-            mapping_data_map = []
+            if (template_context and template_context.get("decisions")) or template_type == "N":
+                # Skip Sheet 8 voor:
+                # - Template Generator (TG): hebben al correcte kolommen
+                # - Nieuwe GHX templates (N): standaard GHX kolommen, geen mapping nodig
+                # Alleen oude/leverancier templates (O) krijgen Sheet 8
+                pass
+            elif template_type == "O":
+                # Import normalize function voor header vergelijking
+                from .price_tool import normalize_template_header
+                
+                ws_map = workbook.add_worksheet("8. Kolom Mapping")
+                suppress_excel_errors(ws_map)
+                writer.sheets["8. Kolom Mapping"] = ws_map
             mapped_originals = set()
             
-            # 1. Toon alle succesvol gemapte headers
+            # 1. Toon alle succesvol gemapte headers (gefilterd voor Template Generator)  
             for ghx_header, original_header in original_column_mapping.items():
-                mapping_data_map.append({
-                    "GHX Header": ghx_header,
-                    "Supplier Header": original_header,
-                })
-                # Normaliseer originele header voor vergelijking
-                from .price_tool import normalize_template_header
-                normalized_original = normalize_template_header(original_header)
-                mapped_originals.add(normalized_original)
+                # Check of dit veld zichtbaar is in Template Generator context
+                is_visible = True
+                if template_context and template_context.get("_decisions"):
+                    decisions = template_context.get("_decisions", {})
+                    is_visible = decisions.get(ghx_header, {}).get("visible", True)
+                
+                # Alleen toevoegen als het veld zichtbaar is
+                if is_visible:
+                    mapping_data_map.append({
+                        "GHX Header": ghx_header,
+                        "Supplier Header": original_header,
+                    })
+                    # Normaliseer originele header voor vergelijking
+                    from .price_tool import normalize_template_header
+                    normalized_original = normalize_template_header(original_header)
+                    mapped_originals.add(normalized_original)
             
-            # 2. Toon verplichte velden die ontbreken
+            # 2. Toon verplichte velden die ontbreken (gefilterd voor Template Generator)
             if not validation_config:
-                print("WARNING: validation_config is None, kan Sheet 8 niet volledig genereren.")
+                logging.warning("validation_config is None, kan Sheet 8 niet volledig genereren.")
             else:
                 # Check voor v20 vs v18 structuur
                 if "field_validations" in validation_config:
@@ -2698,7 +3277,20 @@ Cijfertoekenning: A+ (90+), A (80-89), B (70-79), C (60-69), D (<60)"""
                     # v18 structuur (fallback)  
                     ghx_headers_in_config = list(validation_config.get("fields", {}).keys())
                 
-                for ghx_header in ghx_headers_in_config:
+                # Filter headers voor Template Generator templates - alleen zichtbare velden
+                visible_headers = ghx_headers_in_config
+                
+                if template_context and template_context.get("decisions"):
+                    # Use Template Generator decisions om ingeklapte velden uit te filteren
+                    decisions = template_context.get("decisions", {})
+                    visible_list = decisions.get("visible_list", [])
+                    visible_headers = [header for header in ghx_headers_in_config if header in visible_list]
+                    # Template Generator kolom filtering toegepast voor Sheet 8
+                else:
+                    # Template Generator filtering overgeslagen voor Sheet 8
+                    pass
+                
+                for ghx_header in visible_headers:
                     if ghx_header in ghx_mandatory_fields and ghx_header not in original_column_mapping:
                         mapping_data_map.append({
                             "GHX Header": ghx_header,
@@ -2719,49 +3311,34 @@ Cijfertoekenning: A+ (90+), A (80-89), B (70-79), C (60-69), D (<60)"""
                     })
             mapping_df_sheet = pd.DataFrame(mapping_data_map)
 
-            mapping_df_sheet.to_excel(
-                writer, sheet_name="8. Kolom Mapping", index=False
-            )
-            ws_map.set_column(0, 0, 45)
-            ws_map.set_column(1, 1, 75)
-            (max_row_map, max_col_map) = mapping_df_sheet.shape
-            # Header format
-            for c_idx, value in enumerate(mapping_df_sheet.columns.values):
-                ws_map.write(0, c_idx, value, fmt_header_orange)
-            # Tabel stijl
-            ws_map.add_table(
-                0,
-                0,
-                max_row_map,
-                max_col_map - 1,
-                {
-                    "columns": [{"header": col} for col in mapping_df_sheet.columns],
-                    "header_row": True,
-                    "style": "Table Style Medium 1",
-                },
-            )
+            # Alleen Sheet 8 schrijven voor oude/leverancier templates (O)
+            if template_type == "O":
+                mapping_df_sheet.to_excel(
+                    writer, sheet_name="8. Kolom Mapping", index=False
+                )
+                ws_map.set_column(0, 0, 45)
+                ws_map.set_column(1, 1, 75)
+                (max_row_map, max_col_map) = mapping_df_sheet.shape
+                # Header format
+                for c_idx, value in enumerate(mapping_df_sheet.columns.values):
+                    ws_map.write(0, c_idx, value, fmt_header_orange)
+                # Tabel stijl
+                ws_map.add_table(
+                    0,
+                    0,
+                    max_row_map,
+                    max_col_map - 1,
+                    {
+                        "columns": [{"header": col} for col in mapping_df_sheet.columns],
+                        "header_row": True,
+                        "style": "Table Style Medium 1",
+                    },
+                )
 
-            # ==================================================================
-            # EINDE CODE VOOR SHEET 8: KOLOM MAPPING
-            # ==================================================================
+                # ==================================================================
+                # EINDE CODE VOOR SHEET 8: KOLOM MAPPING (binnen normale bestanden if-block)
+                # ==================================================================
 
-            # ==================================================================
-            # START CODE VOOR SHEET 9: DATASET VALIDATIE
-            # ==================================================================
-            # Deze functie wordt nu aangeroepen vanuit dit script
-            add_colored_dataset_sheet(
-                workbook,
-                df,
-                validation_results,
-                ghx_mandatory_fields,
-                original_column_mapping,
-                JSON_CONFIG_PATH,
-                validation_config,
-            )
-
-            # ==================================================================
-            # EINDE CODE VOOR SHEET 9: DATASET VALIDATIE
-            # ==================================================================
 
             # ==================================================================
             # EINDE CODE VOOR SHEET 1: DASHBOARD
@@ -2918,7 +3495,7 @@ Cijfertoekenning: A+ (90+), A (80-89), B (70-79), C (60-69), D (<60)"""
         ws_config.set_column("C:C", 35)
         ws_config.set_column("D:D", 50)
 
-        print(f"Validatierapport succesvol gegenereerd (in functie): '{output_path}'")
+        logging.info(f"Validatierapport succesvol gegenereerd: '{output_path}'")
         return output_path
 
     except KeyError as e:
@@ -2939,14 +3516,13 @@ Cijfertoekenning: A+ (90+), A (80-89), B (70-79), C (60-69), D (<60)"""
     # --- Einde van de genereer_rapport functie ---
 
     except KeyError as e:
-        print(
-            f"FOUT (KeyError) bij genereren rapport: Kolom '{e}' niet gevonden. Controleer data of mapping."
+        logging.error(
+            f"KeyError bij genereren rapport: Kolom '{e}' niet gevonden. Controleer data of mapping."
         )
-        # print("Beschikbare kolommen in df_errors:", df_errors.columns.tolist() if not df_errors.empty else "df_errors is leeg")
-        # print("Beschikbare kolommen in df:", df.columns.tolist())
+        # Debug informatie voor kolommen (uitgecommentarieerd)
         return None  # Geef None terug bij fout
     except Exception as e:
-        print(f"Algemene FOUT bij genereren rapport: {e}")
+        logging.error(f"Algemene fout bij genereren rapport: {e}")
         import traceback
 
         traceback.print_exc()  # Print volledige traceback voor debuggen
