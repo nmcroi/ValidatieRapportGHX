@@ -198,49 +198,75 @@ def determine_template_type(df: pd.DataFrame, excel_path: str = None) -> Tuple[s
         Tuple van (template_type, template_info)
         template_type:
             'TG' - Template Generator gegenereerde template
-            'N'  - Nieuwe GHX standaard template  
-            'O'  - Oude GHX template of supplier template
+            'DT' - Default Template (standaard GHX template)  
+            'AT' - Alternatieve Template (oude of supplier template)
         template_info: Dictionary met template metadata
     """
-    # Prioriteit 1: Template Generator detection met uitgebreide info
+    # Import de nieuwe template detectie functie uit price_tool
+    try:
+        from .price_tool import determine_template_type as new_determine_template_type
+        from .price_tool import extract_template_generator_context
+        
+        if excel_path:
+            # Gebruik de nieuwe implementatie uit price_tool.py
+            template_type = new_determine_template_type(excel_path)
+            
+            if template_type == 'TG':
+                # Gebruik nieuwe TG context extractie
+                template_info = extract_template_generator_context(excel_path) or {}
+                template_info['has_stamp'] = True
+                
+                # Log Template Generator info
+                config = template_info.get('configuration', {})
+                decisions = template_info.get('decisions', {})
+                
+                template_code = template_info.get('template_code', 'Unknown')
+                product_types = config.get('product_types', [])
+                institutions = config.get('institutions', [])
+                
+                logging.info(f"Template Generator gedetecteerd: {template_code}")
+                if product_types:
+                    logging.info(f"Product types: {', '.join(product_types)}")
+                if institutions:
+                    logging.info(f"Instellingen: {len(institutions)} instellingen")
+                
+                return template_type, template_info
+            else:
+                # DT of AT template
+                template_info = {
+                    "has_stamp": False,
+                    "template_type": "default" if template_type == "DT" else "alternative"
+                }
+                return template_type, template_info
+                
+    except ImportError:
+        logging.warning("Nieuwe template detectie niet beschikbaar, gebruik legacy detectie")
+    
+    # Legacy fallback detectie
     if has_template_generator_stamp(df, excel_path):
         template_info = extract_template_generator_info(excel_path) if excel_path else {}
-        
-        # Enhanced logging voor Template Generator templates
-        if template_info.get("preset_code"):
-            preset_code = template_info["preset_code"]
-            product_types = template_info.get("product_types", [])
-            institutions = template_info.get("institutions", [])
-            
-            logging.info(f"Template Generator gedetecteerd: {preset_code}")
-            if product_types:
-                logging.info(f"Product types: {', '.join(product_types)}")
-            if institutions:
-                logging.info(f"Instellingen: {', '.join(institutions)}")
-        else:
-            logging.info("Template Generator stamp gedetecteerd (geen code info)")
-        
+        logging.info("Template Generator stamp gedetecteerd (legacy detectie)")
         return "TG", template_info
     
-    # Prioriteit 2: Nieuwe vs Oude template
+    # Legacy DT vs AT detectie
     template_info = {
         "has_stamp": False,
-        "template_type": "standard" if is_new_template(df) else "legacy"
+        "template_type": "default" if is_new_template(df) else "alternative"
     }
     
     if is_new_template(df):
-        logging.info("Template type gedetecteerd: Nieuwe GHX template (N)")
-        return "N", template_info
+        logging.info("Template type gedetecteerd: Default Template (DT)")
+        return "DT", template_info
     else:
-        logging.info("Template type gedetecteerd: Oude/Supplier template (O)")
-        return "O", template_info
+        logging.info("Template type gedetecteerd: Alternatieve Template (AT)")
+        return "AT", template_info
 
 def get_template_display_info(template_type: str, template_info: Dict[str, Any]) -> Dict[str, str]:
     """
     Genereert display informatie voor template in rapport.
     
     Args:
-        template_type: Template type code ('TG', 'N', 'O')
+        template_type: Template type code ('TG', 'DT', 'AT')
         template_info: Template metadata dictionary
         
     Returns:
@@ -257,40 +283,57 @@ def get_template_display_info(template_type: str, template_info: Dict[str, Any])
     try:
         if template_type == "TG":
             # Template Generator info
-            preset_code = template_info.get("preset_code", "UNKNOWN")
-            display_info["type_description"] = f"Template Generator Template ({preset_code})"
+            template_code = template_info.get("template_code", "UNKNOWN")
+            display_info["type_description"] = f"Template Generator Template ({template_code})"
             
-            if template_info.get("parsed_code"):
-                parsed = template_info["parsed_code"]
-                
-                # Code components
-                template_choice = parsed.get("template_type", "standard")
-                gs1_mode = parsed.get("gs1_mode", "none")
-                product_types = parsed.get("product_types", [])
+            # Configuration info
+            config = template_info.get("configuration", {})
+            if config:
+                template_choice = config.get("template_choice", "standard")
+                gs1_mode = config.get("gs1_mode", "none")
+                has_chemicals = config.get("has_chemicals", False)
+                is_staffel = config.get("is_staffel_file", False)
                 
                 display_info["code_info"] = f"Type: {template_choice.capitalize()}, GS1: {gs1_mode}"
                 
+                if has_chemicals or is_staffel:
+                    extra_info = []
+                    if has_chemicals:
+                        extra_info.append("Chemicals")
+                    if is_staffel:
+                        extra_info.append("Staffel")
+                    display_info["code_info"] += f", Extra: {', '.join(extra_info)}"
+                
                 # Product types
+                product_types = config.get("product_types", [])
                 if product_types:
                     display_info["context_info"] = f"Product types: {', '.join(product_types).title()}"
                 
                 # Institutions
-                institutions = parsed.get("institutions", [])
+                institutions = config.get("institutions", [])
                 if institutions:
-                    display_info["institution_info"] = f"Instellingen: {', '.join(institutions).upper()}"
-                
-                # Statistics
-                stats = parsed.get("statistics", {})
-                if stats:
-                    visible = stats.get("visible_fields", 0)
-                    mandatory = stats.get("mandatory_fields", 0)
-                    display_info["statistics_info"] = f"Velden: {visible} zichtbaar, {mandatory} verplicht"
+                    display_info["institution_info"] = f"Instellingen: {len(institutions)} geselecteerd"
             
-        elif template_type == "N":
-            display_info["type_description"] = "Nieuwe GHX Standaard Template"
+            # Decisions/Statistics info
+            decisions = template_info.get("decisions", {})
+            if decisions:
+                visible = decisions.get("visible_fields", 0)
+                mandatory = decisions.get("mandatory_fields", 0)
+                hidden = decisions.get("hidden_fields", 0)
+                display_info["statistics_info"] = f"Velden: {visible} zichtbaar, {mandatory} verplicht, {hidden} verborgen"
+            
+        elif template_type == "DT":
+            display_info["type_description"] = "Default Template (Standaard GHX)"
             display_info["context_info"] = "17 verplichte velden, alle product types"
+            display_info["statistics_info"] = "Alle kolommen zichtbaar"
+            
+        elif template_type == "AT":
+            display_info["type_description"] = "Alternatieve Template (Supplier/Legacy)"
+            display_info["context_info"] = "Aangepaste kolom structuur"
+            display_info["statistics_info"] = "Beperkte validatie toegepast"
             
         elif template_type == "O":
+            # Legacy support voor oude rapportage
             display_info["type_description"] = "Oude GHX Template / Supplier Template"
             display_info["context_info"] = "Backwards compatibility modus"
     
@@ -1481,6 +1524,10 @@ def genereer_rapport(
                 # Template Type informatie genereren - alleen het basis type
                 if template_type == "TG":
                     template_type_display = "Template Generator"
+                elif template_type == "DT": 
+                    template_type_display = "Default Template"
+                elif template_type == "AT":
+                    template_type_display = "Onbekende Template"
                 elif template_type == "N": 
                     template_type_display = "Nieuw GHX Template"
                 elif template_type == "O":
@@ -1518,45 +1565,69 @@ def genereer_rapport(
                     )
                     current_template_row += 1
                     
-                    # Template info regels - samengevoegd op één regel
-                    template_info_parts = []
+                    # Template categorie info - nuttige informatie voor gebruiker
+                    # Probeer eerst uit configuration (nieuwe structuur)
+                    config = template_context.get("configuration", {})
+                    product_types = config.get("product_types", template_context.get("product_types", []))
+                    institutions = config.get("institutions", template_context.get("institutions", []))
                     
-                    # Type info
-                    template_choice = template_context.get("template_choice", "unknown")
-                    gs1_mode = template_context.get("gs1_mode", "none")
-                    template_info_parts.append(f"Type: {template_choice.title()}, GS1: {gs1_mode}")
-                    
-                    # Product types
-                    product_types = template_context.get("product_types", [])
+                    # Categorie informatie (product types)
                     if product_types:
                         if isinstance(product_types, list):
-                            product_types_str = ", ".join([pt.title() for pt in product_types])
+                            # Nederlandse namen voor product types
+                            product_names = []
+                            for pt in product_types:
+                                if pt.lower() == 'lab':
+                                    product_names.append('Laboratorium')
+                                elif pt.lower() == 'medisch':
+                                    product_names.append('Medisch')
+                                elif pt.lower() == 'facilitair':
+                                    product_names.append('Facilitair')
+                                elif pt.lower() == 'overige':
+                                    product_names.append('Overige')
+                                else:
+                                    product_names.append(pt.title())
+                            categorie_str = ", ".join(product_names)
                         else:
-                            product_types_str = str(product_types).title()
-                        template_info_parts.append(f"Product types: {product_types_str}")
+                            categorie_str = str(product_types).title()
+                        
+                        ws_dash.merge_range(
+                            f"B{current_template_row + 1}:C{current_template_row + 1}",
+                            f"Categorie: {categorie_str}",
+                            fmt_template_value,
+                        )
+                        current_template_row += 1
                     
-                    # Institutions
-                    institutions = template_context.get("institutions", [])
-                    if institutions:
+                    # Organisaties informatie - gebruik korte codes indien beschikbaar
+                    institution_codes = config.get("institution_codes", template_context.get("institution_codes", []))
+                    if institution_codes:
+                        # Gebruik korte codes zoals ze in de Template Generator stamp staan
+                        if isinstance(institution_codes, list):
+                            inst_str = ", ".join([code.upper() for code in institution_codes])
+                        else:
+                            inst_str = str(institution_codes).upper()
+                    elif institutions:
+                        # Fallback naar volledige namen
                         if isinstance(institutions, list):
                             inst_str = ", ".join([inst.upper() for inst in institutions])
                         else:
                             inst_str = str(institutions).upper()
-                        template_info_parts.append(f"Instellingen: {inst_str}")
-                    
-                    combined_info = " | ".join(template_info_parts)
-                    ws_dash.merge_range(
-                        f"B{current_template_row + 1}:C{current_template_row + 1}",
-                        combined_info,
-                        fmt_template_value,
-                    )
-                    current_template_row += 1
+                    else:
+                        inst_str = None
+                        
+                    if inst_str:
+                        ws_dash.merge_range(
+                            f"B{current_template_row + 1}:C{current_template_row + 1}",
+                            f"Organisaties: {inst_str}",
+                            fmt_template_value,
+                        )
+                        current_template_row += 1
                     
                     # Template velden info
                     if template_context.get("decisions"):
                         visible_count = template_context["decisions"].get("visible_fields", 0)
-                        mandatory_list = template_context["decisions"].get("mandatory_list", [])
-                        mandatory_count = len(mandatory_list)
+                        # Gebruik de mandatory_fields waarde uit Template Generator code (M18=18)
+                        mandatory_count = template_context["decisions"].get("mandatory_fields", 0)
                         velden_info = f"Velden: {visible_count} zichtbaar, {mandatory_count} verplicht"
                         ws_dash.merge_range(
                             f"B{current_template_row + 1}:C{current_template_row + 1}",
@@ -1782,8 +1853,8 @@ def genereer_rapport(
                     ("Aantal rijen", total_rows),
                     ("Aantal kolommen", total_original_cols),  # Nu gefilterde kolom count voor TG
                     ("Aantal velden", aantal_velden_totaal),
-                    ("Aantal aanwezige verplichte velden", aantal_aanw_verpl_velden),  # Nu consistent
-                    ("Aantal afwezige verplichte velden", aantal_afw_verpl_velden),    # Nu consistent
+                    ("Aantal aanwezige verplichte kolommen", aantal_aanw_verpl_velden),  # Nu consistent
+                    ("Aantal afwezige verplichte kolommen", aantal_afw_verpl_velden),    # Nu consistent
                     ("Aantal gevulde verplichte velden", total_filled_in_present),
                     ("Aantal aanwezige lege verplichte velden", aantal_aanw_lege_verpl_velden),
                     ("Aantal regels mogelijk afgewezen door Gatekeeper", aantal_afkeuringen),
@@ -1797,8 +1868,8 @@ def genereer_rapport(
                     ("Aantal rijen", total_rows),
                     ("Aantal kolommen", total_original_cols),
                     ("Aantal velden", aantal_velden_totaal),
-                    ("Aantal aanwezige verplichte velden", aantal_aanw_verpl_velden),
-                    ("Aantal afwezige verplichte velden", aantal_afw_verpl_velden),
+                    ("Aantal aanwezige verplichte kolommen", aantal_aanw_verpl_velden),
+                    ("Aantal afwezige verplichte kolommen", aantal_afw_verpl_velden),
                     ("Aantal gevulde verplichte velden", total_filled_in_present),
                     ("Aantal aanwezige lege verplichte velden", aantal_aanw_lege_verpl_velden),
                     ("Aantal regels mogelijk afgewezen door Gatekeeper", aantal_afkeuringen),
@@ -1889,10 +1960,6 @@ def genereer_rapport(
             # Data voor Actiepunten - direct onder header
             actions_data_row = actions_start_row + 1  # Direct onder header
             actions_data_original = [
-                (
-                    "Aantal lege verplichte velden (incl. ontbrekende)",
-                    aantal_leeg_incl_missing,
-                ),
                 (
                     "Percentage ingevulde verplichte velden (incl. ontbrekende)",
                     percentage_ingevuld_incl_missing / 100,
@@ -2378,7 +2445,7 @@ def genereer_rapport(
                         "fill": {"color": colors[i]},
                     }
                 )
-            stacked_chart.set_title({"name": "Verplichte Velden Overzicht"})
+            stacked_chart.set_title({"name": "Verplichte Kolommen Overzicht"})
             stacked_chart.set_x_axis(
                 {"name": "Verplichte Velden", "num_font": {"rotation": -45, "size": 11}}
             )

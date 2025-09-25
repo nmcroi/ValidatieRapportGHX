@@ -27,39 +27,94 @@ except ImportError:
 # TEMPLATE-AWARE HELPER FUNCTIES
 # -----------------------------
 
-def has_template_generator_stamp(excel_path: str) -> bool:
+def determine_template_type(excel_path: str) -> str:
     """
-    Controleert of Excel bestand een Template Generator stamp heeft.
-    
-    Zoekt naar:
-    - _GHX_META sheet 
-    - GHX_STAMP named range
+    Bepaalt het type template: TG (Template Generator), DT (Default Template), of AT (Alternatieve Template).
     
     Returns:
-        True als template generator stamp gevonden
+        'TG' - Template Generator (met stamp metadata)
+        'DT' - Default Template (standaard GHX zonder stamp) 
+        'AT' - Alternatieve Template (afwijkende structuur)
+    """
+    try:
+        # Check voor Template Generator stamp
+        if has_template_generator_stamp(excel_path):
+            logging.info("Template type: TG (Template Generator) - stamp gedetecteerd")
+            return "TG"
+        
+        # Check voor Default Template door kolom structuur te analyseren
+        import pandas as pd
+        try:
+            df = pd.read_excel(excel_path, nrows=0)  # Alleen headers laden
+            columns = [str(col).strip().lower() for col in df.columns]
+            
+            # GHX standaard velden die in DT template moeten aanwezig zijn
+            required_dt_fields = [
+                'artikelnummer', 'artikelnaam', 'brutoprijs', 'nettoprijs',
+                'is bestelbarereenheid', 'is basiseenheid', 'unspsc'
+            ]
+            
+            # Tel hoeveel standaard velden aanwezig zijn
+            matches = sum(1 for field in required_dt_fields 
+                         if any(field in col for col in columns))
+            
+            # Als 70%+ van standaard velden aanwezig zijn → Default Template
+            if matches >= len(required_dt_fields) * 0.7:
+                logging.info("Template type: DT (Default Template) - standaard GHX structuur")
+                return "DT"
+            else:
+                logging.info("Template type: AT (Alternatieve Template) - afwijkende structuur")
+                return "AT"
+                
+        except Exception as e:
+            logging.warning(f"Fout bij kolom analyse voor template type: {e}")
+            return "AT"  # Default naar alternatieve template bij fout
+            
+    except Exception as e:
+        logging.error(f"Fout bij template type detectie: {e}")
+        return "AT"  # Fallback
+
+def has_template_generator_stamp(excel_path: str) -> bool:
+    """
+    NIEUWE IMPLEMENTATIE: Template Generator stamp detectie.
+    
+    Template Generator bestanden hebben:
+    - A1: "Deze code niet verwijderen:" + template code
+    - A2: "Template versie:" + versie info
     """
     try:
         import openpyxl
         wb = openpyxl.load_workbook(excel_path, data_only=True, read_only=True)
         
-        # Check voor _GHX_META sheet
-        has_meta_sheet = "_GHX_META" in wb.sheetnames
+        # Haal eerste sheet
+        sheet = wb.worksheets[0]
         
-        # Check voor GHX_STAMP named range
-        has_stamp_range = "GHX_STAMP" in wb.defined_names
+        # Lees A1 en A2
+        a1 = sheet["A1"].value
+        a2 = sheet["A2"].value
         
         wb.close()
         
-        # Template Generator stamp vereist beide
-        return has_meta_sheet and has_stamp_range
+        # Template Generator check: beide cellen moeten de juiste tekst bevatten
+        has_a1_stamp = (a1 and isinstance(a1, str) and "Deze code niet verwijderen:" in a1)
+        has_a2_version = (a2 and isinstance(a2, str) and "Template versie:" in a2)
+        
+        is_tg = has_a1_stamp and has_a2_version
+        
+        logging.info(f"TG Stamp check - A1: {has_a1_stamp}, A2: {has_a2_version}, Result: {is_tg}")
+        
+        return is_tg
         
     except Exception as e:
-        logging.warning(f"Fout bij stamp detection: {e}")
+        logging.error(f"Stamp detection error: {e}")
         return False
 
 def extract_template_generator_context(excel_path: str) -> Optional[Dict[str, Any]]:
     """
-    Extraheert Template Generator context uit _GHX_META sheet.
+    Extraheert Template Generator context uit A1 en A2 cellen.
+    
+    A1: "Deze code niet verwijderen: [CODE]"
+    A2: "Template versie: V[versie] | Gegenereerd: [datum]"
     
     Returns:
         Dictionary met template context of None bij fout
@@ -68,34 +123,633 @@ def extract_template_generator_context(excel_path: str) -> Optional[Dict[str, An
         import openpyxl
         wb = openpyxl.load_workbook(excel_path, data_only=True, read_only=True)
         
-        if "_GHX_META" not in wb.sheetnames:
-            return None
+        if wb.worksheets:
+            first_sheet = wb.worksheets[0]
             
-        meta_ws = wb["_GHX_META"]
-        json_str = meta_ws["A1"].value
+            # Parse A1 voor template code
+            cell_a1_value = first_sheet["A1"].value
+            template_code = None
+            if cell_a1_value and isinstance(cell_a1_value, str) and "Deze code niet verwijderen:" in cell_a1_value:
+                template_code = extract_template_code_from_a1(cell_a1_value)
+            
+            # Parse A2 voor versie info
+            cell_a2_value = first_sheet["A2"].value
+            version_info = {}
+            if cell_a2_value and isinstance(cell_a2_value, str) and "Template versie:" in cell_a2_value:
+                version_info = parse_version_line(cell_a2_value)
+            
+            if template_code:
+                # Parse template code voor configuratie
+                parsed_context = parse_template_code(template_code)
+                
+                # Laad field mapping en Excel data voor field visibility evaluatie
+                field_mapping = load_field_mapping()
+                field_results = {}
+                
+                if field_mapping:
+                    # Laad Excel data voor depends_on evaluatie
+                    try:
+                        import pandas as pd
+                        excel_data = pd.read_excel(excel_path, nrows=10)  # Sample eerste 10 rijen voor performance
+                        field_results = apply_field_visibility(field_mapping, parsed_context, excel_data)
+                        logging.info("Template Generator field visibility toegepast met Excel data")
+                    except Exception as e:
+                        logging.warning(f"Kon Excel data niet laden voor field visibility: {e}, gebruik fallback")
+                        field_results = apply_field_visibility(field_mapping, parsed_context)
+                
+                # Maak Template Generator context
+                tg_context = {
+                    'template_type': 'TG',
+                    'template_code': template_code,
+                    'configuration': {
+                        'template_choice': parsed_context.get('template_choice', 'standard'),
+                        'product_types': parsed_context.get('product_types', []),
+                        'institutions': parsed_context.get('institutions', []),
+                        'institution_codes': parsed_context.get('institution_codes', []),  # Voor display van korte codes
+                        'gs1_mode': parsed_context.get('gs1_mode', 'none'),
+                        'has_chemicals': parsed_context.get('has_chemicals', False),
+                        'is_staffel_file': parsed_context.get('is_staffel_file', False),
+                        'all_orderable': parsed_context.get('all_orderable', False),
+                        'version': version_info.get('version', 'unknown')
+                    },
+                    'decisions': {
+                        'total_fields': field_results.get('total_fields', 0),
+                        'visible_fields': parsed_context.get('visible_count', field_results.get('visible_count', 0)), 
+                        'mandatory_fields': parsed_context.get('mandatory_count', field_results.get('mandatory_count', 0)),
+                        'hidden_fields': max(0, field_results.get('total_fields', 0) - parsed_context.get('visible_count', 0)),
+                        'mandatory_list': field_results.get('mandatory_list', []),
+                        'visible_list': field_results.get('visible_list', []),
+                        'hidden_list': field_results.get('hidden_list', [])
+                    },
+                    'version_info': version_info,
+                    'parsed_context': parsed_context,
+                    'field_mapping_applied': field_mapping is not None
+                }
+                
+                wb.close()
+                logging.info(f"Template Generator context gevonden: {template_code} ({version_info.get('version', 'unknown')})")
+                return tg_context
         
-        if not json_str:
-            logging.warning("Geen metadata gevonden in _GHX_META cel A1")
-            return None
-            
-        # Parse JSON metadata
-        context = json.loads(json_str)
-        
-        # Valideer minimum vereiste velden
-        required_fields = ['template_choice', 'product_type']
-        if not all(field in context for field in required_fields):
-            logging.warning(f"Template context mist vereiste velden: {required_fields}")
-            return None
-            
         wb.close()
-        return context
-        
-    except json.JSONDecodeError as e:
-        logging.error(f"Fout bij parsen template context JSON: {e}")
+        logging.warning("Geen geldige Template Generator context gevonden")
         return None
+        
     except Exception as e:
         logging.error(f"Fout bij extracten template context: {e}")
         return None
+
+def parse_template_code(template_code: str) -> Dict[str, Any]:
+    """
+    Parse Template Generator code naar context object.
+    
+    Code format: S-LM-0-0-0-ul-V78-M18
+    - S: Template choice (S=Standard, C=Custom)
+    - LM: Product types (M=Medisch, L=Lab, F=Facilitair, O=Overige)
+    - 0: all_orderable flag (0=false, 1=true)  
+    - 0: is_staffel_file flag (0=false, 1=true)
+    - 0: has_chemicals flag (0=false, 1=true)
+    - ul: Institution codes (u=UMCU, l=LUMC, a=AMC, v=VUmc, etc.)
+    - V78: Visible fields count
+    - M18: Mandatory fields count
+    """
+    try:
+        # Institution mapping from README.md
+        institution_map = {
+            'umcu': 'UMC Utrecht',
+            'lumc': 'LUMC Leiden', 
+            'amcu': 'Amsterdam UMC',
+            'mumc': 'Maastricht UMC+',
+            'umcg': 'UMCG Groningen',
+            'sq': 'Sanquin',
+            'pmc': 'Prinses Máxima Centrum',
+            'pb': 'Prothya Biosolutions',
+            'ul': 'Universiteit Leiden',
+            'uu': 'Universiteit Utrecht',
+            'uva': 'Universiteit van Amsterdam',
+            'zxl': 'ZorgService XL',
+            'algemeen': 'Algemeen gebruik'
+        }
+        
+        # Product type mapping  
+        product_type_map = {
+            'M': 'medisch', 'L': 'lab', 'F': 'facilitair', 'O': 'overige'
+        }
+        
+        # Split code parts: S-LM-0-0-0-ul-V78-M18
+        parts = template_code.strip().split('-')
+        
+        if len(parts) < 8:
+            raise ValueError(f"Template code heeft niet genoeg onderdelen: {len(parts)} (verwacht 8)")
+        
+        # Parse onderdelen
+        template_choice = 'standard' if parts[0] == 'S' else 'custom'
+        
+        # Product types (bijv. "LM" -> ["lab", "medisch"])
+        product_types = []
+        for char in parts[1]:
+            if char in product_type_map:
+                product_types.append(product_type_map[char])
+        
+        # Flags
+        all_orderable = parts[2] == '1'
+        is_staffel_file = parts[3] == '1' 
+        has_chemicals = parts[4] == '1'
+        
+        # Institutions - parts[5] bevat institution code zoals "ul", "umcu", etc.
+        institution_code = parts[5]  # Hele code zoals "ul", "umcu", etc.
+        institution_codes = [institution_code]  # Voor field matching
+        institutions = []  # Volledige namen voor display
+        
+        if institution_code in institution_map:
+            institutions.append(institution_map[institution_code])
+        else:
+            # Fallback als code niet herkend wordt
+            institutions.append(f"Unknown ({institution_code})")
+        
+        # Extract counts
+        visible_count = 0
+        mandatory_count = 0
+        
+        if parts[6].startswith('V'):
+            visible_count = int(parts[6][1:])
+        if parts[7].startswith('M'):
+            mandatory_count = int(parts[7][1:])
+        
+        context = {
+            'template_choice': template_choice,
+            'product_types': product_types,
+            'all_orderable': all_orderable,
+            'is_staffel_file': is_staffel_file,  
+            'has_chemicals': has_chemicals,
+            'institutions': institutions,
+            'institution_codes': institution_codes,  # Korte codes voor field matching
+            'visible_count': visible_count,
+            'mandatory_count': mandatory_count,
+            'gs1_mode': 'none'  # Default, kan later worden aangepast
+        }
+        
+        logging.info(f"Template code parsed: {template_code} -> {context}")
+        return context
+        
+    except Exception as e:
+        logging.error(f"Fout bij parsen template code '{template_code}': {e}")
+        return {}
+
+def parse_version_line(version_line: str) -> Dict[str, str]:
+    """Parse versie lijn uit A2: 'Template versie: V25.1 | Gegenereerd: 24-09-2025 08:39'"""
+    try:
+        version_info = {}
+        parts = version_line.split("|")
+        
+        for part in parts:
+            part = part.strip()
+            if "Template versie:" in part:
+                version_info['version'] = part.split("Template versie:")[1].strip()
+            elif "Gegenereerd:" in part:
+                version_info['generated'] = part.split("Gegenereerd:")[1].strip()
+        
+        return version_info
+    except Exception as e:
+        logging.warning(f"Fout bij parsen versie lijn: {e}")
+        return {}
+
+def load_field_mapping() -> Optional[Dict[str, Any]]:
+    """
+    Laadt field_mapping.json uit Template Generator Files.
+    
+    Returns:
+        Field mapping dictionary of None bij fout
+    """
+    try:
+        import os
+        import json
+        
+        # Path naar Template Generator Files
+        tg_files_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 
+                                     "Template Generator Files", "field_mapping.json")
+        
+        if not os.path.exists(tg_files_path):
+            logging.error(f"Field mapping niet gevonden: {tg_files_path}")
+            return None
+            
+        with open(tg_files_path, 'r', encoding='utf-8') as f:
+            field_mapping = json.load(f)
+            
+        logging.info(f"Field mapping geladen: {len(field_mapping)} velden")
+        return field_mapping
+        
+    except Exception as e:
+        logging.error(f"Fout bij laden field mapping: {e}")
+        return None
+
+def apply_field_visibility(field_mapping: Dict[str, Any], context: Dict[str, Any], excel_data: 'pd.DataFrame' = None) -> Dict[str, Any]:
+    """
+    Past field visibility toe op basis van Template Generator context.
+    
+    Args:
+        field_mapping: Field mapping configuratie
+        context: Template Generator context (product_types, institutions, etc.)
+        
+    Returns:
+        Dictionary met visible_list, mandatory_list, hidden_list
+    """
+    try:
+        visible_list = []
+        mandatory_list = []
+        hidden_list = []
+        
+        # Context parameters
+        product_types = context.get('product_types', [])
+        institutions = context.get('institutions', [])
+        gs1_mode = context.get('gs1_mode', 'none')
+        has_chemicals = context.get('has_chemicals', False)
+        is_staffel_file = context.get('is_staffel_file', False)
+        
+        # Context labels voor field mapping
+        context_labels = []
+        if gs1_mode != 'none':
+            context_labels.append('gs1')
+        if gs1_mode == 'only':
+            context_labels.append('gs1_only')
+        if has_chemicals:
+            context_labels.append('chemicals')
+        if is_staffel_file:
+            context_labels.append('staffel')
+        
+        # Voeg product types toe (lowercase)
+        context_labels.extend([pt.lower() for pt in product_types])
+        
+        # Voeg institution codes toe (voor field matching)
+        institution_codes = context.get('institution_codes', [])
+        context_labels.extend(institution_codes)  # Gebruik korte codes zoals 'u', 'l'
+            
+        # Evalueer elk veld
+        for field_name, field_config in field_mapping.items():
+            is_visible = evaluate_field_visibility(field_config, context_labels, product_types)
+            is_mandatory = evaluate_field_mandatory(field_config, context_labels, product_types, excel_data) if is_visible else False
+            
+            if is_visible:
+                visible_list.append(field_name)
+                if is_mandatory:
+                    mandatory_list.append(field_name)
+            else:
+                hidden_list.append(field_name)
+        
+        result = {
+            'visible_list': visible_list,
+            'mandatory_list': mandatory_list, 
+            'hidden_list': hidden_list,
+            'total_fields': len(field_mapping),
+            'visible_count': len(visible_list),
+            'mandatory_count': len(mandatory_list),
+            'hidden_count': len(hidden_list)
+        }
+        
+        logging.info(f"Field filtering: {result['visible_count']} zichtbaar, {result['mandatory_count']} verplicht, {result['hidden_count']} verborgen")
+        return result
+        
+    except Exception as e:
+        logging.error(f"Fout bij toepassen field visibility: {e}")
+        return {'visible_list': [], 'mandatory_list': [], 'hidden_list': []}
+
+def evaluate_field_visibility(field_config: Dict[str, Any], context_labels: List[str], product_types: List[str]) -> bool:
+    """
+    Evalueer of een veld zichtbaar is op basis van field config en context.
+    
+    Prioriteit (hoogste naar laagste):
+    1. visible_only 
+    2. visible_except
+    3. visible
+    """
+    try:
+        # Priority 1: visible_only (hoogste prioriteit)
+        if 'visible_only' in field_config:
+            visible_only = field_config['visible_only']
+            return any(label in context_labels for label in visible_only)
+        
+        # Priority 2: visible_except
+        if 'visible_except' in field_config:
+            visible_except = field_config['visible_except']
+            return not any(label in context_labels for label in visible_except)
+            
+        # Priority 3: visible (laagste prioriteit)
+        if 'visible' in field_config:
+            visible = field_config['visible']
+            if visible == 'always':
+                return True
+            elif visible == 'never':
+                return False
+        
+        # Default: zichtbaar
+        return True
+        
+    except Exception as e:
+        logging.warning(f"Fout bij evalueren field visibility: {e}")
+        return True
+
+def evaluate_field_mandatory(field_config: Dict[str, Any], context_labels: List[str], product_types: List[str], excel_data: 'pd.DataFrame' = None) -> bool:
+    """
+    Evalueer of een veld mandatory is op basis van field config en context.
+    
+    Prioriteit (hoogste naar laagste):
+    1. mandatory_only
+    2. mandatory_except  
+    3. mandatory
+    
+    Ondersteunt ook 'depends_on' conditional logic.
+    """
+    try:
+        is_base_mandatory = False
+        
+        # Priority 1: mandatory_only (hoogste prioriteit)
+        if 'mandatory_only' in field_config:
+            mandatory_only = field_config['mandatory_only']
+            is_base_mandatory = any(label in context_labels for label in mandatory_only)
+        
+        # Priority 2: mandatory_except
+        elif 'mandatory_except' in field_config:
+            mandatory_except = field_config['mandatory_except']
+            is_base_mandatory = not any(label in context_labels for label in mandatory_except)
+            
+        # Priority 3: mandatory (laagste prioriteit)
+        elif 'mandatory' in field_config:
+            mandatory = field_config['mandatory']
+            if mandatory == 'always':
+                is_base_mandatory = True
+            elif mandatory == 'never':
+                is_base_mandatory = False
+        
+        # Als niet base mandatory, return False
+        if not is_base_mandatory:
+            return False
+            
+        # Check depends_on conditions if present
+        if 'depends_on' in field_config and excel_data is not None:
+            depends_on = field_config['depends_on']
+            for condition in depends_on:
+                field_name = condition.get('field')
+                not_empty = condition.get('not_empty', True)
+                
+                if field_name and field_name in excel_data.columns:
+                    # Check if field is empty/not empty
+                    field_values = excel_data[field_name].dropna()
+                    field_has_values = len(field_values) > 0 and any(str(val).strip() != '' for val in field_values)
+                    
+                    if not_empty and not field_has_values:
+                        # Condition requires field to have values but it doesn't
+                        return False
+                    elif not not_empty and field_has_values:
+                        # Condition requires field to be empty but it has values  
+                        return False
+        
+        return True
+        
+    except Exception as e:
+        logging.warning(f"Fout bij evalueren field mandatory: {e}")
+        return False
+
+def debug_field_mapping_decisions(field_mapping: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Zorgvuldige debug analyse van field mapping decisions.
+    
+    Returns:
+        Detailed report van elk veld met beslissing en reden
+    """
+    try:
+        # Context parameters
+        product_types = context.get('product_types', [])
+        institutions = context.get('institutions', [])
+        gs1_mode = context.get('gs1_mode', 'none')
+        has_chemicals = context.get('has_chemicals', False)
+        is_staffel_file = context.get('is_staffel_file', False)
+        
+        # Context labels voor field mapping
+        context_labels = []
+        if gs1_mode != 'none':
+            context_labels.append('gs1')
+        if gs1_mode == 'only':
+            context_labels.append('gs1_only')
+        if has_chemicals:
+            context_labels.append('chemicals')
+        if is_staffel_file:
+            context_labels.append('staffel')
+            
+        # Add institution labels
+        institution_labels = [inst.lower() for inst in institutions]
+        context_labels.extend(institution_labels)
+        
+        # Add product type labels  
+        context_labels.extend(product_types)
+        
+        print(f"\n=== FIELD MAPPING DEBUG ANALYSE ===")
+        print(f"Template Code Context:")
+        print(f"  Product Types: {product_types}")
+        print(f"  Institutions: {institutions}")  
+        print(f"  GS1 Mode: {gs1_mode}")
+        print(f"  Has Chemicals: {has_chemicals}")
+        print(f"  Is Staffel: {is_staffel_file}")
+        print(f"  Generated Context Labels: {context_labels}")
+        print(f"\nAnalysing {len(field_mapping)} fields...")
+        print("=" * 80)
+        
+        visible_fields = []
+        mandatory_fields = []
+        hidden_fields = []
+        
+        field_decisions = {}
+        
+        for field_name, field_config in field_mapping.items():
+            # Evaluate visibility
+            visibility_result = debug_evaluate_field_visibility(field_config, context_labels, product_types)
+            is_visible = visibility_result['decision']
+            visibility_reason = visibility_result['reason']
+            
+            # Evaluate mandatory (only if visible)
+            mandatory_result = {'decision': False, 'reason': 'Field not visible'}
+            if is_visible:
+                mandatory_result = debug_evaluate_field_mandatory(field_config, context_labels, product_types)
+            
+            is_mandatory = mandatory_result['decision']
+            mandatory_reason = mandatory_result['reason']
+            
+            # Categorize
+            if is_visible:
+                visible_fields.append(field_name)
+                if is_mandatory:
+                    mandatory_fields.append(field_name)
+            else:
+                hidden_fields.append(field_name)
+            
+            # Store decision details
+            field_decisions[field_name] = {
+                'col': field_config.get('col', ''),
+                'visible': is_visible,
+                'visibility_reason': visibility_reason,
+                'mandatory': is_mandatory,
+                'mandatory_reason': mandatory_reason,
+                'field_config': field_config
+            }
+            
+            # Print detailed analysis for first 20 fields
+            if len(field_decisions) <= 20:
+                status = "VISIBLE" if is_visible else "HIDDEN"
+                mandatory_status = " + MANDATORY" if is_mandatory else ""
+                print(f"{field_name:40} [{field_config.get('col', '??'):3}] {status:7}{mandatory_status}")
+                print(f"    Visibility: {visibility_reason}")
+                if is_visible:
+                    print(f"    Mandatory:  {mandatory_reason}")
+                print()
+        
+        # Summary
+        print(f"\n=== SUMMARY ===")
+        print(f"Total Fields: {len(field_mapping)}")
+        print(f"Visible Fields: {len(visible_fields)}")
+        print(f"Mandatory Fields: {len(mandatory_fields)}")  
+        print(f"Hidden Fields: {len(hidden_fields)}")
+        
+        print(f"\nFirst 10 Visible Fields:")
+        for field in visible_fields[:10]:
+            col = field_decisions[field]['col']
+            mandatory = " (MANDATORY)" if field_decisions[field]['mandatory'] else ""
+            print(f"  [{col:3}] {field}{mandatory}")
+            
+        print(f"\nFirst 10 Hidden Fields:")
+        for field in hidden_fields[:10]:
+            col = field_decisions[field]['col'] 
+            reason = field_decisions[field]['visibility_reason']
+            print(f"  [{col:3}] {field} - {reason}")
+        
+        return {
+            'visible_fields': visible_fields,
+            'mandatory_fields': mandatory_fields,
+            'hidden_fields': hidden_fields,
+            'field_decisions': field_decisions,
+            'context_labels': context_labels,
+            'summary': {
+                'total': len(field_mapping),
+                'visible': len(visible_fields),
+                'mandatory': len(mandatory_fields),
+                'hidden': len(hidden_fields)
+            }
+        }
+        
+    except Exception as e:
+        print(f"Error in debug analysis: {e}")
+        return {}
+
+def debug_evaluate_field_visibility(field_config: Dict[str, Any], context_labels: List[str], product_types: List[str]) -> Dict[str, Any]:
+    """Debug version van field visibility evaluatie met gedetailleerde reden."""
+    try:
+        # Priority 1: visible_only (hoogste prioriteit)
+        if 'visible_only' in field_config:
+            visible_only = field_config['visible_only']
+            matches = [label for label in visible_only if label in context_labels]
+            if matches:
+                return {'decision': True, 'reason': f'visible_only {visible_only} matches {matches}'}
+            else:
+                return {'decision': False, 'reason': f'visible_only {visible_only} - no match in {context_labels}'}
+        
+        # Priority 2: visible_except
+        if 'visible_except' in field_config:
+            visible_except = field_config['visible_except']
+            matches = [label for label in visible_except if label in context_labels]
+            if matches:
+                return {'decision': False, 'reason': f'visible_except {visible_except} matches {matches} - excluded'}
+            else:
+                return {'decision': True, 'reason': f'visible_except {visible_except} - no exclusion'}
+            
+        # Priority 3: visible (laagste prioriteit)
+        if 'visible' in field_config:
+            visible = field_config['visible']
+            if visible == 'always':
+                return {'decision': True, 'reason': 'visible: always'}
+            elif visible == 'never':
+                return {'decision': False, 'reason': 'visible: never'}
+        
+        # Default: zichtbaar
+        return {'decision': True, 'reason': 'default visible (no visibility rules)'}
+        
+    except Exception as e:
+        return {'decision': True, 'reason': f'error in visibility evaluation: {e}'}
+
+def debug_evaluate_field_mandatory(field_config: Dict[str, Any], context_labels: List[str], product_types: List[str]) -> Dict[str, Any]:
+    """Debug version van field mandatory evaluatie met gedetailleerde reden."""
+    try:
+        # Priority 1: mandatory_only (hoogste prioriteit)
+        if 'mandatory_only' in field_config:
+            mandatory_only = field_config['mandatory_only']
+            matches = [label for label in mandatory_only if label in context_labels]
+            if matches:
+                return {'decision': True, 'reason': f'mandatory_only {mandatory_only} matches {matches}'}
+            else:
+                return {'decision': False, 'reason': f'mandatory_only {mandatory_only} - no match in {context_labels}'}
+        
+        # Priority 2: mandatory_except
+        if 'mandatory_except' in field_config:
+            mandatory_except = field_config['mandatory_except']
+            matches = [label for label in mandatory_except if label in context_labels]
+            if matches:
+                return {'decision': False, 'reason': f'mandatory_except {mandatory_except} matches {matches} - excluded'}
+            else:
+                return {'decision': True, 'reason': f'mandatory_except {mandatory_except} - no exclusion'}
+            
+        # Priority 3: mandatory (laagste prioriteit)
+        if 'mandatory' in field_config:
+            mandatory = field_config['mandatory']
+            if mandatory == 'always':
+                return {'decision': True, 'reason': 'mandatory: always'}
+            elif mandatory == 'never':
+                return {'decision': False, 'reason': 'mandatory: never'}
+        
+        # Default: niet mandatory
+        return {'decision': False, 'reason': 'default optional (no mandatory rules)'}
+        
+    except Exception as e:
+        return {'decision': False, 'reason': f'error in mandatory evaluation: {e}'}
+
+def extract_template_code_from_a1(cell_value: str) -> Optional[str]:
+    """Extraheert template code uit A1 cel waarde."""
+    try:
+        # Zoek naar de code na "Deze code niet verwijderen:"
+        if "Deze code niet verwijderen:" in cell_value:
+            parts = cell_value.split("Deze code niet verwijderen:")
+            if len(parts) > 1:
+                code_part = parts[1].strip()
+                # De code kan op dezelfde regel staan of op volgende regel
+                # Verwijder newlines en whitespace
+                code_lines = code_part.split('\n')
+                for line in code_lines:
+                    line = line.strip()
+                    if line and not line.startswith('Template versie:'):  # Skip versie info
+                        return line
+        return None
+    except Exception as e:
+        logging.warning(f"Fout bij extracten template code: {e}")
+        return None
+
+def extract_version_info_from_sheet(worksheet) -> Dict[str, str]:
+    """Extraheert versie informatie uit worksheet."""
+    try:
+        version_info = {}
+        
+        # Zoek naar versie info in de eerste paar rijen
+        for row in range(1, 6):
+            for col in range(1, 5):
+                cell_value = worksheet.cell(row=row, column=col).value
+                if cell_value and isinstance(cell_value, str):
+                    if "Template versie:" in cell_value:
+                        # Parse: "Template versie: v25.1 | Gegenereerd: 24-09-2025 08:39"
+                        parts = cell_value.split("|")
+                        for part in parts:
+                            if "Template versie:" in part:
+                                version_info['version'] = part.split("Template versie:")[1].strip()
+                            elif "Gegenereerd:" in part:
+                                version_info['generated'] = part.split("Gegenereerd:")[1].strip()
+        
+        return version_info
+    except Exception as e:
+        logging.warning(f"Fout bij extracten versie info: {e}")
+        return {}
 
 def get_context_mandatory_fields(template_config: Dict, context: Dict[str, Any]) -> List[str]:
     """
@@ -183,9 +837,10 @@ def get_institution_mandatory_fields(institutions: List[str]) -> List[str]:
 
 def get_collapsed_fields(template_context: Dict[str, Any]) -> List[str]:
     """
-    Bepaalt welke velden ingeklapt zijn in template generator template.
+    Bepaalt welke velden ingeklapt zijn in Template Generator template.
     
-    Deze velden moeten worden weggelaten uit statistieken maar zijn wel aanwezig in Excel.
+    Voor TG templates gebruiken we de hidden_list uit TG metadata.
+    Voor andere templates gebruiken we legacy configuratie logica.
     
     Returns:
         Lijst van field names die ingeklapt zijn
@@ -193,6 +848,16 @@ def get_collapsed_fields(template_context: Dict[str, Any]) -> List[str]:
     collapsed_fields = []
     
     try:
+        # Check of dit TG context is met decisions metadata
+        decisions = template_context.get('decisions', {})
+        if decisions and 'hidden_list' in decisions:
+            # Template Generator: gebruik hidden_list uit metadata
+            hidden_list = decisions.get('hidden_list', [])
+            collapsed_fields = hidden_list.copy()
+            logging.info(f"TG hidden fields uit metadata: {len(collapsed_fields)} velden")
+            return collapsed_fields
+        
+        # Legacy logica voor oude TG templates of andere template types
         # Laad collapsed fields configuratie uit field_validation_v20.json
         validation_config_path = "field_validation_v20.json"
         collapsed_config = {}
@@ -202,8 +867,11 @@ def get_collapsed_fields(template_context: Dict[str, Any]) -> List[str]:
                 config = json.load(f)
             collapsed_config = config.get("template_generator", {}).get("collapsed_fields_by_context", {})
         
+        # Check configuration section voor legacy TG templates
+        configuration = template_context.get('configuration', template_context)
+        
         # GS1 velden zijn ingeklapt als gs1_mode = "none" 
-        gs1_mode = template_context.get("gs1_mode", "none")
+        gs1_mode = configuration.get("gs1_mode", "none")
         if gs1_mode == "none":
             gs1_fields = collapsed_config.get("gs1_mode_none", [
                 "GTIN", "GLN Fabrikant", "GLN Leverancier", "Doelmarkt Landcode",
@@ -212,41 +880,162 @@ def get_collapsed_fields(template_context: Dict[str, Any]) -> List[str]:
             collapsed_fields.extend(gs1_fields)
         
         # Staffel-specifieke velden alleen zichtbaar bij staffel templates
-        is_staffel = template_context.get("is_staffel_file", False) 
+        is_staffel = configuration.get("is_staffel_file", False) 
         if not is_staffel:
-            staffel_fields = collapsed_config.get("non_staffel", ["Hoeveelheid Van", "Hoeveelheid Tot"])
+            staffel_fields = collapsed_config.get("non_staffel", ["Staffel Vanaf", "Staffel Tot"])
             collapsed_fields.extend(staffel_fields)
             
         # Product type specifieke velden
-        product_type = template_context.get("product_type", "")
-        if product_type != "medisch":
+        product_types = configuration.get("product_types", [])
+        if not product_types:
+            # Fallback voor oude templates met single product_type
+            product_type = configuration.get("product_type", "")
+            product_types = [product_type] if product_type else []
+            
+        if "medisch" not in product_types:
             medical_fields = collapsed_config.get("non_medisch", ["GMDN Code", "EMDN Code", "MDR Klasse"])
             collapsed_fields.extend(medical_fields)
             
-        if product_type != "lab":
-            lab_fields = collapsed_config.get("non_lab", ["Chemische Samenstelling", "Gevaarlijke Stoffen Klasse"])
+        if "lab" not in product_types:
+            lab_fields = collapsed_config.get("non_lab", ["CAS nummer", "Stofnaam", "Brutoformule"])
             collapsed_fields.extend(lab_fields)
             
         # Verwijder duplicaten
         collapsed_fields = list(set(collapsed_fields))
             
-        logging.info(f"Ingeklapte velden: {len(collapsed_fields)} velden weggelaten uit statistieken")
+        logging.info(f"Legacy ingeklapte velden: {len(collapsed_fields)} velden weggelaten uit statistieken")
         return collapsed_fields
         
     except Exception as e:
         logging.error(f"Fout bij bepalen ingeklapte velden: {e}")
         return []
 
+def get_visible_fields(template_context: Dict[str, Any]) -> List[str]:
+    """
+    Bepaalt welke velden zichtbaar zijn in Template Generator template.
+    
+    Voor TG templates gebruiken we de visible_list uit TG metadata.
+    Voor andere templates retourneren we None (alle velden zichtbaar).
+    
+    Returns:
+        Lijst van field names die zichtbaar zijn, of None voor alle velden
+    """
+    try:
+        # Check of dit TG context is met decisions metadata
+        decisions = template_context.get('decisions', {})
+        if decisions and 'visible_list' in decisions:
+            # Template Generator: gebruik visible_list uit metadata
+            visible_list = decisions.get('visible_list', [])
+            logging.info(f"TG visible fields uit metadata: {len(visible_list)} velden")
+            return visible_list
+        
+        # Voor andere template types: alle velden zichtbaar
+        template_type = template_context.get('template_type', 'Unknown')
+        logging.info(f"Template type {template_type}: alle velden zichtbaar")
+        return None  # None betekent alle velden zijn zichtbaar
+        
+    except Exception as e:
+        logging.error(f"Fout bij bepalen zichtbare velden: {e}")
+        return None  # Fallback: alle velden zichtbaar
+
+def should_validate_field(field_name: str, template_context: Dict[str, Any]) -> bool:
+    """
+    Bepaalt of een veld gevalideerd moet worden op basis van template context.
+    
+    Args:
+        field_name: Naam van het veld
+        template_context: Template context metadata
+        
+    Returns:
+        True als veld gevalideerd moet worden, False als het geskipped moet worden
+    """
+    try:
+        # Voor TG templates: check of veld in visible_list staat
+        template_type = template_context.get('template_type', 'Unknown')
+        
+        if template_type == 'TG':
+            decisions = template_context.get('decisions', {})
+            visible_list = decisions.get('visible_list', [])
+            hidden_list = decisions.get('hidden_list', [])
+            
+            # Als we visible_list hebben, gebruik die
+            if visible_list:
+                return field_name in visible_list
+            
+            # Als we alleen hidden_list hebben, valideer als veld niet hidden is
+            if hidden_list:
+                return field_name not in hidden_list
+                
+        # Voor DT en AT templates: valideer alle velden
+        return True
+        
+    except Exception as e:
+        logging.error(f"Fout bij bepalen of veld {field_name} gevalideerd moet worden: {e}")
+        return True  # Fallback: valideer het veld
+
+def test_template_detection(excel_path: str) -> Dict[str, Any]:
+    """
+    Test functie om template detectie en metadata extractie te valideren.
+    
+    Returns:
+        Dictionary met detectie resultaten voor debugging
+    """
+    try:
+        # Test template type detectie
+        template_type = determine_template_type(excel_path)
+        
+        result = {
+            'excel_path': excel_path,
+            'template_type': template_type,
+            'has_stamp': has_template_generator_stamp(excel_path),
+            'context': None,
+            'mandatory_fields_count': 0,
+            'visible_fields_count': 0,
+            'hidden_fields_count': 0
+        }
+        
+        # Test context extractie voor TG templates
+        if template_type == 'TG':
+            context = extract_template_generator_context(excel_path)
+            result['context'] = context
+            
+            if context:
+                config = context.get('configuration', {})
+                decisions = context.get('decisions', {})
+                
+                result['institutions'] = config.get('institutions', [])
+                result['product_types'] = config.get('product_types', [])
+                result['gs1_mode'] = config.get('gs1_mode', 'none')
+                result['mandatory_fields_count'] = decisions.get('mandatory_fields', 0)
+                result['visible_fields_count'] = decisions.get('visible_fields', 0)
+                result['hidden_fields_count'] = decisions.get('hidden_fields', 0)
+        
+        # Test mandatory fields bepaling
+        mandatory_fields = determine_mandatory_fields_for_template(excel_path)
+        result['determined_mandatory_count'] = len(mandatory_fields)
+        
+        return result
+        
+    except Exception as e:
+        return {
+            'excel_path': excel_path,
+            'error': str(e),
+            'template_type': 'Error'
+        }
+
 def determine_mandatory_fields_for_template(excel_path: str) -> List[str]:
     """
     Bepaalt welke velden verplicht zijn voor de gegeven template.
     
-    Ondersteunt 3 scenario's:
-    1. Template Generator templates (met stamp) - Context-aware mandatory fields
-    2. Default templates (geen stamp) - 17 GHX mandatory fields  
-    3. Oude leverancier templates - Gebruik aanwezige velden
+    Ondersteunt 3 template types:
+    - TG (Template Generator): Context-aware mandatory fields uit TG metadata
+    - DT (Default Template): 17 standaard GHX mandatory fields  
+    - AT (Alternatieve Template): Gebruik aanwezige velden en fallback
     """
     try:
+        # Bepaal template type
+        template_type = determine_template_type(excel_path)
+        
         # Laad template configuratie uit field_validation_v20.json
         validation_config_path = "field_validation_v20.json"
         if not os.path.exists(validation_config_path):
@@ -256,35 +1045,100 @@ def determine_mandatory_fields_for_template(excel_path: str) -> List[str]:
         with open(validation_config_path, 'r', encoding='utf-8') as f:
             template_config = json.load(f)
         
-        # SCENARIO 3: Template Generator templates
-        if has_template_generator_stamp(excel_path):
-            logging.info("Template Generator stamp gedetecteerd")
+        if template_type == "TG":
+            # Template Generator: gebruik TG metadata voor mandatory fields
             context = extract_template_generator_context(excel_path)
             
             if context:
-                # Template Generator context gevonden
-                template_choice = context.get("template_choice", "besteleenheid")
-                product_type = context.get("product_type", "facilitair") 
-                institutions = context.get("institutions", [])
-                
-                logging.info(f"Template type: Template Generator - {template_choice} ({product_type})")
-                if institutions:
-                    logging.info(f"Instellingen: {', '.join(institutions)}")
-                
-                return get_context_mandatory_fields(template_config, context)
+                return get_tg_mandatory_fields(template_config, context)
             else:
-                logging.warning("Template Generator stamp gevonden maar context extractie gefaald, gebruik default")
-        
-        # SCENARIO 1: Default template (geen stamp)
-        default_config = template_config.get("default_template", {})
-        mandatory_fields = default_config.get("mandatory_fields", [])
-        
-        logging.info(f"Template type: Default (17 verplichte velden)")
-        return mandatory_fields
+                logging.warning("TG template type maar context extractie gefaald, gebruik DT fallback")
+                return get_dt_mandatory_fields(template_config)
+                
+        elif template_type == "DT":
+            # Default Template: gebruik standaard GHX mandatory fields
+            return get_dt_mandatory_fields(template_config)
+            
+        else:  # template_type == "AT"
+            # Alternatieve Template: gebruik beperkte set en geef waarschuwing
+            logging.warning("Alternatieve Template gedetecteerd - beperkte validatie toegepast")
+            return get_at_mandatory_fields(template_config)
         
     except Exception as e:
         logging.error(f"Fout bij bepalen mandatory fields: {e}")
         return get_fallback_mandatory_fields()
+
+def get_tg_mandatory_fields(template_config: Dict, context: Dict[str, Any]) -> List[str]:
+    """
+    Bepaalt mandatory fields voor Template Generator template op basis van TG metadata.
+    
+    Args:
+        template_config: Validatie configuratie
+        context: Template Generator context metadata
+        
+    Returns:
+        Lijst van mandatory field names uit TG decisions
+    """
+    try:
+        # Haal mandatory fields direct uit TG decisions
+        decisions = context.get('decisions', {})
+        tg_mandatory_list = decisions.get('mandatory_list', [])
+        
+        if tg_mandatory_list:
+            logging.info(f"TG mandatory fields uit metadata: {len(tg_mandatory_list)} velden")
+            return tg_mandatory_list
+        else:
+            # Fallback naar configuratie-based logica voor oude TG templates
+            config = context.get('configuration', {})
+            return get_context_mandatory_fields(template_config, config)
+            
+    except Exception as e:
+        logging.error(f"Fout bij bepalen TG mandatory fields: {e}")
+        return get_dt_mandatory_fields(template_config)
+
+def get_dt_mandatory_fields(template_config: Dict) -> List[str]:
+    """
+    Bepaalt mandatory fields voor Default Template (standaard GHX template).
+    
+    Returns:
+        Lijst van 17 standaard GHX mandatory fields
+    """
+    try:
+        default_config = template_config.get("default_template", {})
+        mandatory_fields = default_config.get("mandatory_fields", [])
+        
+        if mandatory_fields:
+            logging.info(f"DT mandatory fields uit config: {len(mandatory_fields)} velden")
+            return mandatory_fields
+        else:
+            # Fallback naar hardcoded lijst
+            return get_fallback_mandatory_fields()
+            
+    except Exception as e:
+        logging.error(f"Fout bij bepalen DT mandatory fields: {e}")
+        return get_fallback_mandatory_fields()
+
+def get_at_mandatory_fields(template_config: Dict) -> List[str]:
+    """
+    Bepaalt mandatory fields voor Alternatieve Template.
+    
+    Voor AT templates gebruiken we een beperkte set core velden.
+    
+    Returns:
+        Lijst van minimale mandatory fields voor AT templates
+    """
+    try:
+        # Voor alternatieve templates alleen de allerbelangrijkste velden verplicht maken
+        at_core_fields = [
+            "Artikelnummer", "Artikelnaam", "Brutoprijs", "Nettoprijs"
+        ]
+        
+        logging.info(f"AT mandatory fields (core only): {len(at_core_fields)} velden")
+        return at_core_fields
+        
+    except Exception as e:
+        logging.error(f"Fout bij bepalen AT mandatory fields: {e}")
+        return ["Artikelnummer", "Artikelnaam"]  # Absolute minimum
 
 def get_fallback_mandatory_fields() -> List[str]:
     """Fallback lijst van 17 mandatory fields als template config faalt."""
@@ -1129,11 +1983,19 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
     total_rows = len(df)
     rij_offset = 3 # Start rijnummer in Excel na header(s)/instructie(s)
 
-    # Bepaal ingeklapte velden voor Template Generator templates
+    # Bepaal template-aware veld filtering
     collapsed_fields = []
+    visible_fields = None
+    template_type = template_context.get('template_type', 'Unknown') if template_context else 'Unknown'
+    
     if template_context:
         collapsed_fields = get_collapsed_fields(template_context)
-        logging.info(f"Template-aware statistieken: {len(collapsed_fields)} ingeklapte velden uitgesloten")
+        visible_fields = get_visible_fields(template_context)
+        
+        if template_type == 'TG' and visible_fields:
+            logging.info(f"TG template: {len(visible_fields)} velden zichtbaar, {len(collapsed_fields)} verborgen")
+        else:
+            logging.info(f"Template type {template_type}: {len(collapsed_fields)} velden uitgesloten van statistieken")
     
     # Initialiseer summary_stats (zal worden geretourneerd als filled_percentages)
     summary_stats = {
@@ -1151,11 +2013,19 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
         },
         'total_rows_in_df': total_rows,
         'collapsed_fields_count': len(collapsed_fields),
-        'template_context': template_context
+        'template_context': template_context,
+        'template_type': template_type,
+        'visible_fields_count': len(visible_fields) if visible_fields else None,
+        'template_aware_filtering': template_type == 'TG'
     }
 
     # Initialiseer tellers en resultaatlijsten
     for field_name in fields_config:
+        # Template-aware field filtering
+        if not should_validate_field(field_name, template_context):
+            logging.debug(f"Overslaan veld (niet zichtbaar in template): {field_name}")
+            continue
+            
         # Skip ingeklapte velden in Template Generator templates
         if field_name in collapsed_fields:
             logging.debug(f"Overslaan ingeklapt veld: {field_name}")
@@ -1182,6 +2052,10 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
 
         # Valideer elk veld in de rij
         for field, rules in fields_config.items():
+            # Template-aware field filtering
+            if not should_validate_field(field, template_context):
+                continue
+                
             # Skip ingeklapte velden in Template Generator templates
             if field in collapsed_fields:
                 continue
@@ -1340,8 +2214,12 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
 
 
     # 2. Bereken summary_stats NA ALLE validaties ---
-    logging.info("Berekenen vullingspercentages...") # Hergebruik logging message, past nu beter
+    logging.info("Berekenen template-aware vullingspercentages...")
     for field_name, rules in fields_config.items():
+        # Template-aware field filtering
+        if not should_validate_field(field_name, template_context):
+            continue
+            
         # Skip ingeklapte velden in Template Generator templates
         if field_name in collapsed_fields:
             continue
@@ -1487,22 +2365,50 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
         # Haal mapping dictionary op
         header_mapping_dict = {k: v["alternatives"] for k, v in header_mapping_config.get("standard_headers", {}).items()}
         
+        # Template type detectie en configuratie
+        template_type = determine_template_type(input_excel_path)
+        logging.info(f"Template type gedetecteerd: {template_type}")
+        
         # Template-aware mandatory fields bepaling
         ghx_mandatory_fields = determine_mandatory_fields_for_template(input_excel_path)
-        logging.info(f"GHX Verplichte velden geladen: {len(ghx_mandatory_fields)} velden.")
+        logging.info(f"Verplichte velden geladen: {len(ghx_mandatory_fields)} velden voor {template_type} template")
         
         # Template context extraheren voor rapportage
         template_context = None
-        if has_template_generator_stamp(input_excel_path):
+        if template_type == "TG":
             template_context = extract_template_generator_context(input_excel_path)
             if template_context:
-                # Log product type informatie voor toekomstige cross-validation
-                product_types = template_context.get("product_type", "onbekend")
-                institutions = template_context.get("institutions", [])
-                logging.info(f"Product types: {product_types} (voor toekomstige UNSPSC cross-validatie)")
-                if institutions:
-                    logging.info(f"Instellingen: {', '.join(institutions)}")
-            logging.info("Template Generator context geëxtraheerd voor rapportage")
+                # Voeg template type toe aan context
+                template_context['template_type'] = template_type
+                
+                # Log Template Generator informatie
+                config = template_context.get('configuration', {})
+                decisions = template_context.get('decisions', {})
+                
+                product_types = config.get("product_types", [])
+                institutions = config.get("institutions", [])
+                visible_fields = decisions.get("visible_fields", 0)
+                hidden_fields = decisions.get("hidden_fields", 0)
+                
+                logging.info(f"TG Product types: {product_types}")
+                logging.info(f"TG Instellingen: {len(institutions)} instellingen")
+                logging.info(f"TG Velden: {visible_fields} zichtbaar, {hidden_fields} verborgen")
+            else:
+                logging.warning("TG template type maar geen geldige context gevonden")
+                # Maak fallback context
+                template_context = {
+                    'template_type': template_type,
+                    'configuration': {},
+                    'decisions': {}
+                }
+        else:
+            # Voor DT en AT templates maak een basis context voor rapportage
+            template_context = {
+                'template_type': template_type,
+                'configuration': {},
+                'decisions': {}
+            }
+            logging.info(f"Template type {template_type}: basis context aangemaakt voor rapportage")
 
         # 2. Lees Excel in
         logging.info(f"Lezen Excel bestand: {input_excel_path}")

@@ -85,6 +85,26 @@ if uploaded_files:
                     tmp_file.write(uploaded_file.getvalue())
                     temp_file_path = tmp_file.name
 
+                # DEBUG: Test template detectie voor dit bestand
+                try:
+                    from validator.price_tool import test_template_detection
+                    debug_result = test_template_detection(temp_file_path)
+                    st.info(f"🔍 **Debug Info voor '{original_filename}':**")
+                    st.write(f"- Template Type: **{debug_result.get('template_type', 'Unknown')}**")
+                    st.write(f"- Heeft Stamp: **{debug_result.get('has_stamp', False)}**")
+                    if debug_result.get('template_type') == 'TG':
+                        st.write(f"- Mandatory Fields: **{debug_result.get('mandatory_fields_count', 0)}**")
+                        st.write(f"- Visible Fields: **{debug_result.get('visible_fields_count', 0)}**")
+                        st.write(f"- Hidden Fields: **{debug_result.get('hidden_fields_count', 0)}**")
+                        if debug_result.get('institutions'):
+                            st.write(f"- Instellingen: **{len(debug_result.get('institutions', []))}**")
+                        if debug_result.get('product_types'):
+                            st.write(f"- Product Types: **{debug_result.get('product_types', [])}**")
+                    elif 'error' in debug_result:
+                        st.error(f"Debug Error: {debug_result['error']}")
+                except Exception as debug_e:
+                    st.warning(f"Debug info niet beschikbaar: {debug_e}")
+
                 # Start validation with a spinner for THIS file
                 with st.spinner(f"Validatie en rapportage voor '{original_filename}' bezig..."):
                     logging.info(f"Aanroepen validate_pricelist voor {original_filename}...")
