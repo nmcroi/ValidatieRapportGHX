@@ -121,7 +121,7 @@
                 { "if_field": "Aanvullende Productclassificatiewaarde (Risicoklasse)", "is": "filled" },
                 { "if_field": "CE Certificaat nummer", "is": "filled" },
                 { "if_field": "Indicatie Implanteerbaar", "equals": 1 },
-                { "if_field": "UNSPSC", "starts_with": "42" },
+                { "if_field": "UNSPSC Code", "starts_with": "42" },
                 { "if_field": "Steriel", "equals": 1 },
                 { "if_field": "MRI Compatibility", "equals": 1 }
             ]
@@ -131,7 +131,7 @@
             "trigger_logic": "OR",
             "triggers": [
                 { "if_field": "Indicatie Implanteerbaar", "equals": 1 },
-                { "if_field": "UNSPSC", "value_in_list_ref": "implant_unspsc_codes" }
+                { "if_field": "UNSPSC Code", "value_in_list_ref": "implant_unspsc_codes" }
             ]
         },
         "is_chemical_substance": {
@@ -141,7 +141,7 @@
                 { "if_context": "template_category", "equals": "chemicals" },
                 { "if_field": "CAS nummer", "is": "filled" },
                 { "if_field": "UN-nummer Gevaarlijke Stof", "is": "filled" },
-                { "if_field": "UNSPSC", "starts_with": "12" }
+                { "if_field": "UNSPSC Code", "starts_with": "12" }
             ]
         },
         "risk_class_is_high": {
@@ -156,7 +156,7 @@
             "trigger_logic": "OR",
             "triggers": [
                 { "if_context": "template_category", "equals": "lab" },
-                { "if_field": "UNSPSC", "starts_with": "41" }
+                { "if_field": "UNSPSC Code", "starts_with": "41" }
             ]
         }
     },
@@ -1106,6 +1106,18 @@
                     "condition": "max_length",
                     "params": 2000,
                     "message": "De 'Omschrijving Duurzaamheid' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
+                }
+            ]
+        },
+        "Naam Duurzaam Assortiment": {
+            "data_format": "string",
+            "rules": [
+                {
+                    "type": "correction",
+                    "code": "702",
+                    "condition": "max_length",
+                    "params": 50,
+                    "message": "De 'Naam Duurzaam Assortiment' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
                 }
             ]
         },

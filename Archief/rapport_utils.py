@@ -9,181 +9,6 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Any  # Type hints zijn goed om te behouden
 
 # -----------------------------
-# NEW INTUITIVE SCORE CALCULATION
-# -----------------------------
-
-def load_uom_penalty_config():
-    """Laad UOM penalty configuratie."""
-    try:
-        config_path = os.path.join(os.path.dirname(__file__), '..', 'uom_penalty_config.json')
-        with open(config_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except Exception as e:
-        logging.error(f"Kon UOM penalty config niet laden: {e}")
-        # Fallback config
-        return {
-            "uom_penalty_codes": ["720", "724", "752", "753", "754", "755", "722"],
-            "penalty_structure": {"penalty_single": -1, "penalty_10_percent": -3, "penalty_25_percent": -5},
-            "template_penalties": {"TG": 0, "DT": 0, "AT": -25}
-        }
-
-def calculate_uom_penalties(df_errors_mand, df_errors_non_mand, total_rows):
-    """
-    Berekent UOM penalty's op basis van foutcodes en hun frequentie.
-    
-    Args:
-        df_errors_mand: DataFrame met mandatory field errors
-        df_errors_non_mand: DataFrame met non-mandatory field errors  
-        total_rows: Totaal aantal rijen in dataset
-        
-    Returns:
-        int: Totale penalty punten (negatief getal)
-    """
-    try:
-        config = load_uom_penalty_config()
-        uom_codes = set(config["uom_penalty_codes"])
-        penalty_struct = config["penalty_structure"]
-        
-        total_penalty = 0
-        
-        # Combineer alle errors
-        all_errors = pd.concat([df_errors_mand, df_errors_non_mand], ignore_index=True) if len(df_errors_mand) > 0 or len(df_errors_non_mand) > 0 else pd.DataFrame()
-        
-        if len(all_errors) == 0 or total_rows == 0:
-            return 0
-            
-        # Group by error code en tel frequentie
-        code_counts = all_errors['Error Code'].value_counts()
-        
-        for error_code, count in code_counts.items():
-            if str(error_code) in uom_codes:
-                error_percentage = (count / total_rows) * 100
-                
-                if error_percentage >= 25:
-                    penalty = penalty_struct["penalty_25_percent"]
-                elif error_percentage >= 10:
-                    penalty = penalty_struct["penalty_10_percent"]
-                else:
-                    penalty = penalty_struct["penalty_single"]
-                    
-                total_penalty += penalty
-                logging.info(f"UOM penalty - Code {error_code}: {count} fouten ({error_percentage:.1f}%) → {penalty} punten")
-        
-        return total_penalty
-        
-    except Exception as e:
-        logging.error(f"Fout bij UOM penalty berekening: {e}")
-        return 0
-
-def calculate_new_intuitive_score(M_found, total_mandatory, df_errors_mand, df_errors_non_mand, total_rows, template_type, volledigheids_percentage=None, juistheid_percentage=None):
-    """
-    Berekent de nieuwe intuïtieve score volgens de formule:
-    Core = ROUND((M% × J%) ÷ 100) - UOM_Penalty's - Template_Penalty
-    
-    Args:
-        M_found: Aantal gevonden mandatory fields
-        total_mandatory: Totaal aantal mandatory fields
-        df_errors_mand: DataFrame met mandatory field errors
-        df_errors_non_mand: DataFrame met non-mandatory field errors
-        total_rows: Totaal aantal rijen 
-        template_type: Template type (TG, DT, AT)
-        volledigheids_percentage: Voorberekend volledigheids percentage (optioneel)
-        juistheid_percentage: Voorberekend juistheid percentage (optioneel)
-        
-    Returns:
-        dict: Score components (M_percentage, J_percentage, core_score, penalties, final_score, grade)
-    """
-    try:
-        config = load_uom_penalty_config()
-        
-        # M% = Volledigheid
-        if volledigheids_percentage is not None:
-            # Voor AT templates: herbereken M% op basis van 17 standaard mandatory fields
-            if template_type == 'AT':
-                # AT templates moeten altijd uit 17 mandatory fields berekend worden
-                # Ook als er maar 10 gemapped zijn
-                # volledigheids_percentage is gebaseerd op beschikbare fields, maar wij willen altijd /17
-                # Schat ingevulde fields: volledigheids_percentage * total_mandatory / 100
-                estimated_filled = (volledigheids_percentage * total_mandatory) / 100 if total_mandatory > 0 else 0
-                M_percentage = round((estimated_filled / 17) * 100)
-            else:
-                # Voor TG/DT/GT: gebruik voorberekende waarde (respecteert werkelijke mandatory count)
-                # GT templates kunnen 19+ mandatory fields hebben (17 default + extra van zorginstelling)
-                M_percentage = round(volledigheids_percentage)
-        else:
-            # Fallback naar oude berekening
-            M_percentage = round((M_found / total_mandatory) * 100) if total_mandatory > 0 else 0
-        
-        # J% = Juistheid (gebruik voorberekende waarde indien beschikbaar)
-        if juistheid_percentage is not None:
-            J_percentage = round(juistheid_percentage)
-        else:
-            # Fallback: hergebruik de bestaande totaal_juist berekening
-            try:
-                # Deze variabelen zijn al berekend eerder in de functie
-                juistheid_percentage = (totaal_juist / total_filled_in_present) * 100 if total_filled_in_present > 0 else 0
-                J_percentage = round(juistheid_percentage)
-            except NameError:
-                # Fallback als variabelen niet beschikbaar zijn
-                J_percentage = 100 if M_found > 0 else 0
-        
-        # Core Score = M% × J% ÷ 100
-        core_score = round((M_percentage * J_percentage) / 100)
-        
-        # UOM Penalty's
-        uom_penalties = calculate_uom_penalties(df_errors_mand, df_errors_non_mand, total_rows)
-        
-        # Template Penalty
-        template_penalty = config["template_penalties"].get(template_type, 0)
-        
-        # Final Score
-        final_score = max(0, min(100, core_score + uom_penalties + template_penalty))
-        
-        # Grade bepaling
-        if final_score >= 95:
-            grade = "A+"
-        elif final_score >= 90:
-            grade = "A"
-        elif final_score >= 80:
-            grade = "B"
-        elif final_score >= 70:
-            grade = "C"
-        elif final_score >= 60:
-            grade = "D"
-        elif final_score >= 50:
-            grade = "E"
-        else:
-            grade = "F"
-            
-        result = {
-            'M_percentage': M_percentage,
-            'J_percentage': J_percentage,
-            'core_score': core_score,
-            'uom_penalties': uom_penalties,
-            'template_penalty': template_penalty,
-            'final_score': final_score,
-            'grade': grade
-        }
-        
-        logging.info(f"Nieuwe score: M={M_percentage}%, J={J_percentage}%, Core={core_score}, UOM={uom_penalties}, Template={template_penalty}, Final={final_score}({grade})")
-        
-        return result
-        
-    except Exception as e:
-        logging.error(f"Fout bij nieuwe score berekening: {e}")
-        # Fallback naar simpele berekening
-        M_percentage = round((M_found / total_mandatory) * 100) if total_mandatory > 0 else 0
-        return {
-            'M_percentage': M_percentage,
-            'J_percentage': 0,
-            'core_score': 0,
-            'uom_penalties': 0,
-            'template_penalty': 0,
-            'final_score': M_percentage,
-            'grade': 'F'
-        }
-
-# -----------------------------
 # EXCEL ERROR SUPPRESSION HELPER
 # -----------------------------
 
@@ -1318,30 +1143,20 @@ def genereer_rapport(
             percentage_correct = 0
         else:
             percentage_correct = 0
-        # === NIEUWE INTUÏTIEVE SCORE BEREKENING ===
-        # Bereken totaal aantal rijen voor penalty berekening
-        total_rows = len(df) if len(df) > 0 else 1
+        # Bereken nieuwe score ook hier voor bestandsnaam
+        completeness_score_file = (M_found / len(ghx_mandatory_fields)) * 40 if len(ghx_mandatory_fields) > 0 else 0
+        quality_score_file = (percentage_correct / 100) * 50 if percentage_correct > 0 else 0
+        if template_type == "TG":
+            template_bonus_file = 15
+        elif template_type == "N":
+            template_bonus_file = 10
+        else:
+            template_bonus_file = 5
+        total_score_file = min(100, completeness_score_file + quality_score_file + template_bonus_file)
+        score_int_file = round(total_score_file)
+        score_grade_file = "A+" if score_int_file >= 90 else "A" if score_int_file >= 80 else "B" if score_int_file >= 70 else "C" if score_int_file >= 60 else "D"
         
-        # Gebruik nieuwe score functie met voorberekende percentages
-        score_result = calculate_new_intuitive_score(
-            M_found=M_found,
-            total_mandatory=len(ghx_mandatory_fields),
-            df_errors_mand=df_errors_mand,
-            df_errors_non_mand=df_errors_non_mand,
-            total_rows=total_rows,
-            template_type=template_type,
-            volledigheids_percentage=volledigheids_percentage,
-            juistheid_percentage=juistheid_percentage
-        )
-        
-        # Extract values voor filename en display
-        M_percentage = score_result['M_percentage']
-        J_percentage = score_result['J_percentage']
-        score_int_file = score_result['final_score']
-        score_grade_file = score_result['grade']
-        
-        # Nieuwe filename format: TG_M86_J75_65(C) (J% terug zoals gevraagd)
-        score_suffix = f"_{template_type}_M{M_percentage}_J{J_percentage}_{score_int_file}({score_grade_file})"
+        score_suffix = f"_{template_type}{M_found}_{score_int_file}({score_grade_file})"
 
         # --- Output Bestandsnaam ---
         output_filename = (
@@ -1569,10 +1384,46 @@ def genereer_rapport(
             except NameError:
                 total_rows_safe = 0
             
-            # === GEBRUIK NIEUWE SCORE VOOR SHEET 1 DISPLAY ===
-            # Gebruik dezelfde score als filename (consistent!)
-            totale_score_display = score_result['final_score']
-            score_grade = score_result['grade']
+            # Bereken volledigheidscore (0-40 punten)
+            if M_found_safe > 0 and len(ghx_mandatory_fields_safe) > 0:
+                volledigheids_percentage = min(100, (M_found_safe / len(ghx_mandatory_fields_safe)) * 100)
+                volledigheids_score_display = int((volledigheids_percentage / 100) * 40)
+            else:
+                volledigheids_score_display = 0
+                
+            # Bereken kwaliteitscore (0-45 punten)  
+            if total_rows_safe > 0:
+                total_fouten_display = len(df_errors_mand_safe) + len(df_errors_non_mand_safe)
+                fout_percentage_display = min(100, (total_fouten_display / total_rows_safe) * 100)
+                kwaliteits_score_display = int(max(0, 45 - (fout_percentage_display / 100 * 45)))
+            else:
+                kwaliteits_score_display = 45  # Perfect als geen data
+                
+            # Template score (10 punten)
+            template_check_display = len(ghx_mandatory_fields_safe) > 0 and M_found_safe >= len(ghx_mandatory_fields_safe) // 2
+            template_score_display = 10 if template_check_display else 0
+            
+            # Versie score (5 punten) - voorlopig 5 punten (nieuwste versie)
+            versie_score_display = 5  # Tijdelijke waarde tot versiedetectie geïmplementeerd is
+            
+            # Bereken totale score en cijfer
+            totale_score_display = volledigheids_score_display + kwaliteits_score_display + template_score_display
+            
+            # Nieuwe cijferlogica: A+ (≥95), A (90-94), B (80-89), C (70-79), D (60-69), E (50-59), F (<50)
+            if totale_score_display >= 95:
+                score_grade = "A+"
+            elif totale_score_display >= 90:
+                score_grade = "A"
+            elif totale_score_display >= 80:
+                score_grade = "B"
+            elif totale_score_display >= 70:
+                score_grade = "C"
+            elif totale_score_display >= 60:
+                score_grade = "D"
+            elif totale_score_display >= 50:
+                score_grade = "E"
+            else:
+                score_grade = "F"
             
             # Bepaal randkleur: groen voor C/B/A/A+, rood voor D/E/F
             is_passing_grade = score_grade in ["C", "B", "A", "A+"]
@@ -2699,10 +2550,25 @@ def genereer_rapport(
 
             # <<<<<< DE TWEEDE (FOUTE) DEFINITIE VAN fmt_title IS HIER VERWIJDERD >>>>>>
 
-            # === GEBRUIK NIEUWE SCORE VOOR SHEET 2 DISPLAY ===
-            # Gebruik dezelfde score als filename en Sheet 1 (consistent!)
-            score_int_uitleg = score_result['final_score']
-            score_grade_uitleg = score_result['grade']
+            # Score Uitleg - Gebruik dezelfde scores als in Config sheet en dashboard
+            # Deze variabelen zijn al berekend eerder in de functie voor de dashboard badge
+            score_int_uitleg = totale_score_display
+            
+            # Gebruik DEZELFDE grading logica als Sheet 1 (Dashboard)
+            if totale_score_display >= 95:
+                score_grade_uitleg = "A+"
+            elif totale_score_display >= 90:
+                score_grade_uitleg = "A"
+            elif totale_score_display >= 80:
+                score_grade_uitleg = "B"
+            elif totale_score_display >= 70:
+                score_grade_uitleg = "C"
+            elif totale_score_display >= 60:
+                score_grade_uitleg = "D"
+            elif totale_score_display >= 50:
+                score_grade_uitleg = "E"
+            else:
+                score_grade_uitleg = "F"
             
             # Maak aparte formats voor mooiere opmaak
             fmt_score_title = workbook.add_format({
@@ -2731,27 +2597,13 @@ def genereer_rapport(
             })
             
             # Titel apart (bold en groot)
-            score_title = f"KWALITEITSSCORE: {score_int_uitleg}/100 - CIJFER {score_grade_uitleg}"
+            score_title = f"KWALITEITSSCORE: {score_int_uitleg}/100 ({score_grade_uitleg})"
             
-            # Gedetailleerde score berekening uitleg
-            M_percentage = score_result['M_percentage']
-            J_percentage = score_result['J_percentage']
-            core_score = score_result['core_score']
-            uom_penalties = score_result['uom_penalties']
-            template_penalty = score_result['template_penalty']
-            
-            score_body_tekst = f"""BEREKENING:
-• Volledigheid (M): {M_percentage}% ({M_found}/{len(ghx_mandatory_fields)} verplichte velden ingevuld)
-• Juistheid (J): {J_percentage}% (correcte data van ingevulde velden)
-• Core score: {M_percentage}% × {J_percentage}% = {core_score}%
-• Template penalty: {template_penalty} ({template_type} template)
-• UOM penalties: {uom_penalties} (foutcodes in UOM kolommen)
-• Eindscore: {core_score} + {template_penalty} + {uom_penalties} = {score_int_uitleg}
-
-INTERPRETATIE:
+            # Compacte score interpretatie tekst - alleen score uitleg
+            score_body_tekst = f"""INTERPRETATIE:
 • A+/A (≥90): Uitstekende kwaliteit - gereed voor Gatekeeper
 • B/C (70-89): Goede kwaliteit - kleine verbeteringen mogelijk  
-• D/E/F (<70): Aandacht vereist - controleer foutmeldingen
+• D/E/F (<70): Aandacht vereist - controleer foutmeldingen en aandachtspunten
 
 Cijfertoekenning: A+ (≥95), A (90-94), B (80-89), C (70-79), D (60-69), E (50-59), F (<50)"""
             # Titel (bold en groot) - 2 rijen
@@ -2762,13 +2614,13 @@ Cijfertoekenning: A+ (≥95), A (90-94), B (80-89), C (70-79), D (60-69), E (50-
             )
             current_row_intro += 3  # 2 rijen titel + 1 witregel
             
-            # Body tekst (extra ruimte voor volledige uitleg tot regel 20+)
+            # Body tekst (zeer compact) - minimale ruimte
             ws_inleiding.merge_range(
-                f"A{current_row_intro+1}:B{current_row_intro + 16}",
+                f"A{current_row_intro+1}:B{current_row_intro + 7}",
                 score_body_tekst,
                 fmt_score_body,
             )
-            current_row_intro += 16
+            current_row_intro += 7
 
             # Witregel
             current_row_intro += 1
@@ -2815,8 +2667,8 @@ Cijfertoekenning: A+ (≥95), A (90-94), B (80-89), C (70-79), D (60-69), E (50-
             # Sheet 7 altijd toevoegen (Dataset Validatie)
             rapport_onderdelen.append("7. Dataset Validatie\n   Visueel overzicht dataset met kleurcodering.")
             
-            # Conditioneel: voeg Sheet 8 toe voor oude/leverancier templates  
-            if template_type in ["O", "AT"]:
+            # Conditioneel: voeg Sheet 8 toe voor oude/leverancier templates
+            if template_type == "O":
                 rapport_onderdelen.append("8. Kolom Mapping\n   Mapping tussen GHX-standaard en uw kolomnamen.")
             
             for onderdeel in rapport_onderdelen:
@@ -3452,7 +3304,7 @@ Cijfertoekenning: A+ (≥95), A (90-94), B (80-89), C (70-79), D (60-69), E (50-
                 # - Nieuwe GHX templates (N): standaard GHX kolommen, geen mapping nodig
                 # Alleen oude/leverancier templates (O) krijgen Sheet 8
                 pass
-            elif template_type in ["O", "AT"]:
+            elif template_type == "O":
                 # Import normalize function voor header vergelijking
                 from .price_tool import normalize_template_header
                 
@@ -3461,70 +3313,24 @@ Cijfertoekenning: A+ (≥95), A (90-94), B (80-89), C (70-79), D (60-69), E (50-
                 writer.sheets["8. Kolom Mapping"] = ws_map
             mapped_originals = set()
             
-            # 1. Toon alle succesvol gemapte headers in GHX template volgorde
-            # Gebruik visible_headers volgorde i.p.v. original_column_mapping volgorde
-            if validation_config:
-                # Check voor v20 vs v18 structuur
-                if "field_validations" in validation_config:
-                    # v20 structuur - gebruik field_validations volgorde
-                    template_ordered_headers = list(validation_config.get("field_validations", {}).keys())
-                else:
-                    # v18 structuur (fallback)
-                    template_ordered_headers = list(validation_config.get("fields", {}).keys())
+            # 1. Toon alle succesvol gemapte headers (gefilterd voor Template Generator)  
+            for ghx_header, original_header in original_column_mapping.items():
+                # Check of dit veld zichtbaar is in Template Generator context
+                is_visible = True
+                if template_context and template_context.get("_decisions"):
+                    decisions = template_context.get("_decisions", {})
+                    is_visible = decisions.get(ghx_header, {}).get("visible", True)
                 
-                # Ga door ALLE GHX headers in template volgorde (103 totaal)
-                for ghx_header in template_ordered_headers:
-                    # Check of deze header gemapt is
-                    if ghx_header in original_column_mapping:
-                        original_header = original_column_mapping[ghx_header]
-                        
-                        # Check of dit veld zichtbaar is in Template Generator context
-                        is_visible = True
-                        if template_context and template_context.get("_decisions"):
-                            decisions = template_context.get("_decisions", {})
-                            is_visible = decisions.get(ghx_header, {}).get("visible", True)
-                        
-                        # Voeg toe met supplier header (voor zichtbare velden)
-                        if is_visible:
-                            mapping_data_map.append({
-                                "GHX Header": ghx_header,
-                                "Supplier Header": original_header,
-                            })
-                            # Normaliseer originele header voor vergelijking
-                            from .price_tool import normalize_template_header
-                            normalized_original = normalize_template_header(original_header)
-                            mapped_originals.add(normalized_original)
-                        else:
-                            # Veld is niet zichtbaar in context - toon als ontbrekend
-                            mapping_data_map.append({
-                                "GHX Header": ghx_header,
-                                "Supplier Header": "— ONTBREKEND (VERBORGEN) —",
-                            })
-                    else:
-                        # Geen mapping gevonden - toon als ontbrekend/optioneel
-                        mapping_data_map.append({
-                            "GHX Header": ghx_header,
-                            "Supplier Header": "— ONTBREKEND (OPTIONEEL) —",
-                        })
-            else:
-                # Fallback naar oude methode als geen validation_config
-                for ghx_header, original_header in original_column_mapping.items():
-                    # Check of dit veld zichtbaar is in Template Generator context
-                    is_visible = True
-                    if template_context and template_context.get("_decisions"):
-                        decisions = template_context.get("_decisions", {})
-                        is_visible = decisions.get(ghx_header, {}).get("visible", True)
-                    
-                    # Alleen toevoegen als het veld zichtbaar is
-                    if is_visible:
-                        mapping_data_map.append({
-                            "GHX Header": ghx_header,
-                            "Supplier Header": original_header,
-                        })
-                        # Normaliseer originele header voor vergelijking
-                        from .price_tool import normalize_template_header
-                        normalized_original = normalize_template_header(original_header)
-                        mapped_originals.add(normalized_original)
+                # Alleen toevoegen als het veld zichtbaar is
+                if is_visible:
+                    mapping_data_map.append({
+                        "GHX Header": ghx_header,
+                        "Supplier Header": original_header,
+                    })
+                    # Normaliseer originele header voor vergelijking
+                    from .price_tool import normalize_template_header
+                    normalized_original = normalize_template_header(original_header)
+                    mapped_originals.add(normalized_original)
             
             # 2. Toon verplichte velden die ontbreken (gefilterd voor Template Generator)
             if not validation_config:
@@ -3551,18 +3357,11 @@ Cijfertoekenning: A+ (≥95), A (90-94), B (80-89), C (70-79), D (60-69), E (50-
                     # Template Generator filtering overgeslagen voor Sheet 8
                     pass
                 
-                # Toon ALLE GHX headers met mapping status voor AT templates  
                 for ghx_header in visible_headers:
-                    if ghx_header not in original_column_mapping:
-                        # Bepaal status: verplicht of optioneel
-                        if ghx_header in ghx_mandatory_fields:
-                            status = "--- ONTBREKEND (VERPLICHT) ---"
-                        else:
-                            status = "--- ONTBREKEND (OPTIONEEL) ---"
-                            
+                    if ghx_header in ghx_mandatory_fields and ghx_header not in original_column_mapping:
                         mapping_data_map.append({
                             "GHX Header": ghx_header,
-                            "Supplier Header": status,
+                            "Supplier Header": "--- ONTBREKEND (VERPLICHT) ---",
                         })
             
             # 3. Vind alle originele headers die NIET gemapt werden
@@ -3579,8 +3378,8 @@ Cijfertoekenning: A+ (≥95), A (90-94), B (80-89), C (70-79), D (60-69), E (50-
                     })
             mapping_df_sheet = pd.DataFrame(mapping_data_map)
 
-            # Alleen Sheet 8 schrijven voor oude/leverancier templates (O/AT)
-            if template_type in ["O", "AT"]:
+            # Alleen Sheet 8 schrijven voor oude/leverancier templates (O)
+            if template_type == "O":
                 mapping_df_sheet.to_excel(
                     writer, sheet_name="8. Kolom Mapping", index=False
                 )

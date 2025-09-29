@@ -1,0 +1,69 @@
+{
+  "description": "Institution codes voor Template Generator stamp parsing en field matching",
+  "version": "1.0",
+  "last_updated": "2025-09-25",
+  "source": "README.md - Template Generator Files/README.md",
+  
+  "institution_mapping": {
+    "umcu": {
+      "name": "UMC Utrecht",
+      "extra_mandatory_fields": ["Levertijd"]
+    },
+    "lumc": {
+      "name": "LUMC Leiden", 
+      "extra_mandatory_fields": ["Levertijd"]
+    },
+    "amcu": {
+      "name": "Amsterdam UMC",
+      "extra_mandatory_fields": ["Levertijd"]
+    },
+    "mumc": {
+      "name": "Maastricht UMC+",
+      "extra_mandatory_fields": ["Levertijd"]
+    },
+    "umcg": {
+      "name": "UMCG Groningen",
+      "extra_mandatory_fields": ["Levertijd"]
+    },
+    "sq": {
+      "name": "Sanquin",
+      "extra_mandatory_fields": ["Bevat het Artikel Menselijk Weefsel"]
+    },
+    "pmc": {
+      "name": "Prinses Máxima Centrum",
+      "extra_mandatory_fields": []
+    },
+    "pb": {
+      "name": "Prothya Biosolutions",
+      "extra_mandatory_fields": []
+    },
+    "ul": {
+      "name": "Universiteit Leiden",
+      "extra_mandatory_fields": []
+    },
+    "uu": {
+      "name": "Universiteit Utrecht", 
+      "extra_mandatory_fields": []
+    },
+    "uva": {
+      "name": "Universiteit van Amsterdam",
+      "extra_mandatory_fields": []
+    },
+    "zxl": {
+      "name": "ZorgService XL",
+      "extra_mandatory_fields": []
+    },
+    "algemeen": {
+      "name": "Algemeen gebruik",
+      "extra_mandatory_fields": []
+    }
+  },
+  
+  "usage_notes": [
+    "Deze codes worden gebruikt in Template Generator stamp parsing",
+    "Format: institution_code -> {name, extra_mandatory_fields}",
+    "Bij wijzigingen: sync met validator/price_tool.py institution_map",
+    "Field matching gebruikt de korte codes (ul, umcu, etc.)",
+    "Display gebruikt de volledige namen (Universiteit Leiden, etc.)"
+  ]
+}

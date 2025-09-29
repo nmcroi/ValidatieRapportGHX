@@ -1,0 +1,98 @@
+{
+  "description": "Template versie informatie voor Nieuwe Generatie templates",
+  "version": "1.0", 
+  "last_updated": "2025-09-25",
+  "usage": "Voor detectie van versie-specifieke kenmerken en veld aantallen",
+  
+  "detection_criteria": {
+    "nieuwe_generatie_markers": [
+      "Is BestelbareEenheid",
+      "Omschrijving Verpakkingseenheid"
+    ],
+    "detection_rule": "Als één van bovenstaande velden aanwezig is = Nieuwe Generatie Template"
+  },
+  
+  "versions": {
+    "25.1": {
+      "release_date": "2024-11-15",
+      "a2_identifier": "Template versie: V25.1",
+      "total_fields": 103,
+      "mandatory_fields": 17,
+      "features": [
+        "Duurzaamheidsvelden toegevoegd", 
+        "Volledige versie info in A2",
+        "Leeg A1 veld (tenzij TG stamp)"
+      ],
+      "status": "current"
+    },
+    "24.7": {
+      "release_date": "2024-10-XX",
+      "a2_identifier": "ONBEKEND - vul in door Niels",
+      "total_fields": "ONBEKEND - vul in door Niels", 
+      "mandatory_fields": 17,
+      "features": [
+        "Tekst in A1 + A2",
+        "Geen duurzaamheidsvelden"
+      ],
+      "status": "legacy"
+    },
+    "24.6": {
+      "release_date": "ONBEKEND - vul in door Niels",
+      "a2_identifier": "ONBEKEND - vul in door Niels",
+      "total_fields": "ONBEKEND - vul in door Niels",
+      "mandatory_fields": 17,
+      "features": [],
+      "status": "legacy"
+    },
+    "24.5": {
+      "release_date": "ONBEKEND - vul in door Niels", 
+      "a2_identifier": "ONBEKEND - vul in door Niels",
+      "total_fields": "ONBEKEND - vul in door Niels",
+      "mandatory_fields": 17,
+      "features": [],
+      "status": "legacy"
+    },
+    "24.4": {
+      "release_date": "ONBEKEND - vul in door Niels",
+      "a2_identifier": "ONBEKEND - vul in door Niels", 
+      "total_fields": "ONBEKEND - vul in door Niels",
+      "mandatory_fields": 17,
+      "features": [],
+      "status": "legacy"
+    },
+    "24.3": {
+      "release_date": "ONBEKEND - vul in door Niels",
+      "a2_identifier": "ONBEKEND - vul in door Niels",
+      "total_fields": "ONBEKEND - vul in door Niels", 
+      "mandatory_fields": 17,
+      "features": [],
+      "status": "legacy"
+    },
+    "24.2": {
+      "release_date": "ONBEKEND - vul in door Niels",
+      "a2_identifier": "ONBEKEND - vul in door Niels",
+      "total_fields": "ONBEKEND - vul in door Niels",
+      "mandatory_fields": 17,
+      "features": [],
+      "status": "legacy"
+    },
+    "24.1": {
+      "release_date": "ONBEKEND - vul in door Niels",
+      "a2_identifier": "ONBEKEND - vul in door Niels", 
+      "total_fields": "ONBEKEND - vul in door Niels (geschat: 99 zonder duurzaamheid)",
+      "mandatory_fields": 17,
+      "features": [
+        "Eerste versie zonder duurzaamheidsvelden"
+      ],
+      "status": "legacy"
+    }
+  },
+  
+  "instructions_for_niels": [
+    "Vul ONBEKEND velden in met correcte waardes",
+    "Check oude templates voor A2 identifier tekst", 
+    "Tel velden in verschillende versies voor total_fields",
+    "Update last_updated datum na wijzigingen",
+    "Voeg nieuwe versies toe als ze worden uitgebracht"
+  ]
+}

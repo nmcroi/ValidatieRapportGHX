@@ -29,50 +29,55 @@ except ImportError:
 
 def determine_template_type(excel_path: str) -> str:
     """
-    Bepaalt het type template: TG (Template Generator), DT (Default Template), of AT (Alternatieve Template).
+    Bepaalt het type template volgens beslissingsboom:
+    
+    1. TG (Template Generator): Stamp in A1 + A2
+    2. N (Nieuwe Generatie): "Is BestelbareEenheid" + "Omschrijving Verpakkingseenheid" aanwezig  
+    3. O (Oude/Alternatieve): Alle andere templates
     
     Returns:
         'TG' - Template Generator (met stamp metadata)
-        'DT' - Default Template (standaard GHX zonder stamp) 
-        'AT' - Alternatieve Template (afwijkende structuur)
+        'N' - Nieuwe Generatie Template (versie 24.1+)
+        'O' - Oude/Alternatieve Template (voor nov 2024 of supplier templates)
     """
     try:
-        # Check voor Template Generator stamp
+        # STAP 1: Check voor Template Generator stamp in A1 + A2
         if has_template_generator_stamp(excel_path):
             logging.info("Template type: TG (Template Generator) - stamp gedetecteerd")
             return "TG"
         
-        # Check voor Default Template door kolom structuur te analyseren
+        # STAP 2: Check voor Nieuwe Generatie Template markers
         import pandas as pd
         try:
             df = pd.read_excel(excel_path, nrows=0)  # Alleen headers laden
             columns = [str(col).strip().lower() for col in df.columns]
             
-            # GHX standaard velden die in DT template moeten aanwezig zijn
-            required_dt_fields = [
-                'artikelnummer', 'artikelnaam', 'brutoprijs', 'nettoprijs',
-                'is bestelbarereenheid', 'is basiseenheid', 'unspsc'
+            # Nieuwe Generatie markers (altijd aanwezig in templates na nov 2024)
+            nieuwe_generatie_markers = [
+                'is bestelbarereenheid',
+                'omschrijving verpakkingseenheid'
             ]
             
-            # Tel hoeveel standaard velden aanwezig zijn
-            matches = sum(1 for field in required_dt_fields 
-                         if any(field in col for col in columns))
+            # Check of minimaal één van de markers aanwezig is
+            has_markers = any(
+                any(marker in col for col in columns) 
+                for marker in nieuwe_generatie_markers
+            )
             
-            # Als 70%+ van standaard velden aanwezig zijn → Default Template
-            if matches >= len(required_dt_fields) * 0.7:
-                logging.info("Template type: DT (Default Template) - standaard GHX structuur")
-                return "DT"
+            if has_markers:
+                logging.info("Template type: N (Nieuwe Generatie) - nieuwe template structuur gedetecteerd")
+                return "N"
             else:
-                logging.info("Template type: AT (Alternatieve Template) - afwijkende structuur")
-                return "AT"
+                logging.info("Template type: O (Oude/Alternatieve) - geen nieuwe generatie markers gevonden")
+                return "O"
                 
         except Exception as e:
             logging.warning(f"Fout bij kolom analyse voor template type: {e}")
-            return "AT"  # Default naar alternatieve template bij fout
+            return "O"  # Default naar oude template bij fout
             
     except Exception as e:
         logging.error(f"Fout bij template type detectie: {e}")
-        return "AT"  # Fallback
+        return "O"  # Fallback
 
 def has_template_generator_stamp(excel_path: str) -> bool:
     """
@@ -213,22 +218,8 @@ def parse_template_code(template_code: str) -> Dict[str, Any]:
     - M18: Mandatory fields count
     """
     try:
-        # Institution mapping from README.md
-        institution_map = {
-            'umcu': 'UMC Utrecht',
-            'lumc': 'LUMC Leiden', 
-            'amcu': 'Amsterdam UMC',
-            'mumc': 'Maastricht UMC+',
-            'umcg': 'UMCG Groningen',
-            'sq': 'Sanquin',
-            'pmc': 'Prinses Máxima Centrum',
-            'pb': 'Prothya Biosolutions',
-            'ul': 'Universiteit Leiden',
-            'uu': 'Universiteit Utrecht',
-            'uva': 'Universiteit van Amsterdam',
-            'zxl': 'ZorgService XL',
-            'algemeen': 'Algemeen gebruik'
-        }
+        # Load institution mapping from JSON config
+        institution_map = load_institution_codes()
         
         # Product type mapping  
         product_type_map = {
@@ -341,6 +332,58 @@ def load_field_mapping() -> Optional[Dict[str, Any]]:
     except Exception as e:
         logging.error(f"Fout bij laden field mapping: {e}")
         return None
+
+def load_institution_codes() -> Dict[str, str]:
+    """
+    Laadt institution codes uit configuratie JSON.
+    
+    Returns:
+        Dictionary met code -> naam mapping
+    """
+    try:
+        import os
+        import json
+        
+        # Path naar Template Generator Files
+        config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 
+                                   "Template Generator Files", "institution_codes.json")
+        
+        if not os.path.exists(config_path):
+            logging.warning(f"Institution codes config niet gevonden: {config_path}, gebruik fallback")
+            return get_fallback_institution_codes()
+            
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+            
+        # Extract name mapping from config
+        institution_map = {}
+        for code, info in config.get("institution_mapping", {}).items():
+            institution_map[code] = info.get("name", code)
+            
+        logging.info(f"Institution codes geladen: {len(institution_map)} instellingen")
+        return institution_map
+        
+    except Exception as e:
+        logging.error(f"Fout bij laden institution codes: {e}, gebruik fallback")
+        return get_fallback_institution_codes()
+
+def get_fallback_institution_codes() -> Dict[str, str]:
+    """Fallback institution codes als config file ontbreekt."""
+    return {
+        'umcu': 'UMC Utrecht',
+        'lumc': 'LUMC Leiden', 
+        'amcu': 'Amsterdam UMC',
+        'mumc': 'Maastricht UMC+',
+        'umcg': 'UMCG Groningen',
+        'sq': 'Sanquin',
+        'pmc': 'Prinses Máxima Centrum',
+        'pb': 'Prothya Biosolutions',
+        'ul': 'Universiteit Leiden',
+        'uu': 'Universiteit Utrecht',
+        'uva': 'Universiteit van Amsterdam',
+        'zxl': 'ZorgService XL',
+        'algemeen': 'Algemeen gebruik'
+    }
 
 def apply_field_visibility(field_mapping: Dict[str, Any], context: Dict[str, Any], excel_data: 'pd.DataFrame' = None) -> Dict[str, Any]:
     """
@@ -1052,17 +1095,17 @@ def determine_mandatory_fields_for_template(excel_path: str) -> List[str]:
             if context:
                 return get_tg_mandatory_fields(template_config, context)
             else:
-                logging.warning("TG template type maar context extractie gefaald, gebruik DT fallback")
-                return get_dt_mandatory_fields(template_config)
+                logging.warning("TG template type maar context extractie gefaald, gebruik N fallback")
+                return get_nieuwe_generatie_mandatory_fields(template_config)
                 
-        elif template_type == "DT":
-            # Default Template: gebruik standaard GHX mandatory fields
-            return get_dt_mandatory_fields(template_config)
+        elif template_type == "N":
+            # Nieuwe Generatie Template: gebruik standaard GHX mandatory fields
+            return get_nieuwe_generatie_mandatory_fields(template_config)
             
-        else:  # template_type == "AT"
-            # Alternatieve Template: gebruik beperkte set en geef waarschuwing
-            logging.warning("Alternatieve Template gedetecteerd - beperkte validatie toegepast")
-            return get_at_mandatory_fields(template_config)
+        else:  # template_type == "O"
+            # Oude/Alternatieve Template: gebruik beperkte set en geef waarschuwing
+            logging.warning("Oude/Alternatieve Template gedetecteerd - beperkte validatie toegepast")
+            return get_oude_template_mandatory_fields(template_config)
         
     except Exception as e:
         logging.error(f"Fout bij bepalen mandatory fields: {e}")
@@ -1096,9 +1139,9 @@ def get_tg_mandatory_fields(template_config: Dict, context: Dict[str, Any]) -> L
         logging.error(f"Fout bij bepalen TG mandatory fields: {e}")
         return get_dt_mandatory_fields(template_config)
 
-def get_dt_mandatory_fields(template_config: Dict) -> List[str]:
+def get_nieuwe_generatie_mandatory_fields(template_config: Dict) -> List[str]:
     """
-    Bepaalt mandatory fields voor Default Template (standaard GHX template).
+    Bepaalt mandatory fields voor Nieuwe Generatie Template (standaard GHX template).
     
     Returns:
         Lijst van 17 standaard GHX mandatory fields
@@ -1108,38 +1151,37 @@ def get_dt_mandatory_fields(template_config: Dict) -> List[str]:
         mandatory_fields = default_config.get("mandatory_fields", [])
         
         if mandatory_fields:
-            logging.info(f"DT mandatory fields uit config: {len(mandatory_fields)} velden")
+            logging.info(f"N mandatory fields uit config: {len(mandatory_fields)} velden")
             return mandatory_fields
         else:
             # Fallback naar hardcoded lijst
             return get_fallback_mandatory_fields()
             
     except Exception as e:
-        logging.error(f"Fout bij bepalen DT mandatory fields: {e}")
+        logging.error(f"Fout bij bepalen N mandatory fields: {e}")
         return get_fallback_mandatory_fields()
 
-def get_at_mandatory_fields(template_config: Dict) -> List[str]:
+def get_oude_template_mandatory_fields(template_config: Dict) -> List[str]:
     """
-    Bepaalt mandatory fields voor Alternatieve Template.
+    Bepaalt mandatory fields voor Oude/Alternatieve Template.
     
-    AT templates moeten ook alle 17 standaard GHX mandatory velden hebben.
-    Na header mapping worden ze gevalideerd tegen dezelfde standaard als TG/N templates.
+    Voor O templates gebruiken we een beperkte set core velden.
     
     Returns:
-        Lijst van alle 17 standaard GHX mandatory fields voor AT templates
+        Lijst van minimale mandatory fields voor O templates
     """
     try:
-        # AT templates moeten alle 17 standaard GHX mandatory velden hebben
-        # Na header mapping valideren we tegen dezelfde standaard als andere templates
-        at_mandatory_fields = get_fallback_mandatory_fields()
+        # Voor oude/alternatieve templates alleen de allerbelangrijkste velden verplicht maken
+        oude_core_fields = [
+            "Artikelnummer", "Artikelnaam", "Brutoprijs", "Nettoprijs"
+        ]
         
-        logging.info(f"AT mandatory fields (alle 17 standaard GHX velden): {len(at_mandatory_fields)} velden")
-        return at_mandatory_fields
+        logging.info(f"O mandatory fields (core only): {len(oude_core_fields)} velden")
+        return oude_core_fields
         
     except Exception as e:
-        logging.error(f"Fout bij bepalen AT mandatory fields: {e}")
-        fallback_fields = get_fallback_mandatory_fields()
-        return fallback_fields
+        logging.error(f"Fout bij bepalen O mandatory fields: {e}")
+        return ["Artikelnummer", "Artikelnaam"]  # Absolute minimum
 
 def get_fallback_mandatory_fields() -> List[str]:
     """Fallback lijst van 17 mandatory fields als template config faalt."""
@@ -1149,7 +1191,7 @@ def get_fallback_mandatory_fields() -> List[str]:
         "Omschrijving Verpakkingseenheid", "UOM Code Verpakkingseenheid",
         "Inhoud Verpakkingseenheid", "UOM Code Basiseenheid", 
         "Inhoud Basiseenheid", "UOM Code Inhoud Basiseenheid",
-        "Omrekenfactor", "GHX BTW Code", "UNSPSC Code",
+        "Omrekenfactor", "GHX BTW Code", "UNSPSC",
         "Startdatum Prijs Artikel", "Einddatum Prijs Artikel"
     ]
 
@@ -1313,11 +1355,31 @@ def normalize_template_header(header: str) -> str:
     return dutch_name
 
 def clean_column_name(col: str) -> str:
-    """Schoont een kolomnaam op."""
+    """Schoont een kolomnaam op voor mapping vergelijking."""
     if not isinstance(col, str):
         return ''
-    # Neem alleen deel voor newline, strip witruimte, maak lowercase
-    return col.split('\n')[0].strip().lower()
+    
+    # Vervang non-breaking spaces met normale spaces
+    cleaned_col = col.replace('\xa0', ' ')
+    
+    # Split op newlines en verwerk alle regels
+    lines = cleaned_col.split('\n')
+    first_line = lines[0].strip()
+    
+    # Zoek naar haakjes op volgende regels en voeg toe aan eerste regel
+    for line in lines[1:]:
+        line = line.strip()
+        if line.startswith('(') and line.endswith(')'):
+            # Voeg haakjes toe aan eerste regel als het nog niet aanwezig is
+            if line not in first_line:
+                first_line = first_line.rstrip() + ' ' + line
+            break  # Neem alleen de eerste haakjes
+    
+    # Verwijder eventuele underscore-delen, maar alleen als het niet begint met underscore
+    if '_' in first_line and not first_line.startswith('_'):
+        first_line = first_line.split('_')[0].strip()
+    
+    return first_line.lower()
 
 def clean_supplier_header(header: str) -> str:
     """Clean supplier header by extracting Dutch name before dash."""
@@ -1330,14 +1392,26 @@ def clean_supplier_header(header: str) -> str:
         clean = clean.split(" - ")[0].strip()
     return clean
 
-
 def map_headers(df: pd.DataFrame, mapping_config: Dict, return_mapping: bool = False) -> Tuple[pd.DataFrame, List[str], Dict[str, str], Dict[str, str]] | Tuple[pd.DataFrame, List[str], Dict[str, str]]:
     """Mapt de headers van het DataFrame naar de GHX standaard headers."""
-    # Haal mapping uit configuratie
-    header_mapping = {k: v["alternatives"] for k, v in mapping_config.get("standard_headers", {}).items()}
+    # Haal mapping uit configuratie - check of we de volledige config of alleen standard_headers krijgen
+    if "standard_headers" in mapping_config:
+        header_mapping = {k: v["alternatives"] for k, v in mapping_config["standard_headers"].items()}
+    else:
+        # We krijgen direct de standard_headers dictionary
+        header_mapping = {k: v["alternatives"] for k, v in mapping_config.items()}
 
+    # DEBUG: Log de header schoonmaak stap voor stap (debug level)
+    logging.debug("=== STAP 2: HEADER SCHOONMAAK ===")
+    
     # Maak een dictionary van originele kolom -> opgeschoonde kolomnaam
-    cleaned_columns = {col: clean_column_name(col) for col in df.columns}
+    cleaned_columns = {}
+    for col in df.columns:
+        cleaned = clean_column_name(col)
+        cleaned_columns[col] = cleaned
+        # Log problematische headers
+        if "hoogte" in str(col).lower() or "inhoud basiseenheid" in str(col).lower():
+            logging.debug(f"SCHOONMAAK - Origineel: {repr(col)} → Schoon: {repr(cleaned)}")
 
     # Maak een reverse mapping: opgeschoonde alternatieve naam -> standaard header
     reverse_mapping = {}
@@ -1349,8 +1423,21 @@ def map_headers(df: pd.DataFrame, mapping_config: Dict, return_mapping: bool = F
         # Voeg alternatieven toe
         for alt in alternatives:
             cleaned_alt = clean_column_name(alt)
-            if cleaned_alt not in reverse_mapping: # Voorkom overschrijven door conflicterende alternatieven
-                reverse_mapping[cleaned_alt] = std_header # Alternatief wijst naar standaard
+            reverse_mapping[cleaned_alt] = std_header # Alternatief wijst naar standaard
+    
+    # AUTOMATISCHE FALLBACK: Voor UOM headers zonder haakjes, zoek naar equivalente met haakjes
+    uom_fallback_mapping = {}
+    for std_header in header_mapping.keys():
+        if "(UOM)" in std_header:
+            # Maak fallback zonder (UOM)
+            base_name = std_header.replace(" (UOM)", "").strip()
+            base_name_clean = clean_column_name(base_name)
+            if base_name_clean not in reverse_mapping:
+                uom_fallback_mapping[base_name_clean] = std_header
+                logging.debug(f"UOM fallback: {repr(base_name_clean)} → {std_header}")
+    
+    # Voeg fallback mappings toe
+    reverse_mapping.update(uom_fallback_mapping)
 
     mapped_columns = {}
     unrecognized = []
@@ -1360,9 +1447,24 @@ def map_headers(df: pd.DataFrame, mapping_config: Dict, return_mapping: bool = F
     # Houd bij welke standaard headers we al hebben toegewezen om duplicaten te nummeren
     assigned_std_headers_count = {}
 
+    # DEBUG: Log de reverse mapping voor problematische headers (debug level)
+    logging.debug("=== STAP 3: MAPPING VERGELIJKING ===")
+    
     for original_col in df.columns:
         clean_col = cleaned_columns[original_col]
         std_header = reverse_mapping.get(clean_col) # Zoek standaard header
+        
+        # Debug logging voor problematische headers
+        if "hoogte" in str(original_col).lower() or "inhoud basiseenheid" in str(original_col).lower():
+            logging.debug(f"MAPPING - Origineel: {repr(original_col)}")
+            logging.debug(f"MAPPING - Schoon: {repr(clean_col)}")
+            logging.debug(f"MAPPING - Gevonden std_header: {std_header}")
+            # Toon beschikbare alternatieven die zouden kunnen matchen
+            for std_h, alternatives in header_mapping.items():
+                for alt in alternatives:
+                    alt_clean = clean_column_name(alt)
+                    if alt_clean == clean_col:
+                        logging.debug(f"MAPPING - MATCH GEVONDEN: {std_h} via alternatief {repr(alt)} → {repr(alt_clean)}")
 
         if std_header:
             # Standaard header gevonden
@@ -1384,21 +1486,11 @@ def map_headers(df: pd.DataFrame, mapping_config: Dict, return_mapping: bool = F
             # Geen standaard header gevonden, gebruik originele (opgeschoonde?) naam
             # We gebruiken de *originele* naam in mapped_columns om te zorgen dat rename werkt
             mapped_columns[original_col] = original_col
-            # BELANGRIJK: Ook voor onherkende headers moeten we de original_column_mapping vullen
-            # Anders krijgen we in rapporten de verkeerde header weergegeven
-            original_column_mapping[original_col] = original_col
             if not str(original_col).lower().startswith('algemeen'): # Negeer 'algemeen' kolom
                  unrecognized.append(original_col) # Noteer als onherkend (indien niet 'algemeen')
 
     # Hernoem de kolommen in het DataFrame
     df = df.rename(columns=mapped_columns)
-
-    # DEBUG: Log original_column_mapping inhoud
-    if return_mapping:
-        logging.info(f"DEBUG: original_column_mapping heeft {len(original_column_mapping)} entries")
-        # DEBUG: Toon eerste 5 entries voor analyse
-        for i, (key, value) in enumerate(list(original_column_mapping.items())[:5]):
-            logging.info(f"DEBUG: original_column_mapping['{key}'] = '{value[:100]}...'")
 
     # Maak dictionary met details over duplicaten (welke _DUPLICAAT_X hoort bij welk origineel)
     duplicate_headers_details = {}
@@ -2359,17 +2451,6 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
                 'configuration': {},
                 'decisions': {}
             }
-            
-            # Voor AT templates: detecteer automatisch chemical fields
-            if template_type == "AT":
-                from .template_context import detect_chemical_fields_in_template
-                has_chemicals = detect_chemical_fields_in_template(input_excel_path)
-                if has_chemicals:
-                    template_context['configuration']['has_chemicals'] = True
-                    logging.info(f"AT template: Chemical fields gedetecteerd - heeft chemicals vlag ingesteld")
-                else:
-                    logging.info(f"AT template: Geen chemical fields gedetecteerd")
-            
             logging.info(f"Template type {template_type}: basis context aangemaakt voor rapportage")
 
         # 2. Lees Excel in
@@ -2506,99 +2587,3 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
     except Exception as e:
         logging.error(f"Een onverwachte fout is opgetreden tijdens validate_pricelist: {e}", exc_info=True)
         raise # Gooi de error opnieuw op zodat Streamlit het kan tonen
-
-def debug_header_mapping(input_excel_path: str) -> Dict[str, Any]:
-    """
-    Complete debug van header mapping - toont ALLE Excel kolommen en hun mapping status.
-    """
-    try:
-        # Laad Excel file
-        df = pd.read_excel(input_excel_path, sheet_name=0, header=0, nrows=5)
-        
-        # Laad header mapping config
-        with open("header_mapping.json", "r", encoding="utf-8") as f:
-            mapping_config = json.load(f)
-        
-        result = {
-            'excel_columns_found': list(df.columns),
-            'total_excel_columns': len(df.columns),
-            'mapping_analysis': []
-        }
-        
-        # Analyseer ELKE Excel kolom
-        for excel_col in df.columns:
-            col_analysis = {
-                'excel_column': excel_col,
-                'cleaned_excel': clean_column_name(excel_col),
-                'mapping_found': None,
-                'mapping_method': None,
-                'all_possible_matches': []
-            }
-            
-            # STAP 1: Zoek exacte match (case-insensitive)
-            excel_lower = str(excel_col).strip().lower()
-            for std_header, alternatives in mapping_config.items():
-                # Check standaard header
-                if std_header.lower() == excel_lower:
-                    col_analysis['mapping_found'] = std_header
-                    col_analysis['mapping_method'] = f"Exacte match met standaard header"
-                    break
-                    
-                # Check alternatieven
-                for alt in alternatives:
-                    if alt.lower() == excel_lower:
-                        col_analysis['mapping_found'] = std_header
-                        col_analysis['mapping_method'] = f"Exacte match met alternatief: {alt}"
-                        break
-                        
-                if col_analysis['mapping_found']:
-                    break
-            
-            # STAP 2: Als geen exacte match, probeer cleaned match
-            if not col_analysis['mapping_found']:
-                cleaned_excel = clean_column_name(excel_col)
-                for std_header, alternatives in mapping_config.items():
-                    # Check cleaned standaard header
-                    if clean_column_name(std_header) == cleaned_excel:
-                        col_analysis['mapping_found'] = std_header
-                        col_analysis['mapping_method'] = f"Cleaned match met standaard header"
-                        break
-                        
-                    # Check cleaned alternatieven
-                    for alt in alternatives:
-                        if clean_column_name(alt) == cleaned_excel:
-                            col_analysis['mapping_found'] = std_header
-                            col_analysis['mapping_method'] = f"Cleaned match met alternatief: {alt}"
-                            break
-                            
-                    if col_analysis['mapping_found']:
-                        break
-            
-            # Vind ALLE mogelijke matches om te debuggen
-            for std_header, alternatives in mapping_config.items():
-                for alt in alternatives:
-                    if (alt.lower() == excel_lower or 
-                        clean_column_name(alt) == clean_column_name(excel_col) or
-                        alt.lower() in excel_lower or 
-                        excel_lower in alt.lower()):
-                        col_analysis['all_possible_matches'].append({
-                            'standard_header': std_header,
-                            'matching_alternative': alt,
-                            'match_strength': 'exact' if alt.lower() == excel_lower else 'partial'
-                        })
-            
-            result['mapping_analysis'].append(col_analysis)
-        
-        # Samenvatting
-        mapped_count = len([x for x in result['mapping_analysis'] if x['mapping_found']])
-        result['summary'] = {
-            'total_columns': len(df.columns),
-            'mapped_columns': mapped_count,
-            'unmapped_columns': len(df.columns) - mapped_count,
-            'unmapped_list': [x['excel_column'] for x in result['mapping_analysis'] if not x['mapping_found']]
-        }
-        
-        return result
-        
-    except Exception as e:
-        return {'error': str(e)}

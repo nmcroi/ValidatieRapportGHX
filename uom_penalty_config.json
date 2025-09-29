@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "description": "UOM penalty configuration for new intuitive score calculation",
+  "uom_penalty_codes": [
+    "720",
+    "724", 
+    "752",
+    "753",
+    "754",
+    "755",
+    "722"
+  ],
+  "penalty_structure": {
+    "penalty_single": -1,
+    "penalty_10_percent": -3,
+    "penalty_25_percent": -5
+  },
+  "template_penalties": {
+    "TG": 0,
+    "DT": 0, 
+    "AT": -25
+  },
+  "code_descriptions": {
+    "720": "Berekende waarde mismatch (bijv. Omrekenfactor klopt niet)",
+    "724": "UOM-relatie fouten (velden conflicteren onderling)",
+    "752": "Brutoprijs lager dan Nettoprijs",
+    "753": "Omschrijving Verpakkingseenheid vs UOM mismatch", 
+    "754": "Omrekenfactor automatisch berekend",
+    "755": "Prijs per Kleinste eenheid automatisch berekend",
+    "722": "Invalid format (kan UOM codes zijn)"
+  },
+  "uom_columns": {
+    "description": "UOM-gerelateerde kolommen (F t/m P)",
+    "columns": ["F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"]
+  }
+}

@@ -1,18 +1,24 @@
-# GHX Prijslijst Validatie App v2.0
+# GHX Price Validation Tool - Clean Architecture v2.0
 
-Een prijslijst validatiesysteem met **dual architecture**: Streamlit web interface voor development en CLI interface voor server deployment.
+Een geavanceerd prijslijst validatiesysteem gebouwd met **clean architecture** principes en intelligente template detectie.
 
-## 🏗️ Architectuur
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Streamlit](https://img.shields.io/badge/streamlit-1.28+-red.svg)](https://streamlit.io/)
+[![Clean Architecture](https://img.shields.io/badge/architecture-clean-green.svg)](docs/ARCHITECTURE.md)
 
-**Development (Streamlit):**
-- Web interface voor interactief testen
-- File upload via browser  
-- Real-time validatie feedback
+## 🏗️ Clean Architecture
 
-**Production (CLI):**
-- Command-line interface voor server deployment
-- Batch processing capabilities
-- Automation-friendly design
+**Template-Aware Processing:**
+- **TG→N→O Decision Tree**: Intelligente template detectie
+- **Modular Validator Package**: Clean separation of concerns
+- **Configuration-Driven**: JSON-based flexible rules
+- **Institution-Specific Logic**: NFU hospitals, research institutes
+
+**Modern Development:**
+- **Clean Code**: SOLID principles, dependency injection
+- **Comprehensive Documentation**: Complete API reference
+- **Extensive Testing**: Archived development scripts
+- **Performance Optimized**: Lazy loading, efficient processing
 
 ## 🚀 Starten van de applicatie
 
@@ -44,23 +50,48 @@ Zie `deployment_for_IT/README_FOR_IT.md` voor server deployment instructies.
 - **Categorized error reporting**: Onderscheidt Afkeuringen, Aanpassingen, en Vlaggen
 - **Database corrections**: Voorspellende suggesties voor veel voorkomende fouten
 
-## 📂 Projectstructuur
+## 📂 Clean Architecture Structure
 
 ```
 📁 Project PrijsValGem_WS app/
-├── 🐍 prijslijst_validatie_app.py          # Streamlit web interface
-├── 📊 Configuratie bestanden:
-│   ├── field_validation_v20.json           # ⭐ JSON v20 validatie regels
-│   ├── header_mapping.json                 # Excel header mapping
-│   ├── reference_lists.json                # UOM codes, landen, etc.
-│   ├── template_config.json                # Template-specifieke regels
-│   └── error_code_mapping.json             # Error code hernummering
-├── 🔧 validator/ - Core validatie engine:
-│   ├── price_tool.py                       # Hoofdvalidatie logica
-│   └── rapport_utils.py                    # Excel rapport generatie
-├── 🚀 deployment_for_IT/ - Server deployment
-└── 📖 Documentatie en archief bestanden
+├── 🌐 prijslijst_validatie_app.py          # Streamlit web interface
+├── 🏗️ validator/ - Clean Architecture Package:
+│   ├── template_detector.py               # TG→N→O decision tree
+│   ├── validation_engine.py               # Core validation pipeline
+│   ├── config_manager.py                  # Configuration management
+│   ├── data_processor.py                  # Data cleaning & header mapping
+│   ├── mandatory_fields.py                # Smart mandatory field detection
+│   ├── field_logic.py                     # Conditional visibility & logic
+│   ├── template_context.py                # TG metadata parsing
+│   ├── debug_tools.py                     # Development utilities
+│   ├── utils.py                           # Helper functions
+│   └── price_tool.py                      # Legacy compatibility
+├── 📚 docs/ - Comprehensive Documentation:
+│   ├── ARCHITECTURE.md                    # System design overview
+│   ├── TEMPLATE_DETECTION.md              # TG→N→O decision tree
+│   ├── VALIDATION_PIPELINE.md             # Processing workflow
+│   ├── CONFIGURATION.md                   # Config management
+│   └── API_REFERENCE.md                   # Complete API docs
+├── 🗄️ archive/ - Development History:
+│   ├── development_scripts/               # Debug & test scripts
+│   └── README.md                          # Archive documentation
+├── ⚙️ Configuration Files:
+│   ├── field_validation_v20.json          # Core validation rules
+│   ├── header_mapping.json                # Legacy header mapping
+│   ├── reference_lists.json               # Value validation lists
+│   └── Template Generator Files/          # TG synchronization
+└── 🚀 deployment_for_IT/ - Server deployment
 ```
+
+## 📖 Comprehensive Documentation
+
+Volledige documentatie beschikbaar in de `docs/` directory:
+
+- **[🏗️ Architecture](docs/ARCHITECTURE.md)** - Systeem ontwerp en clean architecture principes
+- **[🌳 Template Detection](docs/TEMPLATE_DETECTION.md)** - TG→N→O beslissings boom logica  
+- **[🔄 Validation Pipeline](docs/VALIDATION_PIPELINE.md)** - Complete processing workflow
+- **[⚙️ Configuration](docs/CONFIGURATION.md)** - Configuratie management systeem
+- **[📚 API Reference](docs/API_REFERENCE.md)** - Volledige API documentatie
 
 ## Git Workflow
 

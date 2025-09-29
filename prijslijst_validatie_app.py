@@ -8,13 +8,12 @@ import logging # Om logging uit de tool te zien (optioneel)
 import io
 import zipfile
 
-# Importeer de hoofdfunctie uit price_tool.py
-# Zorg dat validator map bestaat met __init__.py, price_tool.py, rapport_utils.py
+# Importeer de hoofdfunctie uit price_tool.py (met volledige rapport functionaliteit)
 try:
     from validator.price_tool import validate_pricelist
 except ImportError as e:
     st.error(f"Fout bij importeren validatiemodule: {e}")
-    st.error("Zorg ervoor dat de map 'validator' bestaat met daarin __init__.py, price_tool.py en rapport_utils.py.")
+    st.error("Zorg ervoor dat de map 'validator' bestaat met daarin price_tool.py en rapport_utils.py.")
     st.stop() # Stop de app als de import faalt
 
 # --- Basis Configuratie ---
@@ -87,7 +86,7 @@ if uploaded_files:
 
                 # DEBUG: Test template detectie voor dit bestand
                 try:
-                    from validator.price_tool import test_template_detection
+                    from validator.price_tool import test_template_detection, debug_header_mapping
                     debug_result = test_template_detection(temp_file_path)
                     st.info(f"🔍 **Debug Info voor '{original_filename}':**")
                     st.write(f"- Template Type: **{debug_result.get('template_type', 'Unknown')}**")
@@ -102,6 +101,34 @@ if uploaded_files:
                             st.write(f"- Product Types: **{debug_result.get('product_types', [])}**")
                     elif 'error' in debug_result:
                         st.error(f"Debug Error: {debug_result['error']}")
+                        
+                    # DEBUG: Complete header mapping voor AT templates
+                    if debug_result.get('template_type') == 'AT':
+                        header_debug = debug_header_mapping(temp_file_path)
+                        if 'error' not in header_debug:
+                            st.info("📋 **Complete Header Mapping Debug voor AT Template:**")
+                            
+                            # Samenvatting
+                            summary = header_debug['summary']
+                            st.write(f"**Samenvatting:** {summary['mapped_columns']}/{summary['total_columns']} kolommen gemapt")
+                            
+                            if summary['unmapped_list']:
+                                st.warning(f"**Niet gemapt:** {', '.join(summary['unmapped_list'])}")
+                            
+                            # Details van elke kolom (alleen eerste 10 om niet te veel ruimte in te nemen)
+                            st.write("**Eerste 10 Excel kolommen:**")
+                            for i, col_info in enumerate(header_debug['mapping_analysis'][:10]):
+                                status = "✅" if col_info['mapping_found'] else "❌"
+                                st.write(f"{status} `{col_info['excel_column']}`")
+                                if col_info['mapping_found']:
+                                    st.write(f"   → **{col_info['mapping_found']}** ({col_info['mapping_method']})")
+                                elif col_info['all_possible_matches']:
+                                    st.write(f"   💡 Mogelijke matches: {[m['standard_header'] for m in col_info['all_possible_matches']]}")
+                                    
+                            if len(header_debug['mapping_analysis']) > 10:
+                                st.write(f"... en nog {len(header_debug['mapping_analysis']) - 10} kolommen")
+                        else:
+                            st.error(f"Header mapping debug error: {header_debug['error']}")
                 except Exception as debug_e:
                     st.warning(f"Debug info niet beschikbaar: {debug_e}")
 
