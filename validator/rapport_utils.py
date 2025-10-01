@@ -1058,6 +1058,8 @@ def genereer_rapport(
     validation_config: dict = None,  # Geconverteerde config voor Sheet 9
     template_context: dict = None,  # Template Generator context
     excel_path: str = None,  # Pad naar origineel Excel bestand voor template detectie
+    max_rows: int = None,
+    total_rows: int = None,
 ):
     """
     Genereert het volledige Excel validatierapport, inclusief alle sheets,
@@ -1124,7 +1126,12 @@ def genereer_rapport(
         bestandsnaam_zonder_extensie = os.path.splitext(bestandsnaam)[0]
 
         # --- Data Voorbereiding & Berekeningen (Begin) ---
-        total_rows = len(df)
+        # Voor Quick Mode: gebruik originele total_rows parameter, anders processed data lengte
+        if total_rows is None:
+            total_rows = len(df)  # Normale modus: gebruik processed data lengte
+        # Anders: behoud originele total_rows parameter (Quick Mode)
+        
+        processed_rows = len(df)  # Aantal verwerkte rijen (voor berekeningen)
         total_cols = len(df.columns)  # Kolommen in verwerkte df
         total_original_cols = len(df_original.columns)  # Kolommen in origineel bestand
 
@@ -1185,7 +1192,9 @@ def genereer_rapport(
         total_filled_in_present = sum(
             filled_counts.get(f, 0) for f in present_mandatory_columns
         )
-        empty_in_present = (M_found * total_rows) - total_filled_in_present
+        # Bij Quick Mode: gebruik processed_rows, anders total_rows
+        rows_for_calculation = processed_rows if max_rows is not None else total_rows
+        empty_in_present = (M_found * rows_for_calculation) - total_filled_in_present
 
         corrected_errors = {}
         for f in present_mandatory_columns:
@@ -1207,10 +1216,12 @@ def genereer_rapport(
         
         # Voor TG templates: gebruik template_mandatory_fields count
         # Voor ALT/DT templates: gebruik ghx_mandatory_fields count
+        # BELANGRIJK: Gebruik len(df) voor processed data, niet total_rows!
+        processed_rows = len(df)
         if template_type == "TG" and template_context and "decisions" in template_context:
-            total_possible_mandatory_fields = len(template_context["decisions"]["mandatory_list"]) * total_rows
+            total_possible_mandatory_fields = len(template_context["decisions"]["mandatory_list"]) * processed_rows
         else:
-            total_possible_mandatory_fields = len(ghx_mandatory_fields) * total_rows
+            total_possible_mandatory_fields = len(ghx_mandatory_fields) * processed_rows
         percentage_ingevuld_incl_missing = (
             (total_filled_in_present / total_possible_mandatory_fields * 100)
             if total_possible_mandatory_fields > 0
@@ -1319,8 +1330,8 @@ def genereer_rapport(
         else:
             percentage_correct = 0
         # === NIEUWE INTUÏTIEVE SCORE BEREKENING ===
-        # Bereken totaal aantal rijen voor penalty berekening
-        total_rows = len(df) if len(df) > 0 else 1
+        # Bereken aantal verwerkte rijen voor penalty berekening
+        processed_rows_for_calc = len(df) if len(df) > 0 else 1
         
         # Gebruik nieuwe score functie met voorberekende percentages
         score_result = calculate_new_intuitive_score(
@@ -1328,7 +1339,7 @@ def genereer_rapport(
             total_mandatory=len(ghx_mandatory_fields),
             df_errors_mand=df_errors_mand,
             df_errors_non_mand=df_errors_non_mand,
-            total_rows=total_rows,
+            total_rows=processed_rows_for_calc,  # Gebruik verwerkte rijen voor score berekening
             template_type=template_type,
             volledigheids_percentage=volledigheids_percentage,
             juistheid_percentage=juistheid_percentage
@@ -1499,7 +1510,7 @@ def genereer_rapport(
             
             # Voeg GAX logo toe op B2 (rij 1, kolom 1)
             try:
-                logo_path = "/Users/ncroiset/Vibe Coding Projecten/Cursor Projecten/Project PrijsValGem_WS app/static/ghx_logo_2.png"
+                logo_path = "/Users/ncroiset/Vibe Coding Projecten/Cursor Projecten/Project GHX Prijstemplate Validatie Tool/static/ghx_logo_2.png"
                 # Plaats logo op B2 met aspect ratio lock en niet gekoppeld aan cellen
                 ws_dash.insert_image("B2", logo_path, {
                     'positioning': 0,  # Move & size with cells = OFF (absolute positioning)
@@ -1574,14 +1585,18 @@ def genereer_rapport(
             totale_score_display = score_result['final_score']
             score_grade = score_result['grade']
             
-            # Bepaal randkleur: groen voor C/B/A/A+, rood voor D/E/F
-            is_passing_grade = score_grade in ["C", "B", "A", "A+"]
-            border_color = "#4f6229" if is_passing_grade else "#c00000"
+            # Bepaal randkleur: groen voor B/A/A+, oranje voor C/D, rood voor E/F
+            if score_grade in ["B", "A", "A+"]:
+                border_color = "#4f6229"  # Groen
+            elif score_grade in ["C", "D"]:
+                border_color = "#FF5E1A"  # Oranje
+            else:  # E, F
+                border_color = "#c00000"  # Rood
             
-            # Update format voor KWALITEITSCORE met dynamische randkleur
+            # Update format voor KWALITEITSCORE met dynamische randkleur en tekstkleur
             fmt_score_number = workbook.add_format({
                 'font_size': 26,
-                'font_color': '#1F1F1F',
+                'font_color': border_color,  # Tekstkleur matcht randkleur
                 'bold': True,
                 'align': 'center',
                 'valign': 'vcenter',
@@ -1615,10 +1630,68 @@ def genereer_rapport(
             # --- APARTE TEMPLATE TABEL (voor alle template types) ---
             template_table_end_row = current_row - 1  # Default: geen template tabel
             
-            # Template-tabel ALTIJD tonen (voor TG, TD, ALT)
+            # === QUICK MODE TABEL (rij 8-9 indien actief) ===
+            quick_mode_active = (max_rows is not None and max_rows == 5000)
+
+            if quick_mode_active:
+                # Quick Mode tabel op vaste positie: rij 8-9
+                quick_mode_start_row = 7  # 0-based = Excel rij 8
+                
+                # Formats voor Quick Mode tabel
+                fmt_quickmode_header = workbook.add_format({
+                    'bold': True,
+                    'font_color': '#FFFFFF',
+                    'font_size': 14,
+                    'bg_color': '#FF0000',  # Rood
+                    'border': 1,
+                    'border_color': '#000000',
+                    'align': 'left',
+                    'valign': 'vcenter',
+                    'indent': 1
+                })
+                
+                fmt_quickmode_data = workbook.add_format({
+                    "font_size": 12, 
+                    "bg_color": "#FFE6E6",  # Licht rood
+                    "font_color": "#000000",
+                    "border": 1,
+                    "border_color": "#000000",
+                    "indent": 1
+                })
+                
+                # Rij 8: Header (alleen B8:C8)
+                ws_dash.merge_range(
+                    f"B{quick_mode_start_row + 1}:C{quick_mode_start_row + 1}",
+                    "QUICK MODE VALIDATIE",
+                    fmt_quickmode_header,
+                )
+                ws_dash.set_row(quick_mode_start_row, 18)
+                
+                # Rij 9: Beschrijving (alleen B9:C9)
+                if total_rows:
+                    quick_text = f"Alleen de eerste {max_rows:,} van {total_rows:,} rijen zijn gevalideerd"
+                else:
+                    quick_text = f"Alleen de eerste {max_rows:,} rijen zijn gevalideerd"
+                
+                ws_dash.merge_range(
+                    f"B{quick_mode_start_row + 2}:C{quick_mode_start_row + 2}",
+                    quick_text,
+                    fmt_quickmode_data,
+                )
+                ws_dash.set_row(quick_mode_start_row + 1, 16)
+                
+                # Schuif alle andere content 3 rijen naar beneden
+                base_content_start_row = 11  # Was 8, nu 11
+                logging.info(f"Quick Mode tabel toegevoegd op rijen 8-9. Content start op rij {base_content_start_row}")
+            else:
+                # Normale modus: content start op rij 8
+                base_content_start_row = 8
+                logging.info("Normale validatie: geen Quick Mode tabel")
+
+            # Template-tabel ALTIJD tonen (voor TG, TD, ALT) 
             if True:  # Altijd uitvoeren
-                # VASTE POSITIES voor Template tabel: rij 8-11 (Excel 8-11)
-                template_start_row = 7  # 0-based rij 7 = Excel rij 8
+                # Template start op base_content_start_row (rij 8 normaal, rij 11 met Quick Mode)
+                template_start_row = base_content_start_row - 1  # 0-based
                 
                 # Template tabel header format - zelfde thema als statistieken
                 fmt_template_header = workbook.add_format({
@@ -1661,7 +1734,7 @@ def genereer_rapport(
                 ws_dash.set_row(template_start_row, 18)
                 
                 # ALTIJD EERSTE REGEL: Bestandsnaam 
-                template_filename_row = 8
+                template_filename_row = base_content_start_row
                 ws_dash.merge_range(
                     f"B{template_filename_row + 1}:C{template_filename_row + 1}",  # Excel 1-based
                     bestandsnaam,  # Gebruik originele bestandsnaam
@@ -1669,7 +1742,7 @@ def genereer_rapport(
                 )
                 
                 # ALTIJD TWEEDE REGEL: Template Type (alleen het type, geen code)
-                template_type_row = 9
+                template_type_row = base_content_start_row + 1
                 # Template Type informatie genereren - alleen het basis type
                 if template_type == "TG":
                     template_type_display = "Template Generator"
@@ -1691,7 +1764,7 @@ def genereer_rapport(
                 )
                 
                 # EXTRA REGELS ALLEEN VOOR TG TEMPLATES
-                current_template_row = 10  # Start bij rij 10 voor TG-specifieke content
+                current_template_row = base_content_start_row + 2  # Start na Template Type voor TG-specifieke content
                 
                 if template_type == "TG" and template_context:
                     # Template Code (zoals S-LM-0-0-0-umcu-V77-M19)  
@@ -1814,8 +1887,8 @@ def genereer_rapport(
             )
             ws_dash.set_row(current_row + 1, 18)  # Hoogte header rij (correct rij)
             
-            # RECHTER KANT: Foutmeldingen header ALTIJD op rij 7 (Excel rij 8) - GECORRIGEERD
-            fout_header_row = 7  # GECORRIGEERD: rij 7 = Excel rij 8
+            # RECHTER KANT: Foutmeldingen header ALTIJD op rij 7 (Excel rij 8) - BLIJFT ONGEWIJZIGD
+            fout_header_row = 7  # VAST: rechterkant verandert niet
             ws_dash.merge_range(
                 f"E{fout_header_row + 1}:K{fout_header_row + 1}",  # E tot K op rij 8 (Excel 1-based)
                 "Foutmeldingen",
@@ -1835,8 +1908,8 @@ def genereer_rapport(
                 "indent": 1
             })
             
-            # RECHTER KANT: Foutmeldingen subheaders ALTIJD op rij 8 (Excel rij 9) - GECORRIGEERD
-            fout_subheader_row = 8  # GECORRIGEERD: rij 8 = Excel rij 9
+            # RECHTER KANT: Foutmeldingen subheaders ALTIJD op rij 8 (Excel rij 9) - BLIJFT ONGEWIJZIGD
+            fout_subheader_row = 8  # VAST: rechterkant verandert niet
             # Beschrijving spreidt over E, F, G (was D, E, F)
             ws_dash.merge_range(
                 f"E{fout_subheader_row + 1}:G{fout_subheader_row + 1}",  # E-G voor Beschrijving op rij 10
@@ -1997,31 +2070,33 @@ def genereer_rapport(
                 aantal_aanw_verpl_velden = M_found   # Nu correct omdat M_found is bijgewerkt voor TG
                 aantal_afw_verpl_velden = M_missing  # Nu correct omdat M_missing is bijgewerkt voor TG
                 
-                # Voeg statistieken toe met nu correcte globale variabelen
+                # Voeg statistieken toe met correcte labels voor Quick Mode
+                quick_mode_suffix = " (over de eerste 5000 regels)" if max_rows is not None else ""
                 stats_data_original.extend([
                     ("Aantal rijen", total_rows),
                     ("Aantal kolommen", total_original_cols),  # Nu gefilterde kolom count voor TG
                     ("Aantal velden", aantal_velden_totaal),
                     ("Aantal aanwezige verplichte kolommen", aantal_aanw_verpl_velden),  # Nu consistent
                     ("Aantal afwezige verplichte kolommen", aantal_afw_verpl_velden),    # Nu consistent
-                    ("Aantal gevulde verplichte velden", total_filled_in_present),
-                    ("Aantal aanwezige lege verplichte velden", aantal_aanw_lege_verpl_velden),
-                    ("Aantal regels mogelijk afgewezen door Gatekeeper", aantal_afkeuringen),
+                    (f"Aantal gevulde verplichte velden{quick_mode_suffix}", total_filled_in_present),
+                    (f"Aantal aanwezige lege verplichte velden{quick_mode_suffix}", aantal_aanw_lege_verpl_velden),
+                    (f"Aantal regels mogelijk afgewezen door Gatekeeper{quick_mode_suffix}", aantal_afkeuringen),
                 ])
             else:
                 # Voor andere templates: start ZONDER Template Type (die staat nu in Template-tabel)
                 stats_data_original = []
                 
-                # Voeg reguliere statistieken toe
+                # Voeg reguliere statistieken toe met correcte labels voor Quick Mode
+                quick_mode_suffix = " (over de eerste 5000 regels)" if max_rows is not None else ""
                 stats_data_original.extend([
                     ("Aantal rijen", total_rows),
                     ("Aantal kolommen", total_original_cols),
                     ("Aantal velden", aantal_velden_totaal),
                     ("Aantal aanwezige verplichte kolommen", aantal_aanw_verpl_velden),
                     ("Aantal afwezige verplichte kolommen", aantal_afw_verpl_velden),
-                    ("Aantal gevulde verplichte velden", total_filled_in_present),
-                    ("Aantal aanwezige lege verplichte velden", aantal_aanw_lege_verpl_velden),
-                    ("Aantal regels mogelijk afgewezen door Gatekeeper", aantal_afkeuringen),
+                    (f"Aantal gevulde verplichte velden{quick_mode_suffix}", total_filled_in_present),
+                    (f"Aantal aanwezige lege verplichte velden{quick_mode_suffix}", aantal_aanw_lege_verpl_velden),
+                    (f"Aantal regels mogelijk afgewezen door Gatekeeper{quick_mode_suffix}", aantal_afkeuringen),
                 ])
             # SIMPELE STATISTIEKEN DATA LOGICA - FINAL CORRECTIE
             # Header staat op current_row+1, data moet DIRECT daaronder op current_row+1  
@@ -2169,9 +2244,9 @@ def genereer_rapport(
                 )
 
             df_foutcodes_top = pd.DataFrame()
-            # Voor foutmeldingen tabel - VASTE POSITIES
-            table_subheader_row = 8  # Subheader is altijd op rij 8 (Excel rij 9)
-            table_start_row = 9  # Data begint altijd op rij 9 (Excel rij 10)
+            # Voor foutmeldingen tabel - VASTE POSITIES (rechterkant blijft ongewijzigd)
+            table_subheader_row = 8  # VAST: rechterkant verandert niet
+            table_start_row = 9  # VAST: rechterkant verandert niet
             table_end_row = table_start_row + 1  # Default end row
             if not df_errors.empty:
                 # Check of 'code' kolom bestaat voor we verder gaan
@@ -2472,24 +2547,26 @@ def genereer_rapport(
             bar_headers = ["Veld", "Juist", "Foutief", "Leeg", "Kolom Missing"]
             ws_dash.write_row(bar_chart_row, 0, bar_headers)
             bar_chart_data = []
+            # CRITICAL: Use processed_rows for chart calculations, not total_rows!
+            chart_rows = len(df)  # Use actual processed data length
             for i, f in enumerate(ghx_mandatory_fields):
                 row_num = bar_chart_row + 1 + i
                 if f not in df.columns:
                     # Voor lege templates, toon als "leeg" (geel) in plaats van "missing" (zwart)
-                    if total_rows == 0:
+                    if chart_rows == 0:
                         correct, error, empty, missing = 0, 0, 1, 0  # Toon minimaal 1 voor zichtbaarheid
                     else:
-                        correct, error, empty, missing = 0, 0, 0, total_rows
+                        correct, error, empty, missing = 0, 0, 0, chart_rows
                 else:
                     filled = filled_counts.get(f, 0)
                     errors = corrected_errors.get(f, 0)
                     correct = max(0, filled - errors)
                     error = errors
-                    empty = total_rows - filled
+                    empty = chart_rows - filled  # Use processed rows for chart
                     missing = 0
                     
                     # Voor lege templates met kolommen aanwezig, toon als "leeg"
-                    if total_rows == 0:
+                    if chart_rows == 0:
                         empty = 1  # Toon minimaal 1 voor zichtbaarheid
                 ws_dash.write(row_num, 0, f)
                 ws_dash.write(row_num, 1, correct)
@@ -2704,14 +2781,28 @@ def genereer_rapport(
             score_int_uitleg = score_result['final_score']
             score_grade_uitleg = score_result['grade']
             
+            # Bepaal kleuren voor Sheet 2 score display
+            if score_grade_uitleg in ["B", "A", "A+"]:
+                score_text_color = "#4f6229"  # Groen
+                score_bg_color = "#E8F4E8"    # Licht groen
+                score_border_color = "#4f6229"  # Groen
+            elif score_grade_uitleg in ["C", "D"]:
+                score_text_color = "#FF5E1A"  # Oranje
+                score_bg_color = "#FFF4E6"    # Licht oranje
+                score_border_color = "#FF5E1A"  # Oranje
+            else:  # E, F
+                score_text_color = "#c00000"  # Rood
+                score_bg_color = "#FFE6E6"    # Licht rood
+                score_border_color = "#c00000"  # Rood
+            
             # Maak aparte formats voor mooiere opmaak
             fmt_score_title = workbook.add_format({
                 'bold': True,
                 'font_size': 14,
-                'font_color': '#2E4B1A',
-                'bg_color': '#E8F4E8',
+                'font_color': score_text_color,
+                'bg_color': score_bg_color,
                 'border': 1,
-                'border_color': '#2E4B1A',
+                'border_color': score_border_color,
                 'align': 'left',
                 'valign': 'vcenter',
                 'text_wrap': True,
@@ -2721,9 +2812,9 @@ def genereer_rapport(
             fmt_score_body = workbook.add_format({
                 'font_size': 12,
                 'font_color': '#000000',
-                'bg_color': '#E2EFDA',  # Zelfde groen als A3/A4 
+                'bg_color': score_bg_color,  # Gebruik dezelfde achtergrondkleur als de titel
                 'border': 1,
-                'border_color': '#2E4B1A',
+                'border_color': score_border_color,  # Gebruik dezelfde randkleur als de titel
                 'align': 'left',
                 'valign': 'top',
                 'text_wrap': True,

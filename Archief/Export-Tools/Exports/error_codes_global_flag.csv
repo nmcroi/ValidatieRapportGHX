@@ -1,0 +1,6 @@
+"Code","Description_Clean","Severity","Recommended_Action"
+"201","Er ontbreekt een barcode (GTIN of Aanvullende ID) op een productregel.","WARNING","Review global data consistency"
+"202","Specifieke UOM-inconsistentie (bijv. UOMs moeten gelijk zijn als base=orderable).","WARNING","Review global data consistency"
+"203","De aangeleverde template is mogelijk verouderd.","WARNING","Review global data consistency"
+"204","De 'Omschrijving Verpakkingseenheid' komt niet overeen met de UOM-codes.","WARNING","Review global data consistency"
+"205","De set afmetingen (H, B, D) is niet compleet ingevuld.","WARNING","Review global data consistency"

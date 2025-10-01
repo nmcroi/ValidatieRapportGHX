@@ -50,8 +50,11 @@ Zie `deployment_for_IT/README_FOR_IT.md` voor server deployment instructies.
 - **Categorized error reporting**: Onderscheidt Afkeuringen, Aanpassingen, en Vlaggen
 - **Database corrections**: Voorspellende suggesties voor veel voorkomende fouten
 
-## 📂 Clean Architecture Structure
+## 📂 Project Structure Explained
 
+**Waarom zoveel folders?** Dit project is gegroeid van een simpele validator naar een complete clean architecture met TG→N→O template support. Ter vergelijking, de OneDrive versie heeft slechts 6 bestanden - deze heeft er veel meer door de uitgebreide functionaliteit.
+
+### 🏗️ Core Architecture
 ```
 📁 Project PrijsValGem_WS app/
 ├── 🌐 prijslijst_validatie_app.py          # Streamlit web interface
@@ -66,22 +69,46 @@ Zie `deployment_for_IT/README_FOR_IT.md` voor server deployment instructies.
 │   ├── debug_tools.py                     # Development utilities
 │   ├── utils.py                           # Helper functions
 │   └── price_tool.py                      # Legacy compatibility
+```
+
+### 📚 Documentation & Configuration
+```
 ├── 📚 docs/ - Comprehensive Documentation:
 │   ├── ARCHITECTURE.md                    # System design overview
 │   ├── TEMPLATE_DETECTION.md              # TG→N→O decision tree
 │   ├── VALIDATION_PIPELINE.md             # Processing workflow
 │   ├── CONFIGURATION.md                   # Config management
-│   └── API_REFERENCE.md                   # Complete API docs
-├── 🗄️ archive/ - Development History:
-│   ├── development_scripts/               # Debug & test scripts
-│   └── README.md                          # Archive documentation
+│   ├── API_REFERENCE.md                   # Complete API docs
+│   └── COMPLETE_HANDLEIDING.md            # Complete philosophy guide
 ├── ⚙️ Configuration Files:
 │   ├── field_validation_v20.json          # Core validation rules
 │   ├── header_mapping.json                # Legacy header mapping
 │   ├── reference_lists.json               # Value validation lists
-│   └── Template Generator Files/          # TG synchronization
-└── 🚀 deployment_for_IT/ - Server deployment
+│   └── uom_penalty_config.json            # UOM conflict penalties
 ```
+
+### 🗂️ Supporting Infrastructure
+```
+├── 🗄️ archive/ - Development History:
+│   ├── development_scripts/               # 14 debug & test scripts
+│   └── README.md                          # Archive documentation
+├── 📊 Template Generator Files/           # TG synchronization:
+│   ├── institution_codes.json             # Institution mappings
+│   ├── template_versions.json             # Version tracking
+│   └── SYNC_HANDLEIDING.md                # Sync instructions
+├── 🧪 test/ - Test Data:
+│   └── testinput/                         # Various Excel test files
+├── 📋 validation_reports/                 # Generated validation outputs
+├── 💾 backup files/                       # Safety backups
+├── 📁 Archief/                           # Legacy documentation
+├── 📁 static/                            # Static web assets (if any)
+└── 🚀 deployment_for_IT/                 # Server deployment scripts
+```
+
+### 🔄 **Ontwikkelingsgeschiedenis**
+- **OneDrive versie**: 6 bestanden, simpele validator, geen TG support
+- **Cursor versie**: 100+ bestanden, clean architecture, TG→N→O support, uitgebreide documentatie
+- **Ratio**: Meer complexiteit = meer functionaliteit + onderhoudbaarheid
 
 ## 📖 Comprehensive Documentation
 

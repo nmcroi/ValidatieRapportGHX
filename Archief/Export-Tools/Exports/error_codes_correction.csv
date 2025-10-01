@@ -1,0 +1,4 @@
+"Code","Description_Clean","Severity","Recommended_Action"
+"105","De 'Omrekenfactor' is automatisch berekend.","INFO","Verify auto-correction is correct"
+"106","De 'Prijs per Kleinste eenheid' is automatisch berekend.","INFO","Verify auto-correction is correct"
+"108","Een BTW-percentage (zoals 9 of 21) is omgezet naar de juiste BTW-code.","INFO","Verify auto-correction is correct"

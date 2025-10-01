@@ -46,6 +46,10 @@ if not os.path.exists(REFERENCE_JSON):
 if 'report_data' not in st.session_state:
     st.session_state.report_data = {}
 
+# Initialiseer session state voor Quick Mode bestanden
+if 'quick_mode_files' not in st.session_state:
+    st.session_state.quick_mode_files = {}
+
 # File uploader - Accept multiple files
 uploaded_files = st.file_uploader("Kies een of meerdere Excel-bestanden", type=["xlsx", "xls"], accept_multiple_files=True)
 
@@ -57,6 +61,7 @@ if uploaded_files:
     if st.button(f"Start Validatie & Genereer Rapporten voor {len(uploaded_files)} bestand(en)"):
         # Reset/clear previous report data when starting new validation
         st.session_state.report_data = {}
+        st.session_state.quick_mode_files = {}
         # Loop through each uploaded file
         MAX_FILE_SIZE_MB = 50
         MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
@@ -101,38 +106,43 @@ if uploaded_files:
                             st.write(f"- Product Types: **{debug_result.get('product_types', [])}**")
                     elif 'error' in debug_result:
                         st.error(f"Debug Error: {debug_result['error']}")
-                        
-                    # DEBUG: Complete header mapping voor AT templates
-                    if debug_result.get('template_type') == 'AT':
-                        header_debug = debug_header_mapping(temp_file_path)
-                        if 'error' not in header_debug:
-                            st.info("📋 **Complete Header Mapping Debug voor AT Template:**")
-                            
-                            # Samenvatting
-                            summary = header_debug['summary']
-                            st.write(f"**Samenvatting:** {summary['mapped_columns']}/{summary['total_columns']} kolommen gemapt")
-                            
-                            if summary['unmapped_list']:
-                                st.warning(f"**Niet gemapt:** {', '.join(summary['unmapped_list'])}")
-                            
-                            # Details van elke kolom (alleen eerste 10 om niet te veel ruimte in te nemen)
-                            st.write("**Eerste 10 Excel kolommen:**")
-                            for i, col_info in enumerate(header_debug['mapping_analysis'][:10]):
-                                status = "✅" if col_info['mapping_found'] else "❌"
-                                st.write(f"{status} `{col_info['excel_column']}`")
-                                if col_info['mapping_found']:
-                                    st.write(f"   → **{col_info['mapping_found']}** ({col_info['mapping_method']})")
-                                elif col_info['all_possible_matches']:
-                                    st.write(f"   💡 Mogelijke matches: {[m['standard_header'] for m in col_info['all_possible_matches']]}")
-                                    
-                            if len(header_debug['mapping_analysis']) > 10:
-                                st.write(f"... en nog {len(header_debug['mapping_analysis']) - 10} kolommen")
-                        else:
-                            st.error(f"Header mapping debug error: {header_debug['error']}")
                 except Exception as debug_e:
                     st.warning(f"Debug info niet beschikbaar: {debug_e}")
 
-                # Start validation with a spinner for THIS file
+                # Tel eerst aantal rijen in Excel
+                try:
+                    import pandas as pd
+                    df_check = pd.read_excel(temp_file_path, nrows=0)  # Alleen headers
+                    with pd.ExcelFile(temp_file_path) as xls:
+                        # Tel rijen in eerste sheet
+                        df_temp = pd.read_excel(xls, nrows=1)
+                        # Gebruik xlrd/openpyxl om totaal te tellen
+                        import openpyxl
+                        wb = openpyxl.load_workbook(temp_file_path, read_only=True)
+                        ws = wb.active
+                        total_rows = ws.max_row - 1  # -1 voor header
+                        wb.close()
+                    
+                    logging.info(f"Bestand heeft {total_rows} rijen data.")
+                    
+                    # Bepaal of Quick Mode nodig is
+                    if total_rows >= 5000:
+                        st.info(f"📊 Bestand heeft {total_rows} rijen. Quick Validatie: eerste 5000 rijen worden gevalideerd.")
+                        max_rows_param = 5000
+                        # Sla Quick Mode info op in session state
+                        st.session_state.quick_mode_files[original_filename] = {
+                            'total_rows': total_rows,
+                            'file_data': uploaded_file.getvalue()
+                        }
+                    else:
+                        max_rows_param = None  # Valideer alles
+                        
+                except Exception as count_error:
+                    st.warning(f"Kon aantal rijen niet tellen: {count_error}. Valideer volledig bestand.")
+                    total_rows = None
+                    max_rows_param = None
+
+                # Start validation with spinner
                 with st.spinner(f"Validatie en rapportage voor '{original_filename}' bezig..."):
                     logging.info(f"Aanroepen validate_pricelist voor {original_filename}...")
                     report_path = validate_pricelist(
@@ -141,6 +151,8 @@ if uploaded_files:
                         validation_json_path=VALIDATION_JSON,
                         original_input_filename=original_filename,
                         reference_json_path=REFERENCE_JSON,
+                        max_rows=max_rows_param,
+                        total_rows=total_rows,
                     )
                     logging.info(f"validate_pricelist voltooid voor {original_filename}.")
 
@@ -163,6 +175,65 @@ if uploaded_files:
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                             key=f"download_btn_{original_filename}" # Key for button itself (optional but good practice)
                         )
+                        
+                        # Voeg "Volledige Validatie" knop toe voor Quick Mode bestanden
+                        if max_rows_param is not None and original_filename in st.session_state.quick_mode_files:
+                            if st.button(f"🔍 Volledige Validatie voor '{original_filename}' ({total_rows:,} rijen)", key=f"full_validation_{original_filename}"):
+                                st.markdown("---")
+                                st.subheader(f"Volledige Validatie: {original_filename}")
+                                st.info(f"Start volledige validatie van alle {total_rows:,} rijen...")
+                                
+                                # Maak opnieuw een tijdelijk bestand van de opgeslagen data
+                                full_temp_file_path = None
+                                try:
+                                    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_file:
+                                        tmp_file.write(st.session_state.quick_mode_files[original_filename]['file_data'])
+                                        full_temp_file_path = tmp_file.name
+                                    
+                                    # Start volledige validatie (ZONDER max_rows parameter)
+                                    with st.spinner(f"Volledige validatie voor '{original_filename}' bezig..."):
+                                        full_report_path = validate_pricelist(
+                                            input_excel_path=full_temp_file_path,
+                                            mapping_json_path=MAPPING_JSON,
+                                            validation_json_path=VALIDATION_JSON,
+                                            original_input_filename=original_filename,
+                                            reference_json_path=REFERENCE_JSON,
+                                            max_rows=None,  # VOLLEDIGE validatie
+                                            total_rows=total_rows,
+                                        )
+                                    
+                                    # Ruim tijdelijk bestand op
+                                    if os.path.exists(full_temp_file_path):
+                                        os.remove(full_temp_file_path)
+                                    
+                                    # Toon resultaat volledige validatie
+                                    if full_report_path and os.path.exists(full_report_path):
+                                        st.success(f"Volledige validatie voor '{original_filename}' succesvol voltooid!")
+                                        with open(full_report_path, "rb") as fp:
+                                            full_report_bytes = fp.read()
+                                        full_download_filename = os.path.basename(full_report_path)
+                                        
+                                        st.download_button(
+                                            label=f"Download Volledig Rapport voor '{original_filename}'",
+                                            data=full_report_bytes,
+                                            file_name=full_download_filename,
+                                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                            key=f"full_download_btn_{original_filename}"
+                                        )
+                                        
+                                        # Update session state met volledig rapport
+                                        st.session_state.report_data[f"{original_filename}_VOLLEDIG"] = {
+                                            'bytes': full_report_bytes,
+                                            'filename': full_download_filename
+                                        }
+                                    else:
+                                        st.error(f"Volledige validatie voor '{original_filename}' mislukt.")
+                                        
+                                except Exception as full_val_err:
+                                    st.error(f"Fout bij volledige validatie: {full_val_err}")
+                                    if full_temp_file_path and os.path.exists(full_temp_file_path):
+                                        os.remove(full_temp_file_path)
+                        
                         # Store report data in session state
                         st.session_state.report_data[original_filename] = {
                             'bytes': report_bytes,
@@ -198,13 +269,88 @@ if st.session_state.report_data:
         if data.get('error') == 'file_too_large':
             st.warning(f"Bestand '{original_filename}' was te groot en is niet verwerkt.")
             continue # Sla downloadknop over voor te grote bestanden
-        st.download_button(
-            label=f"Download Rapport voor '{original_filename}'",
-            data=data['bytes'],
-            file_name=data['filename'],
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key=f"dl_{original_filename}" # Unique key per button
-        )
+        
+        # Controleer of dit een _VOLLEDIG rapport is
+        if not original_filename.endswith('_VOLLEDIG'):
+            # Normale download knop
+            st.download_button(
+                label=f"Download Rapport voor '{original_filename}'",
+                data=data['bytes'],
+                file_name=data['filename'],
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key=f"dl_{original_filename}" # Unique key per button
+            )
+            
+            # Voeg "Volledige Validatie" knop toe als dit een Quick Mode bestand was
+            if original_filename in st.session_state.quick_mode_files:
+                quick_info = st.session_state.quick_mode_files[original_filename]
+                if st.button(f"🔍 Volledige Validatie voor '{original_filename}' ({quick_info['total_rows']:,} rijen)", key=f"persistent_full_validation_{original_filename}"):
+                    st.markdown("---")
+                    st.subheader(f"Volledige Validatie: {original_filename}")
+                    st.info(f"Start volledige validatie van alle {quick_info['total_rows']:,} rijen...")
+                    
+                    # Maak opnieuw een tijdelijk bestand van de opgeslagen data
+                    full_temp_file_path = None
+                    try:
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_file:
+                            tmp_file.write(quick_info['file_data'])
+                            full_temp_file_path = tmp_file.name
+                        
+                        # Start volledige validatie (ZONDER max_rows parameter)
+                        with st.spinner(f"Volledige validatie voor '{original_filename}' bezig..."):
+                            from validator.price_tool import validate_pricelist
+                            full_report_path = validate_pricelist(
+                                input_excel_path=full_temp_file_path,
+                                mapping_json_path=MAPPING_JSON,
+                                validation_json_path=VALIDATION_JSON,
+                                original_input_filename=original_filename,
+                                reference_json_path=REFERENCE_JSON,
+                                max_rows=None,  # VOLLEDIGE validatie
+                                total_rows=quick_info['total_rows'],
+                            )
+                        
+                        # Ruim tijdelijk bestand op
+                        if os.path.exists(full_temp_file_path):
+                            os.remove(full_temp_file_path)
+                        
+                        # Toon resultaat volledige validatie
+                        if full_report_path and os.path.exists(full_report_path):
+                            st.success(f"Volledige validatie voor '{original_filename}' succesvol voltooid!")
+                            with open(full_report_path, "rb") as fp:
+                                full_report_bytes = fp.read()
+                            full_download_filename = os.path.basename(full_report_path)
+                            
+                            st.download_button(
+                                label=f"Download Volledig Rapport voor '{original_filename}'",
+                                data=full_report_bytes,
+                                file_name=full_download_filename,
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                key=f"persistent_full_download_btn_{original_filename}"
+                            )
+                            
+                            # Update session state met volledig rapport
+                            st.session_state.report_data[f"{original_filename}_VOLLEDIG"] = {
+                                'bytes': full_report_bytes,
+                                'filename': full_download_filename
+                            }
+                            st.rerun()  # Herlaad om nieuwe rapport te tonen
+                        else:
+                            st.error(f"Volledige validatie voor '{original_filename}' mislukt.")
+                            
+                    except Exception as full_val_err:
+                        st.error(f"Fout bij volledige validatie: {full_val_err}")
+                        if full_temp_file_path and os.path.exists(full_temp_file_path):
+                            os.remove(full_temp_file_path)
+        else:
+            # Volledig rapport download knop
+            base_filename = original_filename.replace('_VOLLEDIG', '')
+            st.download_button(
+                label=f"Download Volledig Rapport voor '{base_filename}'",
+                data=data['bytes'],
+                file_name=data['filename'],
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key=f"dl_{original_filename}" # Unique key per button
+            )
 
     # Add Download All button if more than one report exists
     if len(st.session_state.report_data) > 1:

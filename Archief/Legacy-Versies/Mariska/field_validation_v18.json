@@ -1,0 +1,4162 @@
+{
+    "error_code_mapping": {
+        "required": "73",
+        "min_length": "74",
+        "max_length": "75",
+        "unique": "76",
+        "numeric": "77",
+        "format": "78",
+        "length": "79",
+        "allowed_values": "80",
+        "ce_invalid_date": "81",
+        "ce_invalid_institute": "82",
+        "brutoprijs_max_digits": "83",
+        "nettoprijs_missing": "84",
+        "nettoprijs_max_digits": "85",
+        "is_bestelbareeenheid_missing": "86",
+        "is_bestelbareeenheid_invalid": "87",
+        "max_integer_digits": "88",
+        "max_decimal_digits": "89",
+        "omschrijving_verpakkingeenheid_missing": "90",
+        "omschrijving_verpakkingeenheid_too_long": "91",
+        "boolean_invalid": "92",
+        "mismatch": "93",
+        "alphanumeric": "94",
+        "invalid_format": "95",
+        "date_error": "96"
+    },
+    "error_code_descriptions": {
+        "73": "Aantal verplichte velden die leeg zijn.",
+        "74": "Aantal verplichte velden met te korte waarden.",
+        "75": "Aantal verplichte velden met te lange waarden.",
+        "76": "Duplicaten in Artikelnummer gevonden.",
+        "77": "Velden die numeriek moeten zijn, maar dat niet zijn.",
+        "78": "Velden die verkeerde symbolen of tekens bevatten.",
+        "79": "Velden met verkeerde lengtes.",
+        "80": "Velden met waardes die moeten voorkomen in een specifieke lijst.",
+        "81": "Aantal velden met ongeldige CE Certificaat einddatum.",
+        "82": "Aantal velden met ongeldige CE Certificerende instantie.",
+        "83": "Aantal fouten in Brutoprijs (max digits overschrijding).",
+        "84": "Aantal ontbrekende Nettoprijs-velden.",
+        "85": "Aantal fouten in Nettoprijs (max digits overschrijding).",
+        "86": "Aantal ontbrekende Is BestelbareEenheid-velden.",
+        "87": "Aantal Is BestelbareEenheid-velden met ongeldige waarde.",
+        "88": "Aantal ontbrekende Is BasisEenheid-velden.",
+        "89": "Aantal Is BasisEenheid-velden met ongeldige waarde.",
+        "90": "Aantal ontbrekende Omschrijving Verpakkingseenheid-velden.",
+        "91": "Aantal Omschrijving Verpakkingseenheid-velden met te lange waarden.",
+        "92": "Boolean velden waar de waarde niet 1 of 0 is.",
+        "93": "Mismatch fouten.",
+        "94": "Velden moeten alfanumeriek zijn.",
+        "95": "Fout in het formaat van het veld.",
+        "96": "Datum mag niet foutief zijn of vóór een andere datum liggen.",
+        "97": "UOM-relatie fouten: velden die opzich correct zijn maar in combinatie conflicteren."
+    },
+    "allowed_values": [
+      "NaM",
+      "Null",
+      "nvt",
+      "n.v.t.",
+      "NaN",
+      "nan",
+      "n.v.t",
+      "nvt",
+      "n.v.t.",
+      "n.v.t",
+      "niet van toepassing",
+      "geen",
+      "N/A",
+      "NA",
+      "n/a",
+      "n/a.",
+      "unknown",
+      "onbekend",
+      "niet bekend",
+      "niet ingevuld",
+      "niet beschikbaar",
+      "niet van toepassing.",
+      "geen waarde",
+      "n.v.t..",
+      "niet relevant",
+      "irrelevant",
+      "niet",
+      "nvt.",
+      "n.vt",
+      "nvt..",
+      "n.v.t..",
+      "-"
+    ],
+    "GS1ValidatieIngeschakeld": {
+      "type": "boolean",
+      "boolean_values": [
+        0,
+        1
+      ],
+      "error_messages": {
+        "boolean_values": "GS1ValidatieIngeschakeld moet 0 (uit) of 1 (aan) zijn."
+      },
+      "error_codes": {
+        "boolean_values": "92"
+      }
+    },
+    "fields": {
+        "Artikelnummer": {
+            "GHXmandatory": true,
+            "GS1mandatory": false,
+            "type": "string",
+            "min_length": 3,
+            "max_length": 46,
+            "unique": true,
+            "reporting": {
+            "calculate_filled_percentage": true
+            },
+            "error_messages": {
+            "required": "Dit veld is verplicht en mag niet leeg zijn.",
+            "min_length": "Artikelnummer moet minimaal 3 karakters bevatten.",
+            "max_length": "Artikelnummer mag maximaal 46 karakters bevatten.",
+            "unique": "Artikelnummer moet uniek zijn; duplicaten worden niet opgenomen in de database."
+            },
+            "error_codes": {
+            "required": "73",
+            "min_length": "74",
+            "max_length": "75",
+            "unique": "76"
+            },
+            "database_corrections": {
+            "type": "regel_overgeslagen",
+            "message": "LET OP: Artikelnummer is leeg of te klein. Regel niet toegevoegd aan TXT"
+            }
+        },
+        "Artikelnaam": {
+            "GHXmandatory": true,
+            "GS1mandatory": false,
+            "type": "string",
+            "min_length": 3,
+            "max_length": 90,
+            "error_messages": {
+            "required": "Dit veld is verplicht en mag niet leeg zijn.",
+            "min_length": "Artikelnaam moet minimaal 3 karakters bevatten.",
+            "max_length": "Artikelnaam mag maximaal 90 karakters bevatten."
+            },
+            "error_codes": {
+            "required": "73",
+            "min_length": "74",
+            "max_length": "75"
+            },
+            "database_corrections": {
+            "type": "tekst_ingekort",
+            "message": "Artikelnaam te lang. Aantal karakters verwijderd."
+            }
+        },
+        "Artikelomschrijving": {
+            "GHXmandatory": false,
+            "type": "string",
+            "max_length": 2000,
+            "error_messages": {
+                "max_length": "Artikelomschrijving mag maximaal 2000 karakters bevatten."
+            },
+            "error_codes": {
+                "max_length": "75"
+            },
+            "database_corrections": {
+                "type": "tekst_ingekort",
+                "message": "Artikelinformatie te lang. Aantal karakters verwijderd."
+            }
+        },
+        "Artikelomschrijving Taal Code": {
+            "GHXmandatory": false,
+            "type": "string",
+            "length": 2,
+            "allowed_values": [
+                "EN",
+                "AD",
+                "AE",
+                "AF",
+                "AG",
+                "AI",
+                "AL",
+                "AM",
+                "AN",
+                "AO",
+                "AQ",
+                "AR",
+                "AS",
+                "AT",
+                "AU",
+                "AW",
+                "AX",
+                "AZ",
+                "BA",
+                "BB",
+                "BD",
+                "BE",
+                "BF",
+                "BG",
+                "BH",
+                "BI",
+                "BJ",
+                "BM",
+                "BN",
+                "BO",
+                "BR",
+                "BS",
+                "BT",
+                "BV",
+                "BW",
+                "BY",
+                "CA",
+                "CD",
+                "CF",
+                "CG",
+                "CH",
+                "CI",
+                "CK",
+                "CL",
+                "CM",
+                "CN",
+                "CO",
+                "CR",
+                "CS",
+                "CU",
+                "CV",
+                "CX",
+                "CY",
+                "CZ",
+                "DE",
+                "DJ",
+                "DK",
+                "DM",
+                "DO",
+                "DZ",
+                "EC",
+                "EE",
+                "EG",
+                "EH",
+                "ER",
+                "ES",
+                "ET",
+                "FI",
+                "FJ",
+                "FK",
+                "FM",
+                "FO",
+                "FR",
+                "GA",
+                "GB",
+                "GD",
+                "GE",
+                "GF",
+                "GH",
+                "GI",
+                "GL",
+                "GM",
+                "GN",
+                "GP",
+                "GQ",
+                "GR",
+                "GS",
+                "GT",
+                "GU",
+                "GW",
+                "GY",
+                "HK",
+                "HM",
+                "HN",
+                "HR",
+                "HT",
+                "HU",
+                "ID",
+                "IE",
+                "IL",
+                "IM",
+                "IN",
+                "IO",
+                "IQ",
+                "IR",
+                "IS",
+                "IT",
+                "JM",
+                "JO",
+                "JP",
+                "KE",
+                "KG",
+                "KH",
+                "KI",
+                "KM",
+                "KN",
+                "KP",
+                "KR",
+                "KW",
+                "KY",
+                "KZ",
+                "LA",
+                "LB",
+                "LC",
+                "LI",
+                "LK",
+                "LR",
+                "LS",
+                "LT",
+                "LU",
+                "LV",
+                "LY",
+                "MA",
+                "MC",
+                "MD",
+                "ME",
+                "MG",
+                "MH",
+                "MK",
+                "ML",
+                "MM",
+                "MN",
+                "MO",
+                "MP",
+                "MQ",
+                "MR",
+                "MS",
+                "MT",
+                "MU",
+                "MV",
+                "MW",
+                "MX",
+                "MY",
+                "MZ",
+                "NA",
+                "NC",
+                "NE",
+                "NF",
+                "NG",
+                "NI",
+                "NL",
+                "NO",
+                "NP",
+                "NR",
+                "NU",
+                "NZ",
+                "OM",
+                "PA",
+                "PE",
+                "PF",
+                "PG",
+                "PH",
+                "PK",
+                "PL",
+                "PM",
+                "PN",
+                "PR",
+                "PS",
+                "PT",
+                "PW",
+                "PY",
+                "QA",
+                "RE",
+                "RO",
+                "RU",
+                "RW",
+                "SA",
+                "SB",
+                "SC",
+                "SD",
+                "SE",
+                "SG",
+                "SH",
+                "SI",
+                "SJ",
+                "SK",
+                "SL",
+                "SM",
+                "SN",
+                "SO",
+                "SR",
+                "ST",
+                "SV",
+                "SY",
+                "SZ",
+                "TC",
+                "TD",
+                "TF",
+                "TG",
+                "TH",
+                "TJ",
+                "TK",
+                "TL",
+                "TM",
+                "TN",
+                "TO",
+                "TR",
+                "TT",
+                "TV",
+                "TW",
+                "TZ",
+                "UA",
+                "UG",
+                "UM",
+                "US",
+                "UY",
+                "UZ",
+                "VA",
+                "VC",
+                "VE",
+                "VG",
+                "VI",
+                "VN",
+                "VU",
+                "WF",
+                "WS",
+                "XI",
+                "XU",
+                "YE",
+                "YT",
+                "ZA",
+                "ZM",
+                "ZW"
+            ],
+            "error_messages": {
+                "length": "Artikelomschrijving Taal Code moet precies 2 karakters bevatten.",
+                "allowed_values": "Artikelomschrijving Taal Code moet een geldige landcode of taalcode zijn."
+            },
+            "depends_on": {
+                "fields": [
+                    "Artikelomschrijving"
+                ],
+                "condition": "filled",
+                "error_message": "Artikelomschrijving Taal Code is verplicht als 'Artikelomschrijving' is ingevuld."
+            },
+            "error_codes": {
+                "length": "79",
+                "allowed_values": "80"
+            }
+        },
+        "Brutoprijs": {
+            "GHXmandatory": true,
+            "type": "numeric",
+            "max_integer_digits": 100,
+            "max_decimal_digits": 100,
+            "decimal_separator": ",",
+            "allow_currency_symbol": false,
+            "allow_thousand_separator": false,
+            "reporting": {
+                "calculate_empty_percentage": true
+            },
+            "error_messages": {
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "numeric": "Brutoprijs moet een numerieke waarde zijn.",
+                "format": "Brutoprijs mag geen valutatekens of duizendtallenscheidingstekens bevatten.",
+                "max_digits": "Brutoprijs mag maximaal 7 cijfers voor de decimaal en 5 decimalen erna hebben."
+            },
+            "error_codes": {
+                "required": "73",
+                "numeric": "77",
+                "format": "78",
+                "max_digits": "75"
+            }
+        },
+        "Nettoprijs": {
+            "GHXmandatory": true,
+            "type": "numeric",
+            "max_integer_digits": 100,
+            "max_decimal_digits": 100,
+            "decimal_separator": ",",
+            "allow_currency_symbol": false,
+            "allow_thousand_separator": false,
+            "reporting": {
+                "calculate_empty_percentage": true
+            },
+            "error_messages": {
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "numeric": "Nettoprijs moet een numerieke waarde zijn.",
+                "format": "Nettoprijs mag geen valutatekens of duizendtallenscheidingstekens bevatten.",
+                "max_digits": "Nettoprijs mag maximaal 7 cijfers voor de decimaal en 5 decimalen erna hebben."
+            },
+            "error_codes": {
+                "required": "73",
+                "numeric": "77",
+                "format": "78",
+                "max_digits": "75"
+            }
+        },
+        "Is BestelbareEenheid": {
+            "GHXmandatory": true,
+            "GS1mandatory": true,
+            "type": "boolean",
+            "boolean_values": [
+                0,
+                1,
+                "0",
+                "1"
+            ],
+            "error_messages": {
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "boolean_values": "Is BestelbareEenheid moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "required": "73",
+                "boolean_values": "92"
+            }
+        },
+        "Is BasisEenheid": {
+            "GHXmandatory": true,
+            "GS1mandatory": true,
+            "type": "boolean",
+            "boolean_values": [
+                0,
+                1,
+                "0",
+                "1"
+            ],
+            "error_messages": {
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "boolean_values": "Is BasisEenheid moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "required": "73",
+                "boolean_values": "92"
+            }
+        },
+        "Omschrijving Verpakkingseenheid": {
+            "GHXmandatory": true,
+            "type": "string",
+            "max_length": 25,
+            "error_messages": {
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "max_length": "Omschrijving Verpakkingseenheid mag maximaal 15 karakters bevatten."
+            },
+            "error_codes": {
+                "required": "73",
+                "max_length": "75"
+            }
+        },
+        "UOM Code Verpakkingseenheid": {
+            "GHXmandatory": true,
+            "type": "string",
+            "allowed_values": [
+                "1I",
+                "4E",
+                "AA",
+                "AE",
+                "AM",
+                "ANN",
+                "BA",
+                "BAR",
+                "BB",
+                "BBG",
+                "BG",
+                "BH",
+                "BJ",
+                "BK",
+                "BL",
+                "BO",
+                "BPG",
+                "BRI",
+                "BX",
+                "CA",
+                "CEL",
+                "CG",
+                "CH",
+                "CM",
+                "CMK",
+                "CMQ",
+                "CMS",
+                "CMT",
+                "CNG",
+                "CNP",
+                "CQ",
+                "CR",
+                "CS",
+                "CT",
+                "CU",
+                "CY",
+                "D63",
+                "D64",
+                "DAY",
+                "DI",
+                "DMK",
+                "DMT",
+                "DZP",
+                "EA",
+                "EN",
+                "EP",
+                "EV",
+                "FAH",
+                "GLI",
+                "GLL",
+                "GRM",
+                "GTG",
+                "HLT",
+                "HUR",
+                "INH",
+                "JG",
+                "JR",
+                "KB",
+                "KBA",
+                "KEL",
+                "KG",
+                "KGM",
+                "KT",
+                "KTM",
+                "KTN",
+                "LEF",
+                "LH",
+                "LS",
+                "LTR",
+                "LUX",
+                "MGM",
+                "MIN",
+                "MLT",
+                "MMK",
+                "MMT",
+                "MON",
+                "MPG",
+                "MTK",
+                "MTR",
+                "NE",
+                "NT",
+                "OHM",
+                "OP",
+                "OZ",
+                "P3",
+                "P4",
+                "P5",
+                "P6",
+                "P7",
+                "P8",
+                "P9",
+                "PA",
+                "PB",
+                "PF",
+                "PK",
+                "PLP",
+                "PO",
+                "PR",
+                "PT",
+                "PU",
+                "PUG",
+                "PX",
+                "RK",
+                "RL",
+                "RO",
+                "SET",
+                "STR",
+                "SW",
+                "SX",
+                "SY",
+                "TE",
+                "TN",
+                "TP",
+                "TPR",
+                "TU",
+                "U1",
+                "U2",
+                "WEE",
+                "WRP",
+                "X11",
+                "ZU"
+            ],
+            "error_messages": {
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "allowed_values": "UOM Code Verpakkingseenheid moet een geldige UOM code zijn."
+            },
+            "error_codes": {
+                "required": "73",
+                "allowed_values": "80"
+            }
+        },
+        "Inhoud Verpakkingseenheid": {
+            "GHXmandatory": true,
+            "GS1mandatory": true,
+            "type": "numeric",
+            "max_integer_digits": 7,
+            "max_decimal_digits": 5,
+            "error_messages": {
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "numeric": "Inhoud Verpakkingseenheid moet een numerieke waarde zijn."
+            },
+            "error_codes": {
+                "required": "73",
+                "numeric": "77"
+            },
+            "database_corrections": {
+                "type": "waarde_aangepast",
+                "message": "Inhoud Verpakkingseenheid is leeg of niet numeriek. Aangepast naar '1'."
+            }
+        },
+        "UOM Code Basiseenheid": {
+            "GHXmandatory": true,
+            "type": "string",
+            "allowed_values": [
+                "1I",
+                "4E",
+                "AA",
+                "AE",
+                "AM",
+                "ANN",
+                "BA",
+                "BAR",
+                "BB",
+                "BBG",
+                "BG",
+                "BH",
+                "BJ",
+                "BK",
+                "BL",
+                "BO",
+                "BPG",
+                "BRI",
+                "BX",
+                "CA",
+                "CEL",
+                "CG",
+                "CH",
+                "CM",
+                "CMK",
+                "CMQ",
+                "CMS",
+                "CMT",
+                "CNG",
+                "CNP",
+                "CQ",
+                "CR",
+                "CS",
+                "CT",
+                "CU",
+                "CY",
+                "D63",
+                "D64",
+                "DAY",
+                "DI",
+                "DMK",
+                "DMT",
+                "DZP",
+                "EA",
+                "EN",
+                "EP",
+                "EV",
+                "FAH",
+                "GLI",
+                "GLL",
+                "GRM",
+                "GTG",
+                "HLT",
+                "HUR",
+                "INH",
+                "JG",
+                "JR",
+                "KB",
+                "KBA",
+                "KEL",
+                "KG",
+                "KGM",
+                "KT",
+                "KTM",
+                "KTN",
+                "LEF",
+                "LH",
+                "LS",
+                "LTR",
+                "LUX",
+                "MGM",
+                "MIN",
+                "MLT",
+                "MMK",
+                "MMT",
+                "MON",
+                "MPG",
+                "MTK",
+                "MTR",
+                "NE",
+                "NT",
+                "OHM",
+                "OP",
+                "OZ",
+                "P3",
+                "P4",
+                "P5",
+                "P6",
+                "P7",
+                "P8",
+                "P9",
+                "PA",
+                "PB",
+                "PF",
+                "PK",
+                "PLP",
+                "PO",
+                "PR",
+                "PT",
+                "PU",
+                "PUG",
+                "PX",
+                "RK",
+                "RL",
+                "RO",
+                "SET",
+                "STR",
+                "SW",
+                "SX",
+                "SY",
+                "TE",
+                "TN",
+                "TP",
+                "TPR",
+                "TU",
+                "U1",
+                "U2",
+                "WEE",
+                "WRP",
+                "X11",
+                "ZU"
+            ],
+            "error_messages": {
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "allowed_values": "UOM Code Basiseenheid moet een geldige UOM code zijn."
+            },
+            "error_codes": {
+                "required": "73",
+                "allowed_values": "80"
+            }
+        },
+        "Inhoud Basiseenheid": {
+            "GHXmandatory": true,
+            "GS1mandatory": true,
+            "type": "numeric",
+            "max_integer_digits": 7,
+            "max_decimal_digits": 5,
+            "error_messages": {
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "numeric": "Inhoud Basiseenheid moet een numerieke waarde zijn."
+            },
+            "error_codes": {
+                "required": "73",
+                "numeric": "77"
+            }
+        },
+        "UOM Code Inhoud Basiseenheid": {
+            "GHXmandatory": true,
+            "GS1mandatory": true,
+            "type": "string",
+            "allowed_values": [
+                "µL",
+                "UL",
+                "µG",
+                "UG",
+                "µMOL",
+                "UMOL",
+                "µM",
+                "UM",
+                "MOL",
+                "1I",
+                "4E",
+                "AA",
+                "AE",
+                "AM",
+                "ANN",
+                "BA",
+                "BAR",
+                "BB",
+                "BBG",
+                "BG",
+                "BH",
+                "BJ",
+                "BK",
+                "BL",
+                "BO",
+                "BPG",
+                "BRI",
+                "BX",
+                "CA",
+                "CEL",
+                "CG",
+                "CH",
+                "CM",
+                "CMK",
+                "CMQ",
+                "CMS",
+                "CMT",
+                "CNG",
+                "CNP",
+                "CQ",
+                "CR",
+                "CS",
+                "CT",
+                "CU",
+                "CY",
+                "D63",
+                "D64",
+                "DAY",
+                "DI",
+                "DMK",
+                "DMT",
+                "DZP",
+                "EA",
+                "EN",
+                "EP",
+                "EV",
+                "FAH",
+                "GLI",
+                "GLL",
+                "GRM",
+                "GTG",
+                "HLT",
+                "HUR",
+                "INH",
+                "JG",
+                "JR",
+                "KB",
+                "KBA",
+                "KEL",
+                "KG",
+                "KGM",
+                "KT",
+                "KTM",
+                "KTN",
+                "LEF",
+                "LH",
+                "LS",
+                "LTR",
+                "LUX",
+                "MGM",
+                "MIN",
+                "MLT",
+                "MMK",
+                "MMT",
+                "MON",
+                "MPG",
+                "MTK",
+                "MTR",
+                "NE",
+                "NT",
+                "OHM",
+                "OP",
+                "OZ",
+                "P3",
+                "P4",
+                "P5",
+                "P6",
+                "P7",
+                "P8",
+                "P9",
+                "PA",
+                "PB",
+                "PF",
+                "PK",
+                "PLP",
+                "PO",
+                "PR",
+                "PT",
+                "PU",
+                "PUG",
+                "PX",
+                "RK",
+                "RL",
+                "RO",
+                "SET",
+                "STR",
+                "SW",
+                "SX",
+                "SY",
+                "TE",
+                "TN",
+                "TP",
+                "TPR",
+                "TU",
+                "U1",
+                "U2",
+                "WEE",
+                "WRP",
+                "X11",
+                "ZU"
+            ],
+            "error_messages": {
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "allowed_values": "UOM Code Inhoud Basiseenheid moet een geldige UOM code zijn."
+            },
+            "error_codes": {
+                "required": "73",
+                "allowed_values": "80"
+            },
+            "database_corrections": {
+                "type": "leeg_gelaten",
+                "message": "UOM Code Inhoud Basiseenheid niet numeriek. Leeg gelaten."
+            }
+        },
+        "Omrekenfactor": {
+            "GHXmandatory": true,
+            "GS1mandatory": true,
+            "type": "numeric",
+            "error_messages": {
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "numeric": "Omrekenfactor moet een numerieke waarde zijn.",
+                "mismatch": "Omrekenfactor moet gelijk zijn aan 'Inhoud Verpakkingseenheid' x 'Inhoud Basiseenheid'."
+            },
+            "error_codes": {
+                "required": "73",
+                "numeric": "77",
+                "mismatch": "93"
+            },
+            "database_corrections": {
+                "type": "leeg_gelaten",
+                "message": "Omrekenfactor is niet numeriek. Leeg gelaten."
+            }
+        },
+        "Prijs per Kleinste Eenheid": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "numeric",
+            "error_messages": {
+                "numeric": "Prijs per Kleinste Eenheid moet een numerieke waarde zijn.",
+                "mismatch": "Prijs per Kleinste Eenheid moet gelijk zijn aan 'Nettoprijs' ÷ 'Omrekenfactor'."
+            },
+            "error_codes": {
+                "numeric": "77",
+                "mismatch": "93"
+            }
+        },
+        "Aantal van de Volgende Lagere Verpakkingslaag": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "numeric",
+            "error_messages": {
+                "required": "Aantal van de Volgende Lagere Verpakkingslaag is verplicht als conditie voldoet.",
+                "numeric": "Aantal van de Volgende Lagere Verpakkingslaag moet een heel getal zijn."
+            },
+            "error_codes": {
+                "required": "73",
+                "numeric": "77"
+            }
+        },
+        "Artikel Hiërarchie Omschrijving": {
+            "GHXmandatory": false,
+            "GS1mandatory": true,
+            "type": "string",
+            "allowed_values": [
+                "BASE_UNIT_OR_EACH",
+                "CASE",
+                "DISPLAY_SHIPPER",
+                "MIXED_MODULE",
+                "PACK_OR_INNER_PACK",
+                "PALLET",
+                "TRANSPORT_LOAD"
+            ],
+            "error_messages": {
+                "allowed_values": "Artikel Hiërarchie Omschrijving moet een geldige waarde bevatten."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "GTIN Verpakkingseenheid": {
+            "GHXmandatory": false,
+            "GS1mandatory": true,
+            "type": "string",
+            "read_as_string": true,
+            "min_length": 13,
+            "max_length": 14,
+            "unique": true,
+            "error_messages": {
+                "min_length": "GTIN Verpakkingseenheid moet minimaal 13 karakters bevatten.",
+                "max_length": "GTIN Verpakkingseenheid mag maximaal 14 karakters bevatten.",
+                "unique": "GTIN Verpakkingseenheid moet uniek zijn."
+            },
+            "error_codes": {
+                "min_length": "74",
+                "max_length": "75",
+                "unique": "76"
+            },
+            "depends_on": {
+                "fields": [
+                    "Risicoklasse",
+                    "GS1ValidatieIngeschakeld"
+                ],
+                "condition": "filled",
+                "error_message": "GTIN Verpakkingseenheid is verplicht als 'Risicoklasse'."
+            },
+            "validation": {
+                "regex": "^[0-9]{14}$"
+            }
+        },
+        "GTIN Verpakkingseenheid Historie": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "read_as_string": true,
+            "validation": {
+                "regex": "^[0-9]+$"
+            },
+            "error_messages": {
+                "numeric": "GTIN Verpakkingseenheid Historie moet een numerieke waarde zijn."
+            },
+            "error_codes": {
+                "numeric": "77"
+            }
+        },
+        "GTIN Basiseenheid": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "read_as_string": true,
+            "length": 13,
+            "error_messages": {
+                "numeric": "GTIN Basiseenheid moet een numerieke waarde zijn.",
+                "length": "GTIN Basiseenheid moet exact 13 karakters lang zijn."
+            },
+            "error_codes": {
+                "numeric": "77",
+                "length": "79"
+            },
+            "validation": {
+                "regex": "^[0-9]{13}$"
+            }
+        },
+        "GTIN Basiseenheid Historie": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string", 
+            "read_as_string": true,
+            "length": 13,
+            "validation": {
+                "regex": "^[0-9]{13}$"
+            },
+            "error_messages": {
+                "numeric": "GTIN Basiseenheid moet een numerieke waarde zijn.",
+                "length": "GTIN Basiseenheid Historie moet exact 13 karakters lang zijn."
+            },
+            "error_codes": {
+                "numeric": "77",
+                "length": "79"
+            }
+         },
+        "Aanvullende Productidentificatie": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 50,
+            "error_messages": {
+                "required": "Aanvullende Productidentificatie is verplicht als 'GTIN Verpakkingseenheid' niet is ingevuld.",
+                "max_length": "Aanvullende Productidentificatie mag maximaal 50 karakters bevatten.",
+                "alphanumeric": "Aanvullende Productidentificatie moet alfanumeriek zijn."
+            },
+            "error_codes": {
+                "required": "73",
+                "max_length": "75",
+                "alphanumeric": "94"
+            },
+            "depends_on": {
+                "fields": [
+                    "GTIN Verpakkingseenheid"
+                ],
+                "condition": "not_filled",
+                "error_message": "Aanvullende Productidentificatie is verplicht als 'GTIN Verpakkingseenheid' niet is ingevuld."
+            }
+        },
+        "Code voor Aanvullende Productidentificatie": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "ADMDM",
+                "AE_MOHAP",
+                "AIG",
+                "ANATEL",
+                "ANDA",
+                "ANVISA",
+                "AO_DNME",
+                "ARFA",
+                "ARTG_ID",
+                "AU_PROSTHESES_REBATE_CODE",
+                "BB_DS",
+                "BE_FAMHP",
+                "BE_FAMHP_NN",
+                "BFR",
+                "BG_BDA",
+                "BI_ABREMA",
+                "BJ_DPMED",
+                "BNDA",
+                "BUYER_ASSIGNED",
+                "BUYER_ASSIGNED_USED_BY_THIRD_PARTY",
+                "BW_BOMRA",
+                "CDSCO",
+                "CL_ISP",
+                "CM_LANACOME",
+                "DAV",
+                "DDA_NP",
+                "DDF_KH",
+                "DDSME",
+                "DE_BFARM",
+                "DGDA",
+                "DGPML_BF",
+                "DGPML_BJ",
+                "DGRS",
+                "DIGEMID_MINSA",
+                "DIN",
+                "DIN_HM",
+                "DISTRIBUTOR_ASSIGNED",
+                "DLP",
+                "DNM_SV",
+                "DNPL",
+                "DPL",
+                "DPLMT",
+                "DPM_CD",
+                "DPM_CI",
+                "DPM_ML",
+                "DPML",
+                "DPMLMOH",
+                "DRA_BT",
+                "DRAP",
+                "DTAMOH",
+                "EC_ANRCVS",
+                "EDA",
+                "EPD",
+                "ET_EFDA",
+                "EU_MEDICAL_PRODUCT_NUMBER",
+                "EUDAMED",
+                "FDA_MEDICAL_DEVICE_LISTING",
+                "FDA_MM",
+                "FDA_NDC_10",
+                "FDA_NDC_11",
+                "FDA_PH",
+                "FDA_PRODUCT_CODE",
+                "FDA_TH",
+                "FDB",
+                "FDD",
+                "FMHACA_ET",
+                "FOR_INTERNAL_USE_1",
+                "FOR_INTERNAL_USE_2",
+                "FOR_INTERNAL_USE_3",
+                "FOR_INTERNAL_USE_4",
+                "FOR_INTERNAL_USE_5",
+                "FOR_INTERNAL_USE_6",
+                "FOR_INTERNAL_USE_7",
+                "FOR_INTERNAL_USE_8",
+                "FOR_INTERNAL_USE_9",
+                "FOR_INTERNAL_USE_10",
+                "FOR_INTERNAL_USE_11",
+                "FOR_INTERNAL_USE_12",
+                "FOR_INTERNAL_USE_13",
+                "FOR_INTERNAL_USE_14",
+                "FOR_INTERNAL_USE_15",
+                "FOR_INTERNAL_USE_16",
+                "FOR_INTERNAL_USE_17",
+                "FOR_INTERNAL_USE_18",
+                "FOR_INTERNAL_USE_19",
+                "FOR_INTERNAL_USE_20",
+                "GA_DMP",
+                "GDPA",
+                "GH_FDA",
+                "GN_DNPM",
+                "GTIN_8",
+                "GTIN_12",
+                "GTIN_13",
+                "GTIN_14",
+                "GY_GA-FDD",
+                "HIBC",
+                "HN_ARSA",
+                "HT_DPMMT",
+                "ICCBBA",
+                "IEHPRA",
+                "INDUSTRY_ASSIGNED",
+                "INMETRO",
+                "INVIMA",
+                "ISBN_NUMBER",
+                "ISSN_NUMBER",
+                "JFDA",
+                "JM_MOHW",
+                "KZ_NCE",
+                "LMHPRA",
+                "LOTTERY_GAME_NUMBER",
+                "LOTTERY_PACK_BOOK_NUMBER",
+                "MANUFACTURER_PART_NUMBER",
+                "MAPA",
+                "MCAZ",
+                "MCC",
+                "MDL",
+                "MINSA",
+                "MISAU",
+                "MODEL_NUMBER",
+                "MOH_AO",
+                "MOH_BB",
+                "MOH_BW",
+                "MOH_GY",
+                "MOH_MA",
+                "MOH_MR",
+                "MOH_RW",
+                "MOH_SZ",
+                "MOH_TJ",
+                "MOH_TT",
+                "MOH_UG",
+                "MOH_UZ",
+                "MOHSW",
+                "MOPH_NE",
+                "MOPH_TD",
+                "MRA",
+                "MRA_PG",
+                "MRA_SS",
+                "MSD",
+                "MSP",
+                "MSPAS_CG",
+                "MSPAS_GT",
+                "MSPBS",
+                "MW_PMRA",
+                "NABCA_PRODUCT_CODE",
+                "NADFC",
+                "NAFDAC_NG",
+                "NAN",
+                "NAPPI",
+                "NCM",
+                "NIIN",
+                "NMFA",
+                "NMPA",
+                "NMPB_SD",
+                "NMRA_LK",
+                "NMRC",
+                "NN_CA",
+                "NPN",
+                "NSN",
+                "NUMERO_RDN",
+                "NZ_MEDICINES_TERMINOLOGY_CODE",
+                "PBSL",
+                "PCOJ",
+                "PG_PSSB",
+                "PHARMACODE_CH",
+                "PIRC",
+                "PLU",
+                "PMPB",
+                "PPB",
+                "PZN",
+                "RVG",
+                "RVH",
+                "RW_FDA",
+                "SA_SFDA",
+                "SAN_4",
+                "SBDMA",
+                "SCDMTE",
+                "SFDA",
+                "SG_HAS",
+                "SMDC_UA",
+                "SN_DPM",
+                "SRAMA",
+                "SS_MOH",
+                "SUPPLIER_ASSIGNED",
+                "SWISSMEDIC_NUMBER",
+                "SZ_MOH",
+                "TFDA",
+                "TG_DPML",
+                "TZ_TMDA",
+                "UG_NDA",
+                "US_CMS_NDC",
+                "US_FDA_NDC",
+                "WAND_NUMBER",
+                "WHOPQN",
+                "Z_INDEX",
+                "ZAMRA"
+            ],
+            "error_messages": {
+                "required": "Code voor Aanvullende Productidentificatie is verplicht als Aanvullende Productidentificatie is ingevuld.",
+                "allowed_values": "Code voor Aanvullende Productidentificatie moet een geldige waarde bevatten."
+            },
+            "error_codes": {
+                "required": "73.",
+                "allowed_values": "80"
+            }
+        },
+        "GHX BTW Code": {
+            "GHXmandatory": true,
+            "GS1mandatory": false,
+            "allowed_values": [
+                0,
+                1,
+                2,
+                3,
+                "0",
+                "1",
+                "2",
+                "3"
+            ],
+            "error_messages": {
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "allowed_values": "GHX BTW Code moet een waarde van 0, 1, 2 of 3 hebben."
+            },
+            "error_codes": {
+                "required": "73",
+                "allowed_values": "80"
+            },
+            "database_corrections": [
+                {
+                    "condition": "value == 12",
+                    "type": "waarde_aangepast",
+                    "new_value": 1,
+                    "message": "'BTW' is 12 ingevuld. Deze waarde wordt niet herkend. We hebben het aangepast naar 3, wat staat voor 12%."
+                },
+                {
+                    "condition": "value == 9",
+                    "type": "waarde_aangepast",
+                    "new_value": 1,
+                    "message": "'BTW' is 9 ingevuld. Deze waarde wordt niet herkend. We hebben het aangepast naar 1, wat staat voor 9%."
+                },
+                {
+                    "condition": "value == 21",
+                    "type": "waarde_aangepast", 
+                    "new_value": 3,
+                    "message": "'BTW' is 21 ingevuld. Deze waarde wordt niet herkend. We hebben het aangepast naar 2, wat staat voor 21%."
+                }
+            ]
+        },
+        "Staffel Vanaf": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "numeric",
+            "error_messages": {
+                "numeric": "Staffel Vanaf moet een numerieke waarde zijn."
+            },
+            "error_codes": {
+                "numeric": "77"
+            }
+        },
+        "Staffel Tot": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "numeric",
+            "error_messages": {
+                "numeric": "Staffel Tot moet een numerieke waarde zijn."
+            },
+            "error_codes": {
+                "numeric": "77"
+            }
+        },
+        "Naam Fabrikant": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 50,
+            "error_messages": {
+                "max_length": "Naam Fabrikant mag maximaal 50 karakters bevatten."
+            },
+            "error_codes": {
+                "max_length": "75"
+            }
+        },
+        "Artikelnummer Fabrikant": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "min_length": 3,
+            "max_length": 46,
+            "error_messages": {
+                "min_length": "Artikelnummer Fabrikant moet minimaal 3 karakters bevatten.",
+                "max_length": "Artikelnummer Fabrikant mag maximaal 46 karakters bevatten."
+            },
+            "error_codes": {
+                "min_length": "74",
+                "max_length": "75"
+            }
+        },
+        "GLN Fabrikant": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "read_as_string": true,
+            "length": 13,
+            "validation": {
+                "regex": "^[0-9]{13}$"
+            },
+            "error_messages": {
+                "length": "GLN Fabrikant moet exact 13 karakters lang zijn."
+            },
+            "error_codes": {
+                "length": "79"
+            }
+        },
+        "GLN Leverancier": {
+            "GHXmandatory": false,
+            "GS1mandatory": true,
+            "type": "string",
+            "read_as_string": true,
+            "length": 13,
+            "validation": {
+                "regex": "^[0-9]{13}$"
+            },
+            "error_messages": {
+                "length": "GLN Leverancier moet exact 13 karakters lang zijn."
+            },
+            "error_codes": {
+                "length": "79"
+            }
+        },
+        "Doelmarkt Landcode": {
+            "GHXmandatory": false,
+            "GS1mandatory": true,
+            "type": "string",
+            "allowed_values": [
+                "EN",
+                "AD",
+                "AE",
+                "AF",
+                "AG",
+                "AI",
+                "AL",
+                "AM",
+                "AN",
+                "AO",
+                "AQ",
+                "AR",
+                "AS",
+                "AT",
+                "AU",
+                "AW",
+                "AX",
+                "AZ",
+                "BA",
+                "BB",
+                "BD",
+                "BE",
+                "BF",
+                "BG",
+                "BH",
+                "BI",
+                "BJ",
+                "BM",
+                "BN",
+                "BO",
+                "BR",
+                "BS",
+                "BT",
+                "BV",
+                "BW",
+                "BY",
+                "CA",
+                "CD",
+                "CF",
+                "CG",
+                "CH",
+                "CI",
+                "CK",
+                "CL",
+                "CM",
+                "CN",
+                "CO",
+                "CR",
+                "CS",
+                "CU",
+                "CV",
+                "CX",
+                "CY",
+                "CZ",
+                "DE",
+                "DJ",
+                "DK",
+                "DM",
+                "DO",
+                "DZ",
+                "EC",
+                "EE",
+                "EG",
+                "EH",
+                "ER",
+                "ES",
+                "ET",
+                "FI",
+                "FJ",
+                "FK",
+                "FM",
+                "FO",
+                "FR",
+                "GA",
+                "GB",
+                "GD",
+                "GE",
+                "GF",
+                "GH",
+                "GI",
+                "GL",
+                "GM",
+                "GN",
+                "GP",
+                "GQ",
+                "GR",
+                "GS",
+                "GT",
+                "GU",
+                "GW",
+                "GY",
+                "HK",
+                "HM",
+                "HN",
+                "HR",
+                "HT",
+                "HU",
+                "ID",
+                "IE",
+                "IL",
+                "IM",
+                "IN",
+                "IO",
+                "IQ",
+                "IR",
+                "IS",
+                "IT",
+                "JM",
+                "JO",
+                "JP",
+                "KE",
+                "KG",
+                "KH",
+                "KI",
+                "KM",
+                "KN",
+                "KP",
+                "KR",
+                "KW",
+                "KY",
+                "KZ",
+                "LA",
+                "LB",
+                "LC",
+                "LI",
+                "LK",
+                "LR",
+                "LS",
+                "LT",
+                "LU",
+                "LV",
+                "LY",
+                "MA",
+                "MC",
+                "MD",
+                "ME",
+                "MG",
+                "MH",
+                "MK",
+                "ML",
+                "MM",
+                "MN",
+                "MO",
+                "MP",
+                "MQ",
+                "MR",
+                "MS",
+                "MT",
+                "MU",
+                "MV",
+                "MW",
+                "MX",
+                "MY",
+                "MZ",
+                "NA",
+                "NC",
+                "NE",
+                "NF",
+                "NG",
+                "NI",
+                "NL",
+                "NO",
+                "NP",
+                "NR",
+                "NU",
+                "NZ",
+                "OM",
+                "PA",
+                "PE",
+                "PF",
+                "PG",
+                "PH",
+                "PK",
+                "PL",
+                "PM",
+                "PN",
+                "PR",
+                "PS",
+                "PT",
+                "PW",
+                "PY",
+                "QA",
+                "RE",
+                "RO",
+                "RU",
+                "RW",
+                "SA",
+                "SB",
+                "SC",
+                "SD",
+                "SE",
+                "SG",
+                "SH",
+                "SI",
+                "SJ",
+                "SK",
+                "SL",
+                "SM",
+                "SN",
+                "SO",
+                "SR",
+                "ST",
+                "SV",
+                "SY",
+                "SZ",
+                "TC",
+                "TD",
+                "TF",
+                "TG",
+                "TH",
+                "TJ",
+                "TK",
+                "TL",
+                "TM",
+                "TN",
+                "TO",
+                "TR",
+                "TT",
+                "TV",
+                "TW",
+                "TZ",
+                "UA",
+                "UG",
+                "UM",
+                "US",
+                "UY",
+                "UZ",
+                "VA",
+                "VC",
+                "VE",
+                "VG",
+                "VI",
+                "VN",
+                "VU",
+                "WF",
+                "WS",
+                "XI",
+                "XU",
+                "YE",
+                "YT",
+                "ZA",
+                "ZM",
+                "ZW"
+            ],
+            "error_messages": {
+                "allowed_values": "Doelmarkt Landcode moet een geldige landcode of taalcode zijn."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Link Artikelinformatie": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 255,
+            "error_messages": {
+                "format": "Link moet beginnen met 'https'.",
+                "max_length": "Link mag maximaal 255 karakters bevatten."
+            },
+            "error_codes": {
+                "format": "78",
+                "max_length": "75"
+            },
+            "validation": {
+                "starts_with": "https"
+            },
+            "database_corrections": {
+                "type": "tekst_ingekort",
+                "message": "Link Artikelfoto te lang. Aantal karakters verwijderd."
+            }
+        },
+        "Link Artikelfoto": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 255,
+            "error_messages": {
+                "format": "Link moet beginnen met 'https'.",
+                "max_length": "Link mag maximaal 255 karakters bevatten."
+            },
+            "error_codes": {
+                "format": "78",
+                "max_length": "75"
+            },
+            "validation": {
+                "starts_with": "https"
+            },
+            "database_corrections": {
+                "type": "tekst_ingekort",
+                "message": "Link Artikelfoto te lang. Aantal karakters verwijderd."
+            }
+        },
+        "Link IFU": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "max_length": 255,
+            "error_messages": {
+                "format": "Link moet beginnen met 'https'.",
+                "max_length": "Link mag maximaal 255 karakters bevatten."
+            },
+            "error_codes": {
+                "format": "78",
+                "max_length": "75"
+            },
+            "validation": {
+                "starts_with": "https"
+            },
+            "database_corrections": {
+                "type": "tekst_ingekort",
+                "message": "Link Artikelfoto te lang. Aantal karakters verwijderd."
+            }
+        },
+        "Functionele Artikelnaam": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 150,
+            "error_messages": {
+                "required": "Functionele Artikelnaam is verplicht en mag niet leeg zijn.",
+                "max_length": "Functionele Artikelnaam mag maximaal 150 karakters bevatten."
+            },
+            "error_codes": {
+                "required": "73",
+                "max_length": "75"
+            }
+        },
+        "Functionele Naam Taal Code": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "EN",
+                "AD",
+                "AE",
+                "AF",
+                "AG",
+                "AI",
+                "AL",
+                "AM",
+                "AN",
+                "AO",
+                "AQ",
+                "AR",
+                "AS",
+                "AT",
+                "AU",
+                "AW",
+                "AX",
+                "AZ",
+                "BA",
+                "BB",
+                "BD",
+                "BE",
+                "BF",
+                "BG",
+                "BH",
+                "BI",
+                "BJ",
+                "BM",
+                "BN",
+                "BO",
+                "BR",
+                "BS",
+                "BT",
+                "BV",
+                "BW",
+                "BY",
+                "CA",
+                "CD",
+                "CF",
+                "CG",
+                "CH",
+                "CI",
+                "CK",
+                "CL",
+                "CM",
+                "CN",
+                "CO",
+                "CR",
+                "CS",
+                "CU",
+                "CV",
+                "CX",
+                "CY",
+                "CZ",
+                "DE",
+                "DJ",
+                "DK",
+                "DM",
+                "DO",
+                "DZ",
+                "EC",
+                "EE",
+                "EG",
+                "EH",
+                "ER",
+                "ES",
+                "ET",
+                "FI",
+                "FJ",
+                "FK",
+                "FM",
+                "FO",
+                "FR",
+                "GA",
+                "GB",
+                "GD",
+                "GE",
+                "GF",
+                "GH",
+                "GI",
+                "GL",
+                "GM",
+                "GN",
+                "GP",
+                "GQ",
+                "GR",
+                "GS",
+                "GT",
+                "GU",
+                "GW",
+                "GY",
+                "HK",
+                "HM",
+                "HN",
+                "HR",
+                "HT",
+                "HU",
+                "ID",
+                "IE",
+                "IL",
+                "IM",
+                "IN",
+                "IO",
+                "IQ",
+                "IR",
+                "IS",
+                "IT",
+                "JM",
+                "JO",
+                "JP",
+                "KE",
+                "KG",
+                "KH",
+                "KI",
+                "KM",
+                "KN",
+                "KP",
+                "KR",
+                "KW",
+                "KY",
+                "KZ",
+                "LA",
+                "LB",
+                "LC",
+                "LI",
+                "LK",
+                "LR",
+                "LS",
+                "LT",
+                "LU",
+                "LV",
+                "LY",
+                "MA",
+                "MC",
+                "MD",
+                "ME",
+                "MG",
+                "MH",
+                "MK",
+                "ML",
+                "MM",
+                "MN",
+                "MO",
+                "MP",
+                "MQ",
+                "MR",
+                "MS",
+                "MT",
+                "MU",
+                "MV",
+                "MW",
+                "MX",
+                "MY",
+                "MZ",
+                "NA",
+                "NC",
+                "NE",
+                "NF",
+                "NG",
+                "NI",
+                "NL",
+                "NO",
+                "NP",
+                "NR",
+                "NU",
+                "NZ",
+                "OM",
+                "PA",
+                "PE",
+                "PF",
+                "PG",
+                "PH",
+                "PK",
+                "PL",
+                "PM",
+                "PN",
+                "PR",
+                "PS",
+                "PT",
+                "PW",
+                "PY",
+                "QA",
+                "RE",
+                "RO",
+                "RU",
+                "RW",
+                "SA",
+                "SB",
+                "SC",
+                "SD",
+                "SE",
+                "SG",
+                "SH",
+                "SI",
+                "SJ",
+                "SK",
+                "SL",
+                "SM",
+                "SN",
+                "SO",
+                "SR",
+                "ST",
+                "SV",
+                "SY",
+                "SZ",
+                "TC",
+                "TD",
+                "TF",
+                "TG",
+                "TH",
+                "TJ",
+                "TK",
+                "TL",
+                "TM",
+                "TN",
+                "TO",
+                "TR",
+                "TT",
+                "TV",
+                "TW",
+                "TZ",
+                "UA",
+                "UG",
+                "UM",
+                "US",
+                "UY",
+                "UZ",
+                "VA",
+                "VC",
+                "VE",
+                "VG",
+                "VI",
+                "VN",
+                "VU",
+                "WF",
+                "WS",
+                "XI",
+                "XU",
+                "YE",
+                "YT",
+                "ZA",
+                "ZM",
+                "ZW"
+            ],
+            "error_messages": {
+                "required": "Functionele Naam Taal Code is verplicht als Functionele Artikelnaam is ingevuld.",
+                "allowed_values": "Functionele Naam Taal Code moet een geldige landcode of taalcode bevatten."
+            },
+            "error_codes": {
+                "required": "73",
+                "allowed_values": "80"
+            }
+        },
+        "Merknaam": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "min_length": 3,
+            "max_length": 90,
+            "error_messages": {
+                "min_length": "Merknaam moet minimaal 3 karakters bevatten.",
+                "max_length": "Merknaam mag maximaal 90 karakters bevatten."
+            },
+            "error_codes": {
+                "min_length": "74",
+                "max_length": "75"
+            }
+        },
+        "Artikelnummer Alternatief Artikel": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "min_length": 3,
+            "max_length": 46,
+            "error_messages": {
+                "min_length": "Artikelnummer Alternatief Artikel moet minimaal 3 karakters bevatten.",
+                "max_length": "Artikelnummer Alternatief Artikel mag maximaal 46 karakters bevatten."
+            },
+            "error_codes": {
+                "min_length": "74",
+                "max_length": "75"
+            }
+        },
+        "Artikelnaam Alternatief Artikel": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "min_length": 3,
+            "max_length": 90,
+            "error_messages": {
+                "min_length": "Artikelnaam Alternatief Artikel moet minimaal 3 karakters bevatten.",
+                "max_length": "Artikelnaam Alternatief Artikel mag maximaal 90 karakters bevatten."
+            },
+            "error_codes": {
+                "min_length": "74",
+                "max_length": "75"
+            }
+        },
+        "Barcode Alternatief Artikel": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "read_as_string": true,
+            "min_length": 13,
+            "max_length": 24,
+            "validation": {
+                "regex": "^[0-9]{13,24}$"
+            },
+            "error_messages": {
+                "min_length": "Barcode Alternatief Artikel moet minimaal 13 karakters bevatten.",
+                "max_length": "Barcode Alternatief Artikel mag maximaal 24 karakters bevatten."
+            },
+            "error_codes": {
+                "min_length": "74",
+                "max_length": "75"
+            }
+        },
+        "UNSPSC Code": {
+            "GHXmandatory": true,
+            "GS1mandatory": true,
+            "type": "string",
+            "read_as_string": true,
+            "length": 8,
+            "validation": {
+                "regex": "^[0-9]{8}$"
+            },
+            "error_messages": {
+                "numeric": "UNSPSC Code moet een numerieke waarde zijn.",
+                "length": "UNSPSC Code moet exact 8 karakters bevatten.",
+                "required": "Dit veld is verplicht en mag niet leeg zijn."
+            },
+            "error_codes": {
+                "required": "73",
+                "numeric": "77",
+                "length": "79"
+            }
+        },
+        "GMDN Code": {
+            "GHXmandatory": false,
+            "GS1mandatory": true,
+            "type": "string",
+            "read_as_string": true,
+            "length": 5,
+            "validation": {
+                "regex": "^[0-9]{5}$"
+            },
+            "error_messages": {
+                "numeric": "GMDN Code moet een numerieke waarde zijn.",
+                "length": "GMDN Code moet exact 5 karakters bevatten."
+            },
+            "error_codes": {
+                "numeric": "77",
+                "length": "79"
+            }
+        },
+        "EMDN Code": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "read_as_string": true,
+            "max_length": 5,
+            "validation": {
+                "regex": "^[0-9]{1,5}$"
+            },
+            "error_messages": {
+                "max_length": "EMDN Code mag maximaal 5 karakters bevatten."
+            },
+            "error_codes": {
+                "max_length": "75"
+            }
+        },
+        "GPCCategoryCode": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "read_as_string": true,
+            "max_length": 8,
+            "validation": {
+                "regex": "^[0-9]{1,8}$"
+            },
+            "error_messages": {
+                "max_length": "GPCCategoryCode mag maximaal 8 karakters bevatten."
+            },
+            "error_codes": {
+                "max_length": "75"
+            }
+        },
+        "Code voor Aanvullende Productclassificatie": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "76",
+                "85"
+            ],
+            "error_messages": {
+                "allowed_values": "Code voor Aanvullende Productclassificatie moet een geldige waarde bevatten."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Aanvullende Productclassificatiewaarde": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "EU_CLASS_A",
+                "EU_CLASS_B",
+                "EU_CLASS_C",
+                "EU_CLASS_D",
+                "EU_CLASS_I",
+                "EU_CLASS_IIA",
+                "EU_CLASS_IIB",
+                "EU_CLASS_III",
+                "IVDD_ANNEX_II_LIST_A",
+                "IVDD_ANNEX_II_LIST_B",
+                "IVDD_DEVICES_SELF_TESTING",
+                "IVDD_GENERAL"
+            ],
+            "max_length": 15,
+            "error_messages": {
+                "max_length": "Aanvullende Productclassificatiewaarde mag maximaal 15 karakters bevatten.",
+                "allowed_values": "Aanvullende Productclassificatiewaarde moet een geldige waarde bevatten."
+            },
+            "error_codes": {
+                "max_length": "75",
+                "allowed_values": "80"
+            }
+        },
+        "CE Certificaat nummer": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 50,
+            "error_messages": {
+                "max_length": "CE Certificaat nummer mag maximaal 50 karakters bevatten."
+            },
+            "error_codes": {
+                "max_length": "75"
+            }
+        },
+        "CE Certificaat einddatum": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "date",
+            "depends_on": {
+                "fields": [
+                    "CE Certificaat nummer"
+                ],
+                "condition": "filled",
+                "error_message": "CE Certificaat einddatum is verplicht als 'CE Certificaat nummer' is ingevuld."
+            },
+            "error_messages": {
+                "invalid_format": "CE Certificaat einddatum moet een geldige datum zijn in het formaat DD-MM-JJJJ."
+            },
+            "error_codes": {
+                "invalid_format": "95"
+            }
+        },
+        "CE Certificerende instantie": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 50,
+            "error_messages": {
+                "max_length": "CE Certificerende instantie mag maximaal 50 karakters bevatten."
+            },
+            "error_codes": {
+                "max_length": "75."
+            },
+            "depends_on": {
+                "fields": [
+                    "CE Certificaat nummer"
+                ],
+                "condition": "filled",
+                "error_message": "CE Certificerende instantie is verplicht als 'CE Certificaat nummer' is ingevuld."
+            }
+        },
+        "Duurzaam Geproduceerd": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_values": [
+                0,
+                1
+            ],
+            "error_messages": {
+                "boolean_values": "Duurzaam Geproduceerd moet 0 of 1 zijn."
+            },
+            "error_codes": {
+                "boolean_values": "92"
+            }
+        },
+        "Naam Duurzaamheidslabel": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 50,
+            "error_messages": {
+                "max_length": "Naam Duurzaamheidslabel mag maximaal 50 karakters bevatten."
+            },
+            "error_codes": {
+                "max_length": "75"
+            }
+        },
+        "Omschrijving Duurzaamheid": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 2000,
+            "error_messages": {
+                "max_length": "Omschrijving Duurzaamheid mag maximaal 2000 karakters bevatten."
+            },
+            "error_codes": {
+                "max_length": "75"
+            }
+        },
+        "CAS nummer": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "validation": {
+                "regex": "^[0-9]{1,7}-[0-9]{2}-[0-9]{1}$"
+            },
+            "error_messages": {
+                "invalid_format": "CAS nummer moet voldoen aan het formaat xxxxxxx-xx-x en mag alleen cijfers en koppeltekens bevatten."
+            },
+            "error_codes": {
+                "invalid_format": "95"
+            }
+        },
+        "Stofnaam": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 200,
+            "error_messages": {
+                "max_length": "Stofnaam mag maximaal 200 karakters bevatten."
+            },
+            "error_codes": {
+                "max_length": "75"
+            }
+        },
+        "Brutoformule": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 40,
+            "error_messages": {
+                "max_length": "Brutoformule mag maximaal 40 karakters bevatten."
+            },
+            "error_codes": {
+                "max_length": "75"
+            }
+        },
+        "Claim Type Code": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "ADDED",
+                "CONTAINS",
+                "DECAFFEINATED",
+                "ENRICHED_WITH",
+                "EXCELLENT_SOURCE_OF",
+                "EXCESS",
+                "EXTRA_LEAN",
+                "FORTIFIED",
+                "FREE_FROM",
+                "FRESH",
+                "FROZEN",
+                "GOOD_SOURCE_OF",
+                "GROWN_WITHOUT",
+                "GUARANTEED_FREE_FROM",
+                "GUARANTEED_SOURCE_OF",
+                "HEALTHY",
+                "HIGH",
+                "HIGH_POTENCY",
+                "HUMAN_GRADE",
+                "INCREASED",
+                "LEAN",
+                "LIGHT_LITE",
+                "LIMITED_INGREDIENTS",
+                "LOW",
+                "MADE_IN_FACILITY_FREE_FROM",
+                "MADE_WITH",
+                "MADE_WITH_100_PERCENT",
+                "MADE_WITH_FRESH",
+                "MADE_WITH_FRESH_AND_FROZEN",
+                "MADE_WITH_FROZEN",
+                "MADE_WITH_MINCED",
+                "MADE_WITH_NATURAL",
+                "MADE_WITH_ORGANIC",
+                "MADE_WITH_PASTEURIZED",
+                "MADE_WITH_UNPASTEURIZED_OR_RAW",
+                "MAY_CONTAIN",
+                "MAY_HAVE",
+                "NATURAL",
+                "NATURAL_SOURCE_OF",
+                "NATURALLY_VEGAN",
+                "NO_ADDED",
+                "NON_ALCOHOLIC",
+                "PACKED_IN",
+                "PARTIALLY_MADE_WITH",
+                "PREVIOUSLY_FROZEN",
+                "PURE",
+                "RAISED_WITHOUT",
+                "REAL",
+                "REDUCED_LESS",
+                "SOURCE_OF",
+                "SWEETENED_WITH",
+                "UNSALTED",
+                "UNSWEETENED",
+                "VEGAN",
+                "VERY_LOW",
+                "WITHOUT"
+            ],
+            "error_messages": {
+                "allowed_values": "Claim Type Code moet een geldige waarde bevatten."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Element Claim Code": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "ACETONE",
+                "ADDITIVES",
+                "AGAVE_SYRUP",
+                "ALCOHOL",
+                "ALMONDS",
+                "ALOE_VERA",
+                "ALUMINIUM",
+                "AMINO_ACIDS",
+                "AMMONIA",
+                "ANCIENT_GRAINS",
+                "ANIMAL_BY_PRODUCTS",
+                "ANIMAL_CRUELTY",
+                "ANIMAL_PROTEIN",
+                "ANIMAL_TESTING",
+                "ANTIBIOTICS",
+                "ANTIOXIDANTS",
+                "ARTIFICIAL_COLOUR",
+                "ARTIFICIAL_FLAVOUR",
+                "ARTIFICIAL_PRESERVATIVES",
+                "ARTIFICIAL_SWEETENERS",
+                "ASH",
+                "ASPARTAME",
+                "AZO_DYE",
+                "AZODICARBONAMIDE",
+                "BACKBONE",
+                "BARLEY",
+                "BEEF_GELATINE",
+                "BHA",
+                "BHT",
+                "BIODEGRADABLE_MATERIAL",
+                "BIOGAS",
+                "BIOTIN",
+                "BLEACH",
+                "BONES",
+                "BPA",
+                "BRAZIL_NUTS",
+                "BRINE",
+                "BROTH",
+                "CAFFEINE",
+                "CALCIUM",
+                "CALORIE",
+                "CANE_SUGAR",
+                "CARBOHYDRATES",
+                "CARRAGEENAN",
+                "CASHEWS",
+                "CAULIFLOWER",
+                "CELERY",
+                "CERAMIDES",
+                "CHEMICAL_TREATMENT",
+                "CHLORIDE",
+                "CHOLESTEROL",
+                "CHOLINE",
+                "CHROMIUM",
+                "CLONED_FOODS",
+                "COCONUT_COPRA_OIL",
+                "COCONUT_CREAM",
+                "COCONUT_WATER",
+                "COENZYME_Q10_UBIQUINONE",
+                "COLLAGENS",
+                "COLOURING_AGENTS",
+                "COPPER",
+                "CORN",
+                "CORN_SYRUP",
+                "CREAM",
+                "CRUSTACEAN",
+                "DAIRY",
+                "DARK_MEAT_TUNA",
+                "DIETARY_FIBRE",
+                "EGGS",
+                "ENERGY",
+                "ESSENTIAL_OIL",
+                "FAT",
+                "FIBRE",
+                "FISH",
+                "FISHBONES",
+                "FLAVOUR_ENHANCERS",
+                "FLAX",
+                "FLUORIDE",
+                "FOLATE",
+                "FOLIC_ACID",
+                "FORMALDEHYDE",
+                "FORMALDEHYDE_RELEASING_CHEMICALS",
+                "FRAGRANCE",
+                "FRUCTOSE",
+                "FRUIT",
+                "FRUIT_JUICE",
+                "FRUIT_JUICE_CONCENTRATE",
+                "FRUIT_PUREE",
+                "FRUIT_SYRUP",
+                "FULLY_HYDROGENATED_VEGETABLE_OIL",
+                "FUNGICIDE",
+                "GELATINE",
+                "GIBLETS",
+                "GLUTEN",
+                "GLYCAEMIC",
+                "GLYZYRRHIZIN",
+                "GMO",
+                "GRAINS",
+                "GRASS",
+                "HAZELNUTS",
+                "HERBICIDE",
+                "HIGH_FRUCTOSE_CORN_SYRUP",
+                "HONEY",
+                "HORMONES",
+                "HYALURONIC_ACID",
+                "HYDROCARBON_PROPELLANT",
+                "HYDROQUINONE",
+                "ICE_CREAM",
+                "INSECTICIDE",
+                "INSOLUBLE_FIBRE",
+                "IODINE",
+                "IRON",
+                "JUICE",
+                "KIDNEYS",
+                "LACTOSE",
+                "LATEX",
+                "LEGUME_PROTEIN",
+                "LIGHT_MEAT_TUNA",
+                "LIQUORICE",
+                "LOBSTER_MEAT",
+                "LOW_FAT_ICE_CREAM",
+                "LOW_FAT_MILK",
+                "MACADAMIA",
+                "MAGNESIUM",
+                "MALT",
+                "MANGANESE",
+                "MAPLE_SYRUP",
+                "MEAT",
+                "MILK",
+                "MILK_PROTEIN",
+                "MINERAL_OIL",
+                "MISSING_PARTS",
+                "MOLASSES",
+                "MOLLUSCS",
+                "MOLYBDENUM",
+                "MONO_PROTEIN",
+                "MONO_UNSATURATED_FAT",
+                "MSG",
+                "MULTIGRAIN",
+                "MUSTARD",
+                "NANOPARTICLE",
+                "NATURAL_COLOUR",
+                "NATURAL_FLAVOUR",
+                "NATURAL_GLUTEN",
+                "NATURALLY_OCCURING_SUGARS",
+                "NIACIN",
+                "NITRATE",
+                "NON_CALORIC_SWEETENERS",
+                "NONYLPHENOL_ETHOXYLATES",
+                "NUTS",
+                "OAT",
+                "OCTINOXATE",
+                "OCTOCRYLENE",
+                "OIL",
+                "OLIVE_OIL",
+                "OMEGA_3_FATTY_ACIDS",
+                "OMEGA_6",
+                "OPTICAL_BRIGHTENERS",
+                "OXYBENZONE",
+                "PALM_OIL",
+                "PANTOTHENIC_ACID",
+                "PARABEN",
+                "PARAFFIN",
+                "PARTIALLY_HYDROGENATED_VEGETABLE_OIL",
+                "PEA_PROTEIN",
+                "PEANUTS",
+                "PECANS",
+                "PEEL",
+                "PEG_EMULSIFIERS",
+                "PEROXIDE",
+                "PESTICIDE",
+                "PESTICIDE_RESIDUES",
+                "PFAS",
+                "PHENOXYETHANOL",
+                "PHENYLALANINE",
+                "PHOSPHATE",
+                "PHOSPHORUS",
+                "PHTHALATE",
+                "PINENUTS",
+                "PISTACHIOS",
+                "PLANT_BASED_ALTERNATIVE_TO_MEAT",
+                "PLANT_PROTEIN",
+                "PLANT_STEROLS",
+                "POLYETHYLENE_MICROBEADS",
+                "POLYPHOSPHATE",
+                "POLYUNSATURATED_FAT",
+                "PORK_GELATINE",
+                "POTASSIUM",
+                "POTATO",
+                "POULTRY",
+                "POWDER",
+                "PREBIOTICS",
+                "PRESERVATIVES",
+                "PROBIOTICS",
+                "PROTEIN",
+                "PULP",
+                "PVC",
+                "PVC_WITH_PHTHALATES",
+                "PVC_WITHOUT_PHTHALATES",
+                "QUININE",
+                "RAISINS",
+                "RASPBERRIES",
+                "RAW_BEET_SUGAR",
+                "RECYCLED_MATERIAL",
+                "RECYCLED_MATERIAL_MASS_BALANCE",
+                "RENEWABLE_MATERIAL",
+                "RENEWABLE_MATERIAL_MASS_BALANCE",
+                "RETINYL_PALMITATE",
+                "RIBOFLAVIN",
+                "RYE",
+                "SATURATED_FAT",
+                "SAUCE",
+                "SEEDS",
+                "SELENIUM",
+                "SESAME",
+                "SHEA_BUTTER",
+                "SILICONE",
+                "SKIN",
+                "SMOKE_FLAVOUR",
+                "SOAP",
+                "SODIUM_NITRITE",
+                "SODIUM_SALT",
+                "SOLUBLE_FIBRE",
+                "SORBITOL",
+                "SOY",
+                "SOYBEAN_OIL",
+                "STEVIA",
+                "SUGARS",
+                "SULFATE",
+                "SULPHITES",
+                "SUNFLOWER_OIL",
+                "SWEETENERS",
+                "THC",
+                "THIAMIN",
+                "TRANS_FAT",
+                "TREE_NUTS",
+                "TRICLOCARBAN",
+                "TRICLOSAN",
+                "TRITICALE",
+                "ULTRA_FILTERED_NONFAT_MILK",
+                "UNSATURATED_FAT",
+                "UREA",
+                "VEGETABLES",
+                "VITAMIN_A",
+                "VITAMIN_B12",
+                "VITAMIN_B6",
+                "VITAMIN_C",
+                "VITAMIN_D",
+                "VITAMIN_D3",
+                "VITAMIN_E",
+                "VITAMIN_K",
+                "VITAMINS_AND_OR_MINERALS",
+                "WALNUTS",
+                "WATER",
+                "WHEAT",
+                "WHITE_MEAT_TUNA",
+                "WHITE_SUGAR",
+                "WHOLE_GRAIN",
+                "WHOLE_WHEAT",
+                "WIND_POWER",
+                "YEAST",
+                "ZINC"
+            ],
+            "error_messages": {
+                "allowed_values": "Element Claim Code moet een geldige waarde bevatten."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "UN-nummer Gevaarlijke Stof": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "numeric",
+            "allowed_values": [
+                "2359",
+                "2588",
+                "2811",
+                "2813",
+                "2921",
+                "2923",
+                "2928",
+                "2930",
+                "3132",
+                "3208",
+                "3229",
+                "3230",
+                "3245",
+                "3286",
+                "3288",
+                "3290",
+                "3375",
+                "3423",
+                "3535"
+            ],
+            "length": 4,
+            "error_messages": {
+                "required": "UN-nummer Gevaarlijke Stof is verplicht en mag niet leeg zijn.",
+                "length": "UN-nummer Gevaarlijke Stof moet exact 4 cijfers bevatten.",
+                "allowed_values": "UN-nummer Gevaarlijke Stof moet een geldige waarde bevatten."
+            },
+            "error_codes": {
+                "required": "73",
+                "length": "79",
+                "allowed_values": "80"
+            }
+        },
+        "ADR Gevarenklasse": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "1",
+                "2",
+                "3",
+                "4.1",
+                "4.2",
+                "4.3",
+                "5.1",
+                "5.2",
+                "6.1",
+                "6.2",
+                "7",
+                "8",
+                "9"
+            ],
+            "error_messages": {
+                "allowed_values": "ADR Gevarenklasse moet een geldige waarde bevatten."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Veiligheidsblad (VIB/SDS)": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_invalid": [
+                0,
+                1
+            ],
+            "error_messages": {
+                "required": "Veiligheidsblad is verplicht indien relevant.",
+                "boolean_invalid": "Veiligheidsblad moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "required": "73",
+                "boolean_invalid": "92"
+            }
+        },
+        "Link Veiligheidsinformatieblad (SDS)": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 255,
+            "error_messages": {
+                "format": "Link moet beginnen met 'https'.",
+                "max_length": "Link mag maximaal 255 karakters bevatten."
+            },
+            "error_codes": {
+                "format": "78",
+                "max_length": "75"
+            },
+            "validation": {
+                "starts_with": "https"
+            }
+        },
+        "Eindgebruikersverklaring": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_invalid": [
+                0,
+                1
+            ],
+            "error_messages": {
+                "boolean_invalid": "Eindgebruikersverklaring moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "boolean_invalid": "92"
+            }
+        },
+        "Koelgoed": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_invalid": [
+                0,
+                1
+            ],
+            "error_messages": {
+                "boolean_invalid": "Koelgoed moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "boolean_invalid": "92"
+            }
+        },
+        "Vriesgoed": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_invalid": [
+                0,
+                1
+            ],
+            "error_messages": {
+                "boolean_invalid": "Vriesgoed moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "boolean_invalid": "92"
+            }
+        },
+        "Code Type Temperatuur": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "DELIVERY_TO_DISTRIBUTION_CENTRE",
+                "DELIVERY_TO_MARKET",
+                "DISINFECTION",
+                "INLET_TEMPERATURE",
+                "OPERATING_TEMPERATURE",
+                "STERILISATION",
+                "STORAGE_AFTER_OPENING",
+                "STORAGE_AFTER_OVERWRAP",
+                "STORAGE_AFTER_RECONSTITUTION",
+                "STORAGE_HANDLING",
+                "TRANSPORTATION",
+                "WASHING_TEMPERATURE",
+                "WORKING_TEMPERATURE"
+            ],
+            "error_messages": {
+                "allowed_values": "Code Type Temperatuur moet een waarde zijn uit de Template sheet 'TemperatureQualifierCode'."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Gebruiksaanwijzing Code Referentie": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "SRT",
+                "FPC",
+                "11"
+            ],
+            "error_messages": {
+                "allowed_values": "Gebruiksaanwijzing Code Referentie moet een geldige waarde bevatten."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Maximum Temperatuur": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "numeric",
+            "max_decimal_digits": 2,
+            "error_messages": {
+                "numeric": "Maximum Temperatuur moet numeriek zijn."
+            },
+            "error_codes": {
+                "numeric": "77"
+            }
+        },
+        "Minimum Temperatuur": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "numeric",
+            "max_decimal_digits": 2,
+            "error_messages": {
+                "numeric": "Minimum Temperatuur moet numeriek zijn."
+            },
+            "error_codes": {
+                "numeric": "77"
+            }
+        },
+        "Eenheid van Temperatuur": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "CEL",
+                "FAH",
+                "KEL"
+            ],
+            "error_messages": {
+                "allowed_values": "Eenheid van Temperatuur moet een van de toegestane waarden zijn: CEL, FAH, KEL."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Bruto Gewicht Verpakkingseenheid": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "numeric",
+            "max_decimal_digits": 5,
+            "error_messages": {
+                "required": "Bruto Gewicht Verpakkingseenheid is verplicht indien relevant.",
+                "max_decimal_digits": "Bruto Gewicht Verpakkingseenheid moet numeriek zijn en maximaal 5 decimalen bevatten."
+            },
+            "error_codes": {
+                "required": "73",
+                "max_decimal_digits": "89"
+            }
+        },
+        "Eenheidscode Bruto Gewicht Verpakkingseenheid (UOM)": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "1I",
+                "4E",
+                "AA",
+                "AE",
+                "AM",
+                "ANN",
+                "BA",
+                "BAR",
+                "BB",
+                "BBG",
+                "BG",
+                "BH",
+                "BJ",
+                "BK",
+                "BL",
+                "BO",
+                "BPG",
+                "BRI",
+                "BX",
+                "CA",
+                "CEL",
+                "CG",
+                "CH",
+                "CM",
+                "CMK",
+                "CMQ",
+                "CMS",
+                "CMT",
+                "CNG",
+                "CNP",
+                "CQ",
+                "CR",
+                "CS",
+                "CT",
+                "CU",
+                "CY",
+                "D63",
+                "D64",
+                "DAY",
+                "DI",
+                "DMK",
+                "DMT",
+                "DZP",
+                "EA",
+                "EN",
+                "EP",
+                "EV",
+                "FAH",
+                "GLI",
+                "GLL",
+                "GRM",
+                "GTG",
+                "HLT",
+                "HUR",
+                "INH",
+                "JG",
+                "JR",
+                "KB",
+                "KBA",
+                "KEL",
+                "KG",
+                "KGM",
+                "KT",
+                "KTM",
+                "KTN",
+                "LEF",
+                "LH",
+                "LS",
+                "LTR",
+                "LUX",
+                "MGM",
+                "MIN",
+                "MLT",
+                "MMK",
+                "MMT",
+                "MON",
+                "MPG",
+                "MTK",
+                "MTR",
+                "NE",
+                "NT",
+                "OHM",
+                "OP",
+                "OZ",
+                "P3",
+                "P4",
+                "P5",
+                "P6",
+                "P7",
+                "P8",
+                "P9",
+                "PA",
+                "PB",
+                "PF",
+                "PK",
+                "PLP",
+                "PO",
+                "PR",
+                "PT",
+                "PU",
+                "PUG",
+                "PX",
+                "RK",
+                "RL",
+                "RO",
+                "SET",
+                "STR",
+                "SW",
+                "SX",
+                "SY",
+                "TE",
+                "TN",
+                "TP",
+                "TPR",
+                "TU",
+                "U1",
+                "U2",
+                "WEE",
+                "WRP",
+                "X11",
+                "ZU"
+            ],
+            "error_messages": {
+                "allowed_values": "De waarde moet voorkomen in de 'UOM Codes'."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Hoogte": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "numeric",
+            "max_length": 10,
+            "error_messages": {
+                "numeric": "Hoogte moet numeriek zijn.",
+                "max_integer_digits": "Hoogte mag maximaal 10 cijfers bevatten."
+            },
+            "error_codes": {
+                "numeric": "77",
+                "max_integer_digits": "88"
+            }
+        },
+        "Eenheidscode Hoogte (UOM)": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "1I",
+                "4E",
+                "AA",
+                "AE",
+                "AM",
+                "ANN",
+                "BA",
+                "BAR",
+                "BB",
+                "BBG",
+                "BG",
+                "BH",
+                "BJ",
+                "BK",
+                "BL",
+                "BO",
+                "BPG",
+                "BRI",
+                "BX",
+                "CA",
+                "CEL",
+                "CG",
+                "CH",
+                "CM",
+                "CMK",
+                "CMQ",
+                "CMS",
+                "CMT",
+                "CNG",
+                "CNP",
+                "CQ",
+                "CR",
+                "CS",
+                "CT",
+                "CU",
+                "CY",
+                "D63",
+                "D64",
+                "DAY",
+                "DI",
+                "DMK",
+                "DMT",
+                "DZP",
+                "EA",
+                "EN",
+                "EP",
+                "EV",
+                "FAH",
+                "GLI",
+                "GLL",
+                "GRM",
+                "GTG",
+                "HLT",
+                "HUR",
+                "INH",
+                "JG",
+                "JR",
+                "KB",
+                "KBA",
+                "KEL",
+                "KG",
+                "KGM",
+                "KT",
+                "KTM",
+                "KTN",
+                "LEF",
+                "LH",
+                "LS",
+                "LTR",
+                "LUX",
+                "MGM",
+                "MIN",
+                "MLT",
+                "MMK",
+                "MMT",
+                "MON",
+                "MPG",
+                "MTK",
+                "MTR",
+                "NE",
+                "NT",
+                "OHM",
+                "OP",
+                "OZ",
+                "P3",
+                "P4",
+                "P5",
+                "P6",
+                "P7",
+                "P8",
+                "P9",
+                "PA",
+                "PB",
+                "PF",
+                "PK",
+                "PLP",
+                "PO",
+                "PR",
+                "PT",
+                "PU",
+                "PUG",
+                "PX",
+                "RK",
+                "RL",
+                "RO",
+                "SET",
+                "STR",
+                "SW",
+                "SX",
+                "SY",
+                "TE",
+                "TN",
+                "TP",
+                "TPR",
+                "TU",
+                "U1",
+                "U2",
+                "WEE",
+                "WRP",
+                "X11",
+                "ZU"
+            ],
+            "error_messages": {
+                "allowed_values": "De waarde moet voorkomen in de 'UOM Codes'."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Breedte": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "numeric",
+            "max_integer_digits": 10,
+            "max_decimal_digits": 2,
+            "error_messages": {
+                "numeric": "Breedte moet numeriek zijn.",
+                "max_integer_digits": "Breedte mag maximaal 10 cijfers bevatten.",
+                "max_decimal_digits": "Breedte mag maximaal 2 decimalen bevatten."
+            },
+            "error_codes": {
+                "numeric": "77",
+                "max_integer_digits": "88",
+                "max_decimal_digits": "89"
+            }
+        },
+        "Eenheidscode Breedte (UOM)": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "1I",
+                "4E",
+                "AA",
+                "AE",
+                "AM",
+                "ANN",
+                "BA",
+                "BAR",
+                "BB",
+                "BBG",
+                "BG",
+                "BH",
+                "BJ",
+                "BK",
+                "BL",
+                "BO",
+                "BPG",
+                "BRI",
+                "BX",
+                "CA",
+                "CEL",
+                "CG",
+                "CH",
+                "CM",
+                "CMK",
+                "CMQ",
+                "CMS",
+                "CMT",
+                "CNG",
+                "CNP",
+                "CQ",
+                "CR",
+                "CS",
+                "CT",
+                "CU",
+                "CY",
+                "D63",
+                "D64",
+                "DAY",
+                "DI",
+                "DMK",
+                "DMT",
+                "DZP",
+                "EA",
+                "EN",
+                "EP",
+                "EV",
+                "FAH",
+                "GLI",
+                "GLL",
+                "GRM",
+                "GTG",
+                "HLT",
+                "HUR",
+                "INH",
+                "JG",
+                "JR",
+                "KB",
+                "KBA",
+                "KEL",
+                "KG",
+                "KGM",
+                "KT",
+                "KTM",
+                "KTN",
+                "LEF",
+                "LH",
+                "LS",
+                "LTR",
+                "LUX",
+                "MGM",
+                "MIN",
+                "MLT",
+                "MMK",
+                "MMT",
+                "MON",
+                "MPG",
+                "MTK",
+                "MTR",
+                "NE",
+                "NT",
+                "OHM",
+                "OP",
+                "OZ",
+                "P3",
+                "P4",
+                "P5",
+                "P6",
+                "P7",
+                "P8",
+                "P9",
+                "PA",
+                "PB",
+                "PF",
+                "PK",
+                "PLP",
+                "PO",
+                "PR",
+                "PT",
+                "PU",
+                "PUG",
+                "PX",
+                "RK",
+                "RL",
+                "RO",
+                "SET",
+                "STR",
+                "SW",
+                "SX",
+                "SY",
+                "TE",
+                "TN",
+                "TP",
+                "TPR",
+                "TU",
+                "U1",
+                "U2",
+                "WEE",
+                "WRP",
+                "X11",
+                "ZU"
+            ],
+            "error_messages": {
+                "allowed_values": "De waarde moet voorkomen in de 'UOM Codes'."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Diepte": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "numeric",
+            "max_integer_digits": 10,
+            "max_decimal_digits": 2,
+            "error_messages": {
+                "numeric": "Diepte moet numeriek zijn.",
+                "max_integer_digits": "Diepte mag maximaal 10 cijfers bevatten.",
+                "max_decimal_digits": "Diepte mag maximaal 2 decimalen bevatten."
+            },
+            "error_codes": {
+                "numeric": "77",
+                "max_integer_digits": "88",
+                "max_decimal_digits": "89"
+            }
+        },
+        "Eenheidscode Diepte (UOM)": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "1I",
+                "4E",
+                "AA",
+                "AE",
+                "AM",
+                "ANN",
+                "BA",
+                "BAR",
+                "BB",
+                "BBG",
+                "BG",
+                "BH",
+                "BJ",
+                "BK",
+                "BL",
+                "BO",
+                "BPG",
+                "BRI",
+                "BX",
+                "CA",
+                "CEL",
+                "CG",
+                "CH",
+                "CM",
+                "CMK",
+                "CMQ",
+                "CMS",
+                "CMT",
+                "CNG",
+                "CNP",
+                "CQ",
+                "CR",
+                "CS",
+                "CT",
+                "CU",
+                "CY",
+                "D63",
+                "D64",
+                "DAY",
+                "DI",
+                "DMK",
+                "DMT",
+                "DZP",
+                "EA",
+                "EN",
+                "EP",
+                "EV",
+                "FAH",
+                "GLI",
+                "GLL",
+                "GRM",
+                "GTG",
+                "HLT",
+                "HUR",
+                "INH",
+                "JG",
+                "JR",
+                "KB",
+                "KBA",
+                "KEL",
+                "KG",
+                "KGM",
+                "KT",
+                "KTM",
+                "KTN",
+                "LEF",
+                "LH",
+                "LS",
+                "LTR",
+                "LUX",
+                "MGM",
+                "MIN",
+                "MLT",
+                "MMK",
+                "MMT",
+                "MON",
+                "MPG",
+                "MTK",
+                "MTR",
+                "NE",
+                "NT",
+                "OHM",
+                "OP",
+                "OZ",
+                "P3",
+                "P4",
+                "P5",
+                "P6",
+                "P7",
+                "P8",
+                "P9",
+                "PA",
+                "PB",
+                "PF",
+                "PK",
+                "PLP",
+                "PO",
+                "PR",
+                "PT",
+                "PU",
+                "PUG",
+                "PX",
+                "RK",
+                "RL",
+                "RO",
+                "SET",
+                "STR",
+                "SW",
+                "SX",
+                "SY",
+                "TE",
+                "TN",
+                "TP",
+                "TPR",
+                "TU",
+                "U1",
+                "U2",
+                "WEE",
+                "WRP",
+                "X11",
+                "ZU"
+            ],
+            "error_messages": {
+                "allowed_values": "De waarde moet voorkomen in de 'UOM Codes'."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Bruto Gewicht Basiseenheid (Incl. verpakking)": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "numeric",
+            "max_length": 10,
+            "error_messages": {
+                "type": "Bruto Gewicht Basiseenheid moet numeriek zijn.",
+                "max_length": "Bruto Gewicht Basiseenheid mag maximaal 10 cijfers bevatten."
+            }
+        },
+        "Eenheidscode Gewicht Basiseenheid (UOM)": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "1I",
+                "4E",
+                "AA",
+                "AE",
+                "AM",
+                "ANN",
+                "BA",
+                "BAR",
+                "BB",
+                "BBG",
+                "BG",
+                "BH",
+                "BJ",
+                "BK",
+                "BL",
+                "BO",
+                "BPG",
+                "BRI",
+                "BX",
+                "CA",
+                "CEL",
+                "CG",
+                "CH",
+                "CM",
+                "CMK",
+                "CMQ",
+                "CMS",
+                "CMT",
+                "CNG",
+                "CNP",
+                "CQ",
+                "CR",
+                "CS",
+                "CT",
+                "CU",
+                "CY",
+                "D63",
+                "D64",
+                "DAY",
+                "DI",
+                "DMK",
+                "DMT",
+                "DZP",
+                "EA",
+                "EN",
+                "EP",
+                "EV",
+                "FAH",
+                "GLI",
+                "GLL",
+                "GRM",
+                "GTG",
+                "HLT",
+                "HUR",
+                "INH",
+                "JG",
+                "JR",
+                "KB",
+                "KBA",
+                "KEL",
+                "KG",
+                "KGM",
+                "KT",
+                "KTM",
+                "KTN",
+                "LEF",
+                "LH",
+                "LS",
+                "LTR",
+                "LUX",
+                "MGM",
+                "MIN",
+                "MLT",
+                "MMK",
+                "MMT",
+                "MON",
+                "MPG",
+                "MTK",
+                "MTR",
+                "NE",
+                "NT",
+                "OHM",
+                "OP",
+                "OZ",
+                "P3",
+                "P4",
+                "P5",
+                "P6",
+                "P7",
+                "P8",
+                "P9",
+                "PA",
+                "PB",
+                "PF",
+                "PK",
+                "PLP",
+                "PO",
+                "PR",
+                "PT",
+                "PU",
+                "PUG",
+                "PX",
+                "RK",
+                "RL",
+                "RO",
+                "SET",
+                "STR",
+                "SW",
+                "SX",
+                "SY",
+                "TE",
+                "TN",
+                "TP",
+                "TPR",
+                "TU",
+                "U1",
+                "U2",
+                "WEE",
+                "WRP",
+                "X11",
+                "ZU"
+            ],
+            "error_messages": {
+                "allowed_values": "De waarde moet voorkomen in de 'UOM Codes'."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Herbruikbaar": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_values": [
+                0,
+                1
+            ],
+            "depends_on": {
+                "fields": [
+                    "Herbruikbaarheids Code"
+                ],
+                "condition": "1",
+                "error_message": "'Herbruikbaarheids Code' is verplicht als 'Herbruikbaar' is ingevuld met een 1."
+            },
+            "error_messages": {
+                "boolean_values": "Herbruikbaar moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "boolean_values": "92"
+            }
+        },
+        "Herbruikbaarheids Code": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "LIMITED_REUSABLE",
+                "REUSABLE",
+                "REUSABLE_SAME_PATIENT",
+                "SINGLE_USE"
+            ],
+            "depends_on": {
+                "fields": [
+                    "Herbruikbaar"
+                ],
+                "condition": "1",
+                "error_message": "'Herbruikbaarheids Code' is verplicht als 'Herbruikbaar' is ingevuld met een 1."
+            },
+            "error_messages": {
+                "allowed_values": "Herbruikbaarheids Code moet een geldige waarde bevatten."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Indicatie Implanteerbaar": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_values": [
+                0,
+                1
+            ],
+            "error_messages": {
+                "required": "Dit veld is verplicht indien relevant.",
+                "boolean_values": "Waarde moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "boolean_values": "92"
+            }
+        },
+        "Bevat het Artikel Menselijk Weefsel": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_values": [
+                0,
+                1
+            ],
+            "error_messages": {
+                "required": "Dit veld is verplicht indien relevant.",
+                "boolean_values": "Waarde moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "boolean_values": "92"
+            }
+        },
+        "Serienummer": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_values": [
+                0,
+                1
+            ],
+            "depends_on": {
+                "field": [
+                    "Locatie Serienummer op de Verpakking"
+                ],
+                "condition": "filled",
+                "error_message": "Als 'Serienummer' 1 is, is 'Locatie Serienummer op de Verpakking' verplicht."
+            },
+            "error_messages": {
+                "required": "Dit veld is verplicht indien relevant.",
+                "boolean_values": "Waarde moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "required": "73",
+                "boolean_values": "92"
+            } 
+        },
+        "Locatie Serienummer op de Verpakking": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "MARKED_ON_PACKAGING",
+                "MARKED_ON_PACKAGING_INSERT",
+                "MARKED_ON_TRADE_ITEM",
+                "UNKNOWN"
+            ],
+            "depends_on": {
+                "fields": [
+                    "Serienummer"
+                ],
+                "condition": "1",
+                "error_message": "'Locatie Serienummer op de Verpakking' is verplicht als 'Serienummer' is ingevuld met een 1."
+            },
+            "error_messages": {
+                "allowed_values": "Waarde moet een van de toegestane opties zijn."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Batch Nummer": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_values": [
+                0,
+                1
+            ],
+            "error_messages": {
+                "required": "Dit veld is verplicht indien relevant.",
+                "boolean_values": "Waarde moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "required": "73",
+                "boolean_values": "92"
+            }
+        },
+        "Steriel": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_values": [
+                0,
+                1
+            ],
+            "depends_on": {
+                "fields": [
+                    "Type Sterilisatie Gebruikt door Fabrikant"
+                ],
+                "condition": "1",
+                "error_message": "'Type Sterilisatie' is verplicht als 'Steriel' is ingevuld met een 1."
+            },
+            "error_messages": {
+                "boolean_values": "Steriel moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "boolean_values": "92"
+            }
+        },
+        "Type Sterilisatie Gebruikt door Fabrikant": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "AUTOCLAVE",
+                "BETA_RADIATION",
+                "CHLORINE_DIOXIDE",
+                "DRY_HEAT",
+                "ELECTRON_BEAM_IRRADIATION",
+                "ETHANOL",
+                "ETO_ETHYLENE_OXIDE",
+                "FORMALDEHYDE",
+                "GAMMA_RADIATION",
+                "GLUTARALDEHYDE",
+                "HIGH_INTENSITY_OR_PULSE_LIGHT",
+                "HIGH_LEVEL_DISINFECTANT",
+                "HYDROGEN_PEROXIDE",
+                "LIQUID_CHEMICAL",
+                "MICROWAVE_RADIATION",
+                "NITROGEN_DIOXIDE",
+                "NOT_STERILISED",
+                "OZONE",
+                "PERACETIC_ACID",
+                "PLASMA",
+                "SOUND_WAVES",
+                "SUPERCRITICAL_CARBON_DIOXIDE",
+                "UNSPECIFIED",
+                "UV_LIGHT"
+            ],
+            "depends_on": {
+                "fields": [
+                    "Steriel"
+                ],
+                "condition": "1",
+                "error_message": "'Type Sterilisatie' is verplicht als 'Steriel' is ingevuld met een 1."
+            },
+            "error_messages": {
+                "allowed_values": "Type Sterilisatie moet een geldige waarde bevatten."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Latex": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_values": [
+                0,
+                1
+            ],
+            "error_messages": {
+                "boolean_values": "Latex moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "boolean_values": "92"
+            }
+        },
+        "MRI Compatibility": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_values": [
+                0,
+                1
+            ],
+            "error_messages": {
+                "boolean_values": "MRI Compatibility moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "boolean_values": "92"
+            }
+        },
+        "Is ConsumentenEenheid": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_values": [
+                0,
+                1
+            ],
+            "error_messages": {
+                "boolean_values": "Is ConsumentenEenheid moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "boolean_values": "92"
+            }
+        },
+        "Is VerzendEenheid": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "boolean_values": [
+                0,
+                1
+            ],
+            "error_messages": {
+                "boolean_values": "Is VerzendEenheid moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "boolean_values": "92"
+            }
+        },
+        "Levertijd": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "numeric",
+            "error_messages": {
+                "numeric": "Levertijd moet een heel getal zijn."
+            },
+            "error_codes": {
+                "numeric": "77"
+            },
+            "database_corrections": {
+                "type": "numerieke_correctie",
+                "message": "Levertijd is niet numeriek, maar nummer(s) gevonden in de tekst en gebruikt als leverdatum."
+            }
+        },
+        "Code Type Datum op Verpakking": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "allowed_values": [
+                "BAKED_FOR_DATE",
+                "BAKED_ON_DATE",
+                "BEST_BEFORE_DATE",
+                "DISPLAY_UNTIL_DATE",
+                "EXPIRATION_DATE",
+                "FREEZE_BY",
+                "LAST_SALE_DATE",
+                "NO_DATE_MARKED",
+                "PACKAGING_DATE",
+                "PRODUCTION_DATE",
+                "USE_BY_DATE"
+            ],
+            "error_messages": {
+                "allowed_values": "Code Type Datum op Verpakking moet voorkomen in de 'TIDOPT Code' sheet."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Startdatum Beschikbaarheid": {
+            "GHXmandatory": false,
+            "GS1mandatory": true,
+            "type": "date",
+            "error_messages": {
+                "invalid_format": "Startdatum Beschikbaarheid moet een geldige datum zijn in het formaat DD-MM-JJJJ."
+            },
+            "error_codes": {
+                "invalid_format": "95"
+            }
+        },
+        "Einddatum Beschikbaarheid": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "date",
+            "depends_on": {
+                "field": [
+                    "Startdatum Beschikbaarheid"
+                ],
+                "condition": "before",
+                "error_date": "Einddatum Beschikbaarheid mag niet vóór Startdatum Beschikbaarheid liggen."
+            },
+            "error_messages": {
+                "invalid_format": "Einddatum Beschikbaarheid moet een geldige datum zijn in het formaat DD-MM-JJJJ.",
+                "date_error": "Einddatum Beschikbaarheid mag niet vóór Startdatum Beschikbaarheid liggen."
+            },
+            "error_codes": {
+                "invalid_format": "95",
+                "date_error": "96"
+            }
+        },
+        "Startdatum Prijs Artikel": {
+            "GHXmandatory": true,
+            "GS1mandatory": false,
+            "type": "date",
+            "error_messages": {
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "invalid_format": "Startdatum Prijs Artikel moet een geldige datum zijn in het formaat DD-MM-JJJJ."
+            },
+            "error_codes": {
+                "required": "73",
+                "invalid_format": "95"
+            }
+        },
+        "Einddatum Prijs Artikel": {
+            "GHXmandatory": true,
+            "GS1mandatory": false,
+            "type": "date",
+            "depends_on": {
+                "field": [
+                    "Startdatum Prijs Artikel"
+                ],
+                "condition": "before",
+                "error_date": "Einddatum Prijs Artikel mag niet vóór Startdatum Prijs Artikel liggen."
+            },
+            "error_messages": {
+                "date_error": "Einddatum Prijs Artikel mag niet vóór Startdatum Prijs Artikel liggen.",
+                "required": "Dit veld is verplicht en mag niet leeg zijn.",
+                "invalid_format": "Einddatum Prijs Artikel moet een geldige datum zijn in het formaat DD-MM-JJJJ."
+            },
+            "error_codes": {
+                "date_error": "96",
+                "required": "73",
+                "invalid_format": "95"
+            },
+            "database_corrections": {
+                "type": "leeg_gelaten",
+                "message": "Einddatum niet goed ingevuld. Leeg gelaten. Gebruik a.u.b. DD-MM-YYYY"
+            }
+        },
+        "Contract aanwezig": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "boolean",
+            "allowed_values": [
+                0,
+                1
+            ],
+            "error_messages": {
+                "allowed_values": "Contract aanwezig moet 0 (nee) of 1 (ja) zijn."
+            },
+            "error_codes": {
+                "allowed_values": "80"
+            }
+        },
+        "Contractnummer Provider": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 30,
+            "error_messages": {
+                "max_length": "Contractnummer Provider mag maximaal 30 karakters bevatten."
+            },
+            "error_codes": {
+                "max_length": "75"
+            }
+        },
+        "Zoeksleutels": {
+            "GHXmandatory": false,
+            "GS1mandatory": false,
+            "type": "string",
+            "max_length": 2000,
+            "error_messages": {
+                "max_length": "Zoeksleutels mag maximaal 2000 karakters bevatten."
+            },
+            "error_codes": {
+                "max_length": "75"
+            }
+        }
+    },    
+    "red_flags": [
+        {
+            "description": "Controleer of zowel GTIN Verpakkingseenheid als Aanvullende Productidentificatie leeg zijn.",
+            "fields": [
+                "GTIN Verpakkingseenheid",
+                "Aanvullende Productidentificatie"
+            ],
+            "condition": "both_empty",
+            "error_message": "Er zijn verschillende artikelen aanwezig in deze prijslijst waar geen barcode (GTIN, HIBCv etc) bij is opgegeven. Dat kan natuurlijk het geval zijn bij sommige artikelen, maar toch maken wij er graag melding van."
+        },
+        {
+            "description": "Controleer op UOM-relatie conflicten",
+            "fields": [
+                "Is BestelbareEenheid",
+                "Is BasisEenheid",
+                "UOM Code Verpakkingseenheid",
+                "UOM Code Basiseenheid",
+                "Inhoud Verpakkingseenheid"
+            ],
+            "condition": "uom_relation",
+            "error_message": "Er zijn conflicterende waardes gevonden in de UOM- en eenheidsvelden. Dit creëert ambiguïteit in hoe de artikelen moeten worden geïnterpreteerd. Controleer de relaties tussen 'Is BestelbareEenheid', 'Is BasisEenheid', 'UOM Code Verpakkingseenheid', 'UOM Code Basiseenheid' en 'Inhoud Verpakkingseenheid'."
+        },
+        {
+            "description": "Controleer of UOM codes overeenkomen als beide eenheidsindicatoren op 1 staan.",
+            "fields": [
+                "Is BestelbareEenheid",
+                "Is BasisEenheid",
+                "UOM Code Verpakkingseenheid",
+                "UOM Code Basiseenheid"
+            ],
+            "condition": "uom_match",
+            "error_message": "Als een artikel bij 'Is BestelbareEenheid' en bij 'Is BasisEenheid' een 1 heeft, dan moeten de UOM codes in de velden 'UOM Code Verpakkingseenheid' en 'UOM Code Basiseenheid' gelijk zijn."
+        },
+        {
+            "description": "Check of verplichte template kolommen aanwezig zijn",
+            "fields": ["Is BestelbareEenheid", "Omschrijving Verpakkingseenheid"],
+            "condition": "template_check",
+            "error_message": "U maakt niet gebruik van onze nieuwste template, wij adviseren u om dat wel te doen. De link naar de nieuwste en meest actuele GHX Template is:\nhttps://ghxnl.ghxeurope.com/synqeps/webroot/upload/GHXstandaardTemplate2.xlsx"
+        },
+        {
+            "description": "Check of het een staffelbestand is",
+            "fields": ["Staffel Vanaf", "Staffel Tot"],
+            "condition": "has_staffel",
+            "error_message": "Dit is een Staffelbestand."
+        },
+        {
+            "description": "Check of Omschrijving Verpakkingseenheid mogelijk niet overeenkomt met inhoud en UOM code.",
+            "fields": [
+                "Omschrijving Verpakkingseenheid",
+                "Inhoud Verpakkingseenheid",
+                "UOM Code Verpakkingseenheid"
+            ],
+            "condition": "uom_description_format",
+            "error_message": "Het veld 'Omschrijving Verpakkingseenheid' komt niet overeen met de verwachte notatie. De ideale invulling van dit veld is de combinatie: 'UOM Code Verpakkingseenheid' + 'Inhoud Verpakkingseenheid' + 'UOM Code Basiseenheid' + 'Inhoud Basiseenheid' + 'UOM Code Inhoud Basiseenheid'"
+        }
+    ]
+}

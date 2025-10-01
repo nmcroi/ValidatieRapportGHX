@@ -2269,7 +2269,7 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
 # HOOFDFUNCTIE VOOR AANROEP VANUIT STREAMLIT
 # -----------------------------
 
-def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation_json_path: str, original_input_filename: str, reference_json_path: str = None) -> str | None:
+def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation_json_path: str, original_input_filename: str, reference_json_path: str = None, max_rows: int = None, total_rows: int = None) -> str | None:
     """
     Valideert een Excel prijslijst en genereert een Excel validatierapport.
     Retourneert het pad naar het rapport, of None bij een fout.
@@ -2388,8 +2388,12 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
             dtype_spec["BARCODENUMMER (EAN/ GTIN/ HIBC)"] = str
             dtype_spec["GTIN Verpakkingseenheid"] = str
             
-            # Lees Excel in met de uitgebreide dtype_spec
-            df = pd.read_excel(input_excel_path, dtype=dtype_spec)
+            # Lees Excel in - limiteer rijen indien Quick Mode
+            if max_rows is not None:
+                logging.info(f"Quick Mode: limiteer tot {max_rows} rijen")
+                df = pd.read_excel(input_excel_path, dtype=dtype_spec, nrows=max_rows)
+            else:
+                df = pd.read_excel(input_excel_path, dtype=dtype_spec)
             df_original = df.copy()
             
             # DEBUG: Log de ruwe, onbewerkte headers (debug level)
@@ -2488,6 +2492,8 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
             validation_config=validation_config,  # Genormaliseerde config in plaats van validation_config_raw
             template_context=template_context,  # Template Generator context voor rapportage
             excel_path=input_excel_path,  # Pad naar origineel Excel bestand voor template detectie
+            max_rows=max_rows,
+            total_rows=total_rows,
         )
 
         if output_path:
