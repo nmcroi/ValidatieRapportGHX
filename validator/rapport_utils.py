@@ -1623,7 +1623,7 @@ def genereer_rapport(
                 'left_color': border_color,
                 'right_color': border_color
             })
-            ws_dash.merge_range("E5:F5", f"Cijfer: {score_grade} | A+(≥95) A(90-94) B(80-89) C(70-79) D(60-69) E(50-59) F(<50)", fmt_score_small)
+            ws_dash.merge_range("E5:F5", f"Cijfer: {score_grade} | Voor meer informatie over de kwaliteitscore en hoe het berekend wordt, ga naar sheet 2.", fmt_score_small)
             
             # --- NIEUWE LAYOUT: Links Statistieken, Rechts Actiepunten ---
             
@@ -2075,9 +2075,9 @@ def genereer_rapport(
                 stats_data_original.extend([
                     ("Aantal rijen", total_rows),
                     ("Aantal kolommen", total_original_cols),  # Nu gefilterde kolom count voor TG
-                    ("Aantal velden", aantal_velden_totaal),
                     ("Aantal aanwezige verplichte kolommen", aantal_aanw_verpl_velden),  # Nu consistent
                     ("Aantal afwezige verplichte kolommen", aantal_afw_verpl_velden),    # Nu consistent
+                    ("Aantal velden", aantal_velden_totaal),  # Verplaatst naar beneden
                     (f"Aantal gevulde verplichte velden{quick_mode_suffix}", total_filled_in_present),
                     (f"Aantal aanwezige lege verplichte velden{quick_mode_suffix}", aantal_aanw_lege_verpl_velden),
                     (f"Aantal regels mogelijk afgewezen door Gatekeeper{quick_mode_suffix}", aantal_afkeuringen),
@@ -2091,9 +2091,9 @@ def genereer_rapport(
                 stats_data_original.extend([
                     ("Aantal rijen", total_rows),
                     ("Aantal kolommen", total_original_cols),
-                    ("Aantal velden", aantal_velden_totaal),
                     ("Aantal aanwezige verplichte kolommen", aantal_aanw_verpl_velden),
                     ("Aantal afwezige verplichte kolommen", aantal_afw_verpl_velden),
+                    ("Aantal velden", aantal_velden_totaal),  # Verplaatst naar beneden
                     (f"Aantal gevulde verplichte velden{quick_mode_suffix}", total_filled_in_present),
                     (f"Aantal aanwezige lege verplichte velden{quick_mode_suffix}", aantal_aanw_lege_verpl_velden),
                     (f"Aantal regels mogelijk afgewezen door Gatekeeper{quick_mode_suffix}", aantal_afkeuringen),
@@ -2719,7 +2719,7 @@ def genereer_rapport(
                     "bold": True,
                     "align": "center",
                     "valign": "vcenter",
-                    "bg_color": "#f79645",
+                    "bg_color": "#16365C",  # Gewijzigd naar blauw
                     "font_color": "white",
                     "border": 1,
                 }
@@ -2844,7 +2844,14 @@ INTERPRETATIE:
 • B/C (70-89): Goede kwaliteit - kleine verbeteringen mogelijk  
 • D/E/F (<70): Aandacht vereist - controleer foutmeldingen
 
-Cijfertoekenning: A+ (≥95), A (90-94), B (80-89), C (70-79), D (60-69), E (50-59), F (<50)"""
+Kwaliteitscore Uitleg:
+• A+ (≥95): Uitstekend - minimale verbeteringen nodig
+• A (90-94): Zeer goed - kleine verbeteringen mogelijk  
+• B (80-89): Goed - enkele verbeterpunten aanwezig
+• C (70-79): Voldoende - aandacht vereist voor verbeteringen
+• D (60-69): Onvoldoende - significante verbeteringen nodig
+• E (50-59): Slecht - grote problemen aanwezig
+• F (<50): Zeer slecht - uitgebreide herziening vereist"""
             # Titel (bold en groot) - 2 rijen
             ws_inleiding.merge_range(
                 f"A{current_row_intro+1}:B{current_row_intro + 2}",
