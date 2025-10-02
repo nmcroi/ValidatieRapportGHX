@@ -613,4 +613,45 @@ results, stats, failed_rows, summary = validate_dataframe(
 print(f"Validation complete: {summary['total_errors']} errors found")
 ```
 
+## 🚀 **Latest Features**
+
+### Quick Mode Processing
+For large datasets (>5000 rows), the system automatically activates Quick Mode:
+
+```python
+# Automatic activation - no API changes needed
+report_path = validate_pricelist("large_file.xlsx")
+# If >5000 rows: processes first 5000, adds _QM_ to filename
+```
+
+### Output Filename Convention
+The system generates standardized report filenames:
+
+```python
+# Normal validation
+"input_file_VR_DT_M86_J75_64(D).xlsx"
+
+# Quick Mode validation  
+"input_file_VR_QM_DT_M86_J75_64(D).xlsx"
+
+# Components:
+# VR = Validatie Rapport
+# QM = Quick Mode (large files only)
+# DT/TG/N/O = Template type
+# M86 = 86% Mandatory field completeness
+# J75 = 75% data correctness (Juistheid)
+# 64(D) = Quality score with grade
+```
+
+### Quality Scoring System
+The validation system provides comprehensive quality assessment:
+
+```python
+# Score calculation formula:
+# Core Score = Volledigheid (M%) × Juistheid (J%)
+# Final Score = Core Score + Template Penalty + UOM Penalties
+
+# Grades: A+ (≥95), A (90-94), B (80-89), C (70-79), D (60-69), E (50-59), F (<50)
+```
+
 This API provides comprehensive access to all validation functionality while maintaining clean separation of concerns and consistent error handling patterns.

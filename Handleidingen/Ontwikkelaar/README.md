@@ -4,29 +4,25 @@ This directory contains comprehensive documentation for the GHX Price Validation
 
 ## 📚 **Documentation Overview**
 
-### Core Architecture Documents
-- **[🏗️ ARCHITECTURE.md](ARCHITECTURE.md)** - Complete system architecture overview
-  - Clean architecture principles and design patterns
-  - Module structure and dependencies
-  - TG→N→O template detection philosophy
-  - Processing pipeline and integration points
+### Core Development Guide
+- **[🏗️ DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** - Complete development documentation
+  - System architecture and clean design principles
+  - TG→N→O template detection philosophy  
+  - Complete validation pipeline workflow
+  - Quality scoring system and Quick Mode
+  - Module structure and integration points
+  - Development guidelines and debugging
 
-### Template Processing
-- **[🌳 TEMPLATE_DETECTION.md](TEMPLATE_DETECTION.md)** - Template detection system
-  - TG→N→O decision tree detailed explanation
-  - Template type characteristics and processing differences
-  - Stamp detection and parsing logic
+### Template Detection System
+- **[🌳 TEMPLATE_DETECTION.md](TEMPLATE_DETECTION.md)** - Detailed template detection logic
+  - TG→N→O decision tree implementation
+  - Stamp parsing and pattern recognition
+  - Template characteristics and processing differences
   - Performance considerations and testing utilities
 
-### Validation System
-- **[🔄 VALIDATION_PIPELINE.md](VALIDATION_PIPELINE.md)** - Complete processing workflow
-  - Stage-by-stage pipeline breakdown
-  - Data processing and transformation steps
-  - Field logic application and conditional validation
-  - Report generation and error handling
-
 ### Configuration Management
-- **[⚙️ CONFIGURATION.md](CONFIGURATION.md)** - Configuration system
+- **[⚙️ CONFIGURATION.md](../Configuratie/CONFIGURATION.md)** - Configuration system
+- **[📋 Handleiding_JSON.md](../Configuratie/Handleiding_JSON.md)** - Complete field_validation_v20.json guide
   - JSON configuration file structure and relationships
   - Template Generator synchronization
   - Configuration validation and security

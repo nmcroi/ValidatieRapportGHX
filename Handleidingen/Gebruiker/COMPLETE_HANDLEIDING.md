@@ -127,6 +127,39 @@ Excel rapporten met multiple sheets:
 - Probleem rijen overzicht
 - Unmapped kolommen analyse
 
+### Quick Mode Functionaliteit
+Voor grote datasets (>5000 rijen) biedt het systeem Quick Mode:
+- **Activatie:** Automatisch bij bestanden >5000 rijen
+- **Verwerking:** Limiteert analyse tot eerste 5000 rijen  
+- **Accuraatheid:** Percentages berekend op verkleinde dataset
+- **Identifier:** _QM_ in bestandsnaam
+- **Doel:** Snelle validatie voor initiële kwaliteitscheck
+
+### Output Bestandsnaam Conventie
+Het systeem genereert automatisch bestandsnamen volgens een vaste structuur:
+
+**Normale validatie:**
+```
+[origineel_bestand]_VR_[template]_M[volledigheid%]_J[juistheid%]_[score]([cijfer]).xlsx
+```
+
+**Quick Mode validatie:**
+```
+[origineel_bestand]_VR_QM_[template]_M[volledigheid%]_J[juistheid%]_[score]([cijfer]).xlsx
+```
+
+**Voorbeelden:**
+- `Test6B_VR_DT_M86_J75_64(D).xlsx` - Normale validatie
+- `Test6B_VR_QM_DT_M86_J75_64(D).xlsx` - Quick Mode validatie
+
+**Componenten:**
+- **VR** = Validatie Rapport
+- **QM** = Quick Mode (alleen bij grote bestanden)
+- **DT/TG/N/O** = Template type
+- **M86** = 86% volledigheid (Mandatory fields)
+- **J75** = 75% juistheid (Correctheid data)
+- **64(D)** = Score 64 met cijfer D
+
 ## 🔄 **Complete Workflow: Van Upload tot Rapport**
 
 ### Stap 1: Template Detectie
@@ -205,6 +238,42 @@ Stamp: S-LM-0-0-0-ul-V78-M18
 2. Volledige GHX mandatory field set
 3. Legacy compatibility mode
 4. Flexibele field detectie
+
+## 📊 **Kwaliteitscore Systeem**
+
+### Score Berekening Methodologie
+Het systeem gebruikt een dubbele-factor methodologie voor objectieve kwaliteitsassessment:
+
+**Core Score Formula:**
+```
+Core Score = Volledigheid (M%) × Juistheid (J%)
+```
+
+**Componenten:**
+- **M (Mandatory):** Percentage ingevulde verplichte velden
+- **J (Juistheid):** Percentage correcte data van ingevulde velden
+- **Template Penalty:** Aftrek gebaseerd op template type
+- **UOM Penalties:** Aftrek voor foutcodes in UOM kolommen
+
+**Eindformule:**
+```
+Totaal Score = Core Score + Template Penalty + UOM Penalties
+```
+
+### Cijferklassen & Interpretatie
+- **A+ (≥95):** Uitstekend - gereed voor Gatekeeper, minimale verbeteringen nodig
+- **A (90-94):** Zeer goed - kleine verbeteringen mogelijk  
+- **B (80-89):** Goed - enkele verbeterpunten aanwezig
+- **C (70-79):** Voldoende - aandacht vereist voor verbeteringen
+- **D (60-69):** Onvoldoende - significante verbeteringen nodig
+- **E (50-59):** Slecht - grote problemen aanwezig
+- **F (<50):** Zeer slecht - uitgebreide herziening vereist
+
+### Template Penalties
+- **TG Templates:** 0 punten (geen penalty)
+- **DT Templates:** -5 punten  
+- **N Templates:** -3 punten
+- **O Templates:** -8 punten
 
 ## 🔧 **Development & Debugging**
 

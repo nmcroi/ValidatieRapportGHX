@@ -1355,8 +1355,9 @@ def genereer_rapport(
         score_suffix = f"_{template_type}_M{M_percentage}_J{J_percentage}_{score_int_file}({score_grade_file})"
 
         # --- Output Bestandsnaam ---
+        quick_mode_suffix = "_QM" if quick_mode else ""
         output_filename = (
-            f"{bestandsnaam_zonder_extensie}_validation_rapport{score_suffix}.xlsx"
+            f"{bestandsnaam_zonder_extensie}_VR{quick_mode_suffix}{score_suffix}.xlsx"
         )
         output_path = os.path.join(output_dir, output_filename)
 
@@ -1623,7 +1624,7 @@ def genereer_rapport(
                 'left_color': border_color,
                 'right_color': border_color
             })
-            ws_dash.merge_range("E5:F5", f"Cijfer: {score_grade} | Voor meer informatie over de kwaliteitscore en hoe het berekend wordt, ga naar sheet 2.", fmt_score_small)
+            ws_dash.merge_range("E5:F5", "Voor meer informatie over de kwaliteitscore en hoe het berekend wordt, ga naar sheet 2.", fmt_score_small)
             
             # --- NIEUWE LAYOUT: Links Statistieken, Rechts Actiepunten ---
             
@@ -2839,13 +2840,8 @@ def genereer_rapport(
 • UOM penalties: {uom_penalties} (foutcodes in UOM kolommen)
 • Eindscore: {core_score} + {template_penalty} + {uom_penalties} = {score_int_uitleg}
 
-INTERPRETATIE:
-• A+/A (≥90): Uitstekende kwaliteit - gereed voor Gatekeeper
-• B/C (70-89): Goede kwaliteit - kleine verbeteringen mogelijk  
-• D/E/F (<70): Aandacht vereist - controleer foutmeldingen
-
 Kwaliteitscore Uitleg:
-• A+ (≥95): Uitstekend - minimale verbeteringen nodig
+• A+ (≥95): Uitstekend - gereed voor Gatekeeper, minimale verbeteringen nodig
 • A (90-94): Zeer goed - kleine verbeteringen mogelijk  
 • B (80-89): Goed - enkele verbeterpunten aanwezig
 • C (70-79): Voldoende - aandacht vereist voor verbeteringen
@@ -2862,11 +2858,11 @@ Kwaliteitscore Uitleg:
             
             # Body tekst (extra ruimte voor volledige uitleg tot regel 20+)
             ws_inleiding.merge_range(
-                f"A{current_row_intro+1}:B{current_row_intro + 16}",
+                f"A{current_row_intro+1}:B{current_row_intro + 18}",
                 score_body_tekst,
                 fmt_score_body,
             )
-            current_row_intro += 16
+            current_row_intro += 18
 
             # Witregel
             current_row_intro += 1

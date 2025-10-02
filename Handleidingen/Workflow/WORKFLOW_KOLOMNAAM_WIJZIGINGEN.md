@@ -396,4 +396,24 @@ git checkout HEAD -- validator/mandatory_fields.py validator/price_tool.py
 
 ---
 
-**📞 Contact:** Documenteer nieuwe issues voor toekomstige reference. Deze workflow is gebaseerd op real-world debugging van AT template validatie problemen (UNSPSC naming, mapping conflicts, Sheet 8 ordering).
+## 🆕 RECENTE SYSTEEM FEATURES (2025)
+
+Bij het wijzigen van kolommen, houd rekening met deze nieuwe features:
+
+### Quick Mode Processing
+- **Impact:** Kolommen moeten correct werken met 5000-row subset processing
+- **Test:** Test zowel normale als Quick Mode validatie (>5000 rows)
+
+### Nieuwe Bestandsnaam Conventie
+- **Format:** `[file]_VR_[template]_M[%]_J[%]_[score]([grade]).xlsx`
+- **Quick Mode:** Extra `_QM_` identifier in bestandsnaam
+- **Impact:** Kolomnaam wijzigingen beïnvloeden score berekeningen
+
+### Quality Scoring System
+- **Formula:** Core Score = Volledigheid (M%) × Juistheid (J%)
+- **Impact:** Nieuwe kolommen kunnen mandatory percentages beïnvloeden
+- **Test:** Controleer M/J percentages na kolomnaam wijzigingen
+
+---
+
+**📞 Contact:** Documenteer nieuwe issues voor toekomstige reference. Deze workflow is gebaseerd op real-world debugging van AT template validatie problemen (UNSPSC naming, mapping conflicts, Sheet 8 ordering) en geüpdatet voor 2025 features.

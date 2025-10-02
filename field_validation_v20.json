@@ -86,6 +86,7 @@
         "771": "FLAG: Een 'CE Certificaat nummer' ontbreekt terwijl dit verplicht is op basis van de risicoklasse.",
         "772": "CORRECTION: De ingevulde risicoklasse is niet geldig in combinatie met de gekozen productclassificatiecode.",
         "773": "FLAG: Een GMDN-code of EMDN-code is verplicht voor medische producten (UNSPSC 42xxxx).",
+        "774": "FLAG: Veiligheidsblad URL mogelijk generiek - URL komt meer dan 5x voor met verschillende CAS-nummers/stoffen.",
 
         "800": "GLOBAL FLAG: Er ontbreekt een barcode (GTIN of Aanvullende ID) op een productregel.",
         "801": "GLOBAL FLAG: UOM codes moeten gelijk zijn als base=orderable beide 1 zijn.",
@@ -1259,6 +1260,16 @@
                     "condition": "not_starts_with",
                     "params": "https",
                     "message": "De link voor het Veiligheidsinformatieblad heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
+                },
+                {
+                    "type": "flag",
+                    "code": "774",
+                    "condition": "duplicate_url_with_varying_chemicals",
+                    "params": {
+                        "threshold": 5,
+                        "check_fields": ["CAS nummer", "Stofnaam", "Brutoformule"]
+                    },
+                    "message": "Deze SDS-URL komt meer dan 5 keer voor met verschillende CAS-nummers of stoffen. Dit wijst mogelijk op een generieke URL die niet direct naar de specifieke SDS leidt."
                 }
             ]
         },

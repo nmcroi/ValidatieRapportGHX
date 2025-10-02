@@ -408,4 +408,95 @@ config_metrics = {
 }
 ```
 
-This configuration management system provides a robust, flexible, and maintainable foundation for the validation system while ensuring consistency, security, and synchronization with external systems.
+## 🚀 **Latest Configuration Features (2025)**
+
+### Quick Mode Configuration Impact
+The system automatically handles large dataset processing:
+
+```json
+{
+  "processing": {
+    "quick_mode_threshold": 5000,
+    "quick_mode_sample_size": 5000,
+    "quick_mode_enabled": true
+  }
+}
+```
+
+**Configuration Considerations:**
+- Field validation rules apply to subset processing
+- Mandatory field calculations adjust for processed row count
+- Score calculations maintain accuracy on reduced dataset
+
+### Quality Scoring Configuration
+New scoring system affects configuration requirements:
+
+```json
+{
+  "scoring": {
+    "template_penalties": {
+      "TG": 0,
+      "DT": -5, 
+      "N": -3,
+      "O": -8
+    },
+    "grade_thresholds": {
+      "A+": 95, "A": 90, "B": 80, "C": 70, "D": 60, "E": 50, "F": 0
+    }
+  }
+}
+```
+
+### Output Naming Configuration
+The system generates standardized report filenames:
+
+```json
+{
+  "output": {
+    "filename_pattern": "{original}_VR_{quick_mode}_{template}_M{mandatory}_J{correctness}_{score}({grade}).xlsx",
+    "quick_mode_identifier": "QM"
+  }
+}
+```
+
+**Configuration Updates Required:**
+- Report generation templates updated for new naming
+- Dashboard statistics adapted for M×J methodology  
+- Template processing enhanced for score calculation
+
+## 🧩 **Advanced Validation Conditions**
+
+### Complex Cross-Row Validations
+The system supports advanced validation patterns that analyze multiple rows simultaneously:
+
+#### duplicate_url_with_varying_chemicals
+**Purpose:** Detects generic SDS URLs that point to different chemical substances
+
+```json
+{
+  "type": "flag",
+  "code": "774",
+  "condition": "duplicate_url_with_varying_chemicals",
+  "params": {
+    "threshold": 5,
+    "check_fields": ["CAS nummer", "Stofnaam", "Brutoformule"]
+  },
+  "message": "Deze SDS-URL komt meer dan 5 keer voor met verschillende CAS-nummers of stoffen."
+}
+```
+
+**Logic:**
+1. **Step 1:** Group all rows by URL value
+2. **Step 2:** For URLs appearing ≥ threshold times (5+)
+3. **Step 3:** Check if check_fields contain different values across rows
+4. **Step 4:** Flag rows where same URL has varying chemical identifiers
+
+**Use Case:** Identifies suppliers using generic SDS portals instead of direct links to specific Safety Data Sheets
+
+**Parameters:**
+- `threshold`: Minimum occurrences to trigger check (default: 5)
+- `check_fields`: Fields to verify for consistency (chemical identifiers)
+
+---
+
+This configuration management system provides a robust, flexible, and maintainable foundation for the validation system while ensuring consistency, security, and synchronization with external systems. Recent 2025 enhancements maintain backward compatibility while adding advanced processing capabilities.
