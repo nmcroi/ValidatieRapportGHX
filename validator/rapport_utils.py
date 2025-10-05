@@ -52,8 +52,21 @@ def calculate_uom_penalties(df_errors_mand, df_errors_non_mand, total_rows):
         if len(all_errors) == 0 or total_rows == 0:
             return 0
             
-        # Group by error code en tel frequentie
-        code_counts = all_errors['Error Code'].value_counts()
+        # Group by error code en tel frequentie  
+        # Controleer welke kolom naam wordt gebruikt voor error codes
+        code_column = None
+        if 'code' in all_errors.columns:
+            code_column = 'code'
+        elif 'Error Code' in all_errors.columns:
+            code_column = 'Error Code'
+        elif 'Foutcode' in all_errors.columns:
+            code_column = 'Foutcode'
+        
+        if code_column is None:
+            logging.warning("Geen foutcode kolom gevonden in error DataFrames")
+            return 0
+            
+        code_counts = all_errors[code_column].value_counts()
         
         for error_code, count in code_counts.items():
             if str(error_code) in uom_codes:
@@ -934,6 +947,9 @@ def add_colored_dataset_sheet(
             # Template Generator filtering overgeslagen
             visible_columns = df.columns
         
+        # Filter uit instructie/algemene tekst kolommen die niet in dataset horen
+        visible_columns = [col for col in visible_columns if not col.startswith("ALGEMEEN")]
+        
         # Schrijf alleen zichtbare headers
         for col, header in enumerate(visible_columns):
             worksheet.write(start_row, col, str(header), header_format)
@@ -1009,10 +1025,13 @@ def add_colored_dataset_sheet(
                 worksheet.write(
                     start_row + row_idx + 1, col_idx, value_str, cell_format
                 )
+            
+            # Stel rijhoogte in op 15 voor elke data rij (geen terugloop)
+            worksheet.set_row(start_row + row_idx + 1, 15)
 
-        # Stel kolombreedte in - A is al ingesteld op 25, rest op 20
+        # Stel kolombreedte in - A is al ingesteld op 25, rest op 30 (zoals template)
         if len(visible_columns) > 1:
-            worksheet.set_column(1, len(visible_columns) - 1, 20)
+            worksheet.set_column(1, len(visible_columns) - 1, 30)
 
         # Voeg Excel AutoFilter toe voor betere filtering mogelijkheden
         # AutoFilter bereik: van header rij tot laatste data rij
@@ -1070,6 +1089,9 @@ def genereer_rapport(
 
     # Early Template Type Detectie (voorkom UnboundLocalError)
     template_type, template_info = determine_template_type(df, excel_path)
+    
+    # Quick Mode detectie (voorkom UnboundLocalError)
+    quick_mode = (max_rows is not None and max_rows == 5000)
 
     # Constanten voor rapportage limieten (uit notebook Code 5)
     ERROR_LIMIT = 50000  # Maximaal aantal errors per sheet
@@ -2081,7 +2103,6 @@ def genereer_rapport(
                     ("Aantal velden", aantal_velden_totaal),  # Verplaatst naar beneden
                     (f"Aantal gevulde verplichte velden{quick_mode_suffix}", total_filled_in_present),
                     (f"Aantal aanwezige lege verplichte velden{quick_mode_suffix}", aantal_aanw_lege_verpl_velden),
-                    (f"Aantal regels mogelijk afgewezen door Gatekeeper{quick_mode_suffix}", aantal_afkeuringen),
                 ])
             else:
                 # Voor andere templates: start ZONDER Template Type (die staat nu in Template-tabel)
@@ -2097,7 +2118,6 @@ def genereer_rapport(
                     ("Aantal velden", aantal_velden_totaal),  # Verplaatst naar beneden
                     (f"Aantal gevulde verplichte velden{quick_mode_suffix}", total_filled_in_present),
                     (f"Aantal aanwezige lege verplichte velden{quick_mode_suffix}", aantal_aanw_lege_verpl_velden),
-                    (f"Aantal regels mogelijk afgewezen door Gatekeeper{quick_mode_suffix}", aantal_afkeuringen),
                 ])
             # SIMPELE STATISTIEKEN DATA LOGICA - FINAL CORRECTIE
             # Header staat op current_row+1, data moet DIRECT daaronder op current_row+1  
@@ -2189,7 +2209,7 @@ def genereer_rapport(
                     "Percentage ingevulde verplichte velden (incl. ontbrekende)",
                     percentage_ingevuld_incl_missing / 100,
                 ),
-                ("Aantal ontbrekende verplichte kolommen", M_missing),
+                (f"Aantal regels mogelijk afgewezen door Gatekeeper{quick_mode_suffix}", aantal_afkeuringen),
             ]
 
             # Format voor Actiepunten data - met inspringing
@@ -2400,14 +2420,6 @@ def genereer_rapport(
                 )
                 table_end_row = geen_fouten_row
 
-            # --- Ontbrekende verplichte kolommen in Kolom D --- #
-            # Definieer formats als echte tabel headers (rood met witte letters)
-            fmt_missing_col_header = workbook.add_format(
-                {'bold': True, 'font_color': 'white', 'font_size': 12, 'bg_color': '#D32F2F', 'border': 1} # Zelfde stijl als hoofdheaders
-            )
-            fmt_missing_col_item = workbook.add_format(
-                {'color': '#000000', 'bg_color': '#F2DCDB', 'font_size': 12, 'border': 1, 'align': 'left'} # Stijl zoals Actiepunten data
-            )
 
             # DYNAMISCHE POSITIE voor Aandachtspunten: bereken based op einde van Foutmeldingen data
             # Minimaal 2 regels ruimte tussen Foutmeldingen en Aandachtspunten
@@ -3057,7 +3069,7 @@ Kwaliteitscore Uitleg:
                     2, 2, 30
                 )  # Supplier Kolom << Kolom die moet wrappen
                 ws_mand_err.set_column(3, 3, 45)  # Veldwaarde
-                ws_mand_err.set_column(4, 4, 70)  # Foutmelding
+                ws_mand_err.set_column(4, 4, 150)  # Foutmelding
                 ws_mand_err.set_column(5, 5, 10)  # Foutcode
                 ws_mand_err.set_column(6, 6, 12)  # Type
 
@@ -3265,7 +3277,7 @@ Kwaliteitscore Uitleg:
                 ws_opt_err.set_column(1, 1, 30)  # GHX Kolom
                 ws_opt_err.set_column(2, 2, 30)  # Supplier Kolom
                 ws_opt_err.set_column(3, 3, 45)  # Veldwaarde
-                ws_opt_err.set_column(4, 4, 70)  # Foutmelding
+                ws_opt_err.set_column(4, 4, 150)  # Foutmelding
                 ws_opt_err.set_column(5, 5, 10)  # Foutcode
                 ws_opt_err.set_column(6, 6, 12)  # Type
                 (max_row_oe, max_col_oe) = df_errors_non_mand_sheet.shape

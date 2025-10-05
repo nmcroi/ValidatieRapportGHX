@@ -87,6 +87,7 @@
         "772": "CORRECTION: De ingevulde risicoklasse is niet geldig in combinatie met de gekozen productclassificatiecode.",
         "773": "FLAG: Een GMDN-code of EMDN-code is verplicht voor medische producten (UNSPSC 42xxxx).",
         "774": "FLAG: Veiligheidsblad URL mogelijk generiek - URL komt meer dan 5x voor met verschillende CAS-nummers/stoffen.",
+        "775": "FLAG: Deze URL komt meer dan 5 keer voor en wijst mogelijk op een generieke link die niet specifiek is voor dit product.",
 
         "800": "GLOBAL FLAG: Er ontbreekt een barcode (GTIN of Aanvullende ID) op een productregel.",
         "801": "GLOBAL FLAG: UOM codes moeten gelijk zijn als base=orderable beide 1 zijn.",
@@ -743,6 +744,15 @@
                     "condition": "not_starts_with",
                     "params": "https",
                     "message": "De link voor 'Artikelinformatie' heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
+                },
+                {
+                    "type": "flag",
+                    "code": "775",
+                    "condition": "duplicate_url_simple",
+                    "params": {
+                        "threshold": 5
+                    },
+                    "message": "Deze URL voor Artikelinformatie komt meer dan 5 keer voor en wijst mogelijk op een generieke link die niet specifiek is voor dit product."
                 }
             ]
         },
@@ -755,6 +765,15 @@
                     "condition": "not_starts_with",
                     "params": "https",
                     "message": "De link voor 'Artikelfoto' heeft een ongeldig format. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
+                },
+                {
+                    "type": "flag",
+                    "code": "775",
+                    "condition": "duplicate_url_simple",
+                    "params": {
+                        "threshold": 5
+                    },
+                    "message": "Deze URL voor Artikelfoto komt meer dan 5 keer voor en wijst mogelijk op een generieke link die niet specifiek is voor dit product."
                 }
             ]
         },
@@ -774,6 +793,15 @@
                     "condition": "is_empty_when_context",
                     "params": ["is_medical_device"],
                     "message": "Het veld 'Link IFU' is niet ingevuld. Voor medische hulpmiddelen wordt een IFU sterk aanbevolen."
+                },
+                {
+                    "type": "flag",
+                    "code": "775",
+                    "condition": "duplicate_url_simple",
+                    "params": {
+                        "threshold": 5
+                    },
+                    "message": "Deze URL voor IFU komt meer dan 5 keer voor en wijst mogelijk op een generieke link die niet specifiek is voor dit product."
                 }
             ]
         },

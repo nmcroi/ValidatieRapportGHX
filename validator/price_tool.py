@@ -1904,6 +1904,158 @@ def validate_field_v20_native(field_name: str, value: Any, field_config: dict, i
     
     return errors
 
+def perform_cross_row_validations(df: pd.DataFrame, validation_config: dict, original_column_mapping: dict) -> list:
+    """
+    Voert cross-row validaties uit die meerdere rijen vergelijken.
+    Bijvoorbeeld duplicate SDS URLs met verschillende chemische identifiers.
+    """
+    results = []
+    
+    # Zoek naar duplicate URL validaties in field_validations
+    if "field_validations" in validation_config:
+        for field_name, field_config in validation_config["field_validations"].items():
+            if field_name in df.columns and "rules" in field_config:
+                for rule in field_config["rules"]:
+                    if rule.get("condition") == "duplicate_url_with_varying_chemicals":
+                        results.extend(check_duplicate_urls_with_varying_chemicals(
+                            df, field_name, rule, original_column_mapping
+                        ))
+                    elif rule.get("condition") == "duplicate_url_simple":
+                        results.extend(check_duplicate_urls_simple(
+                            df, field_name, rule, original_column_mapping
+                        ))
+    
+    return results
+
+def check_duplicate_urls_with_varying_chemicals(df: pd.DataFrame, url_field: str, rule: dict, original_column_mapping: dict) -> list:
+    """
+    Controleert of dezelfde URL meerdere keren voorkomt met verschillende chemische identifiers.
+    """
+    results = []
+    
+    # Haal parameters op
+    params = rule.get("params", {})
+    threshold = params.get("threshold", 5)
+    check_fields = params.get("check_fields", ["CAS nummer", "Stofnaam", "Brutoformule"])
+    message = rule.get("message", "URL komt meerdere keren voor met verschillende chemische identifiers")
+    code = rule.get("code", "774")
+    
+    # Filter rijen waar URL veld niet leeg is
+    df_with_urls = df[df[url_field].notna() & (df[url_field].astype(str).str.strip() != "")]
+    
+    if len(df_with_urls) == 0:
+        return results
+    
+    # Groepeer op URL
+    url_groups = df_with_urls.groupby(url_field)
+    
+    for url, group_df in url_groups:
+        # Check of deze URL vaker voorkomt dan threshold
+        if len(group_df) < threshold:
+            continue
+            
+        # Categoriseer rijen: volledig leeg, volledig gevuld, of mixed
+        rows_all_empty = 0
+        rows_fully_filled = 0
+        chemical_identifiers = set()
+        
+        for _, row in group_df.iterrows():
+            # Tel hoeveel chemische velden gevuld zijn
+            filled_values = []
+            empty_count = 0
+            
+            for field in check_fields:
+                if field in df.columns:
+                    value = str(row.get(field, "")).strip().lower()
+                    if value != "":
+                        filled_values.append(value)
+                    else:
+                        empty_count += 1
+            
+            # Categoriseer deze rij
+            total_fields = len([f for f in check_fields if f in df.columns])
+            
+            if len(filled_values) == 0:
+                # Alle velden leeg
+                rows_all_empty += 1
+            elif empty_count == 0:
+                # Alle velden gevuld - gebruik voor vergelijking
+                rows_fully_filled += 1
+                identifier = tuple(sorted(filled_values))
+                chemical_identifiers.add(identifier)
+        
+        # Beslissing volgens jouw regels:
+        should_flag = False
+        
+        if rows_all_empty == len(group_df):
+            # SCENARIO 3: Alle rijen hebben lege chemische info
+            should_flag = True
+        elif rows_fully_filled > 0 and len(chemical_identifiers) > 1:
+            # SCENARIO 2: Verschillende chemische info (alleen kijken naar volledig gevulde rijen)
+            should_flag = True
+        # SCENARIO 1 (zelfde info) en SCENARIO 4 (mixed/incomplete): geen flag
+        
+        if should_flag:
+            # Voeg error toe voor elke rij met deze URL
+            for idx, row in group_df.iterrows():
+                excel_row_num = idx + 2  # Excel is 1-based, plus 1 voor header
+                supplier_col = original_column_mapping.get(url_field, url_field)
+                
+                results.append({
+                    "Rij": excel_row_num,
+                    "GHX Kolom": url_field,
+                    "Supplier Kolom": supplier_col,
+                    "Veldwaarde": str(row[url_field]),
+                    "Foutmelding": message,
+                    "code": code
+                })
+    
+    return results
+
+def check_duplicate_urls_simple(df: pd.DataFrame, url_field: str, rule: dict, original_column_mapping: dict) -> list:
+    """
+    Controleert of dezelfde URL meer dan X keer voorkomt (eenvoudige duplicate check zonder chemische info).
+    Voor Link Artikelinformatie, Link Artikelfoto, Link IFU.
+    """
+    results = []
+    
+    # Haal parameters op
+    params = rule.get("params", {})
+    threshold = params.get("threshold", 5)
+    message = rule.get("message", "Deze URL komt meer dan 5 keer voor en wijst mogelijk op een generieke link")
+    code = rule.get("code", "775")
+    
+    # Filter rijen waar URL veld niet leeg is
+    df_with_urls = df[df[url_field].notna() & (df[url_field].astype(str).str.strip() != "")]
+    
+    if len(df_with_urls) == 0:
+        return results
+    
+    # Groepeer op URL en tel frequenties
+    url_counts = df_with_urls[url_field].value_counts()
+    
+    # Vind URLs die de threshold overschrijden
+    duplicate_urls = url_counts[url_counts >= threshold].index
+    
+    if len(duplicate_urls) > 0:
+        # Voeg error toe voor elke rij met een duplicate URL
+        for url in duplicate_urls:
+            url_rows = df_with_urls[df_with_urls[url_field] == url]
+            for idx, row in url_rows.iterrows():
+                excel_row_num = idx + 2  # Excel is 1-based, plus 1 voor header
+                supplier_col = original_column_mapping.get(url_field, url_field)
+                
+                results.append({
+                    "Rij": excel_row_num,
+                    "GHX Kolom": url_field,
+                    "Supplier Kolom": supplier_col,
+                    "Veldwaarde": str(row[url_field]),
+                    "Foutmelding": message,
+                    "code": code
+                })
+    
+    return results
+
 def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_column_mapping: dict, template_context: Dict[str, Any] = None) -> Tuple[list, dict, list, dict]:
     """
     Valideert het DataFrame en berekent template-aware statistieken.
@@ -2260,6 +2412,10 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
         error_count = len(unique_error_rows)
         # Aantal fouten kan niet groter zijn dan aantal gevulde velden
         errors_per_field[field_name] = min(error_count, filled_counts.get(field_name, 0))
+
+    # 4. Cross-row validaties (zoals duplicate SDS URLs)
+    cross_row_errors = perform_cross_row_validations(df, validation_config, original_column_mapping)
+    results.extend(cross_row_errors)
 
     # Retourneer alle berekende informatie
     return results, filled_percentages, red_flag_messages, errors_per_field
