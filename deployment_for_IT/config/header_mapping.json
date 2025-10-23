@@ -1,1983 +1,2117 @@
 {
-    "standard_headers": {
-      "Artikelnummer": {
-        "alternatives": [
-          "1) Art nr",
-          "ARTIKELNUMMER",
-          "Art. Code",
-          "Art. Nr.",
-          "Art. Nr. Merk",
-          "Art. leveranc.",
-          "Art.nr",
-          "Art.nr.",
-          "Art.nr.lev.",
-          "ArtNr",
-          "Article Number",
-          "Article number",
-          "Article_number",
-          "Articlenumber",
-          "Artikel nr",
-          "Artikel_Num",
-          "Artikelnr",
-          "Artikelnr.",
-          "Artikelnummer",
-          "Artikelnummer Van der Bend",
-          "ArtikelnummerArticle number",
-          "Artikelnummer__Article_number",
-          "Artikelnummer_x000D_",
-          "Artiklenummer",
-          "Artnr",
-          "Atikelnummer",
-          "Bcf Artnr",
-          "Bestel-nummer",
-          "Cat. No.",
-          "Code",
-          "Guerbet article number",
-          "Item No.",
-          "Item Number",
-          "LeverancierArtikelnummer",
-          "Leveranciers artikelnummer/ Supplier article number",
-          "Materiaal",
-          "Material",
-          "PRODUCTNUMBER",
-          "Part Number",
-          "PartNo",
-          "Product",
-          "Product Code",
-          "Product nr",
-          "REF",
-          "REFERENTIE ARTIKEL",
-          "Supplier Part ID",
-          "ZorgserviceXL artikelnummer",
-          "artikelnummer",
-          "artikelnummers",
-          "material",
-          "produktcode"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Artikelnaam": {
-        "alternatives": [
-          "2) Art naam",
-          "ARTIKELNAAM",
-          "Article Name",
-          "Article name",
-          "Articlename",
-          "Artikel",
-          "Artikel naam",
-          "Artikel_Name",
-          "Artikelam",
-          "Artikelnaam",
-          "Artikelnaam ENGELS",
-          "Artikelnaam NEDERLANDS",
-          "ArtikelnaamArticlename",
-          "Artikelnaam__Articlename",
-          "Artikelnaam_x000D_",
-          "De korte naam van het artikel",
-          "Description (trade name + generic name + stent/balloon size_UL)",
-          "Item",
-          "Item Description UMCU VANTIVE PRODUCTEN",
-          "Item Name",
-          "NAME",
-          "Name short (50)",
-          "Packaging",
-          "Product Name",
-          "Product Short Description",
-          "Product description",
-          "Short Description (50)",
-          "Short name",
-          "artikel naam",
-          "materialtext"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Artikelomschrijving": {
-        "alternatives": [
-          "3) Art informatie",
-          "ARTIKEL INFORMATIE",
-          "Article Information",
-          "Article information",
-          "Article_information",
-          "Artikel Informatie",
-          "Artikel beschrijving",
-          "Artikel infoResmed",
-          "Artikel informatie",
-          "Artikel informatieArticle information",
-          "Artikel informatie_x000D_",
-          "Artikel information",
-          "Artikel-informatie",
-          "ArtikelInformatie",
-          "ArtikelOmschrijving",
-          "Artikel_Desc",
-          "Artikel_informatie__Article_information",
-          "Artikelinfomatie",
-          "Artikelinformatie",
-          "Artikelomschrijving",
-          "Description",
-          "Item Description",
-          "LONGTEXT",
-          "Lange artikelomschrijving",
-          "Omschrijving",
-          "Product Description",
-          "Product Long Description",
-          "Product Omschrijving",
-          "artikel omschrijving",
-          "artikelomschrijving",
-          "materialdescription"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Artikelomschrijving Taal Code": {
-        "alternatives": [
-          "Artikelomschrijving Taal Code",
-          "Description Language Code",
-          "materiallang"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Brutoprijs": {
-        "alternatives": [
-          "BRUTOPRIJS (PRIJS ZONDER KORTING & EXCL. BTW)",
-          "BRUTOPRIJS EXCL. BTW/ EXCL. KORTING (PER BESTELVERPAKKING)",
-          "Basisprijs",
-          "Bruto Prijs",
-          "Bruto Prijs (EUR)",
-          "Bruto prijs",
-          "Bruto prijs per besteleenheid:",
-          "Bruto prijzen",
-          "Bruto prijzen 2023",
-          "Bruto prijzen 2024",
-          "Bruto verkpr 2022",
-          "Bruto verkpr 2023",
-          "Bruto verkpr 2024",
-          "BrutoPrijs",
-          "Brutoprijs",
-          "Brutoprijs 2022",
-          "Brutoprijs Excl btw",
-          "Brutoprijs Excl. BTW/ Excl. Korting",
-          "Brutoprijs excl. BTW/Excl. korting",
-          "Brutoprijs in Euro (Ex. BTW)",
-          "Brutoprijs €",
-          "BrutoprijsExcl. BTW/ Excl. KortingListpriceExcl. VAT/ Excl. Discount",
-          "Brutoprijs_Excl__BTW__Excl__Korting__per_bestelverpakking___Listprice_Excl__VAT__Excl__Discount__per_price_unit",
-          "Brutoprijs_x000D_",
-          "Corporate List Price",
-          "Excl. BTW/ Excl. Korting",
-          "Gross Price",
-          "Item Price excl. VAT",
-          "LISTPRICE",
-          "Lijstprijs fabrikant",
-          "List Price",
-          "List Price2",
-          "List Prices",
-          "List price",
-          "ListPrice",
-          "List_price",
-          "Listprice",
-          "Listprice excl. VAT/Excl. discount",
-          "ListpriceExcl. VAT/ Excl. Discount",
-          "Market Price",
-          "Price (EUR)",
-          "Price excl. VAT",
-          "Price without discount",
-          "Prijs_Bruto_Excl",
-          "bruto",
-          "brutoprice",
-          "list price",
-          "listprijs",
-          "listprijs ex btw"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Nettoprijs": {
-        "alternatives": [
-          "2022 - Prijs per Verpakkingseenheid",
-          "2023 - Prijs per Verpakkings-eenheid",
-          "2024",
-          "5) Netto prijs",
-          "AZ Maastricht Net price",
-          "AZ Maastricht Net priceExcl. VAT/Incl. Discount",
-          "Br.prijs",
-          "Customer Contract Price",
-          "Customer Price",
-          "Eenheidsprijs",
-          "Eenheidsprijs (€)",
-          "Excl. BTW/Incl. Korting",
-          "GHX NETTOPRIJS JULI 2022 PER VE",
-          "GHX Nettoprijs PER JULI 2022 per VE",
-          "GHX PRIJS PER JULI 2022 PER VE",
-          "Item Price excl. VAT w/Discount",
-          "Klantprijs",
-          "LUMC Net price",
-          "LUMC Net priceExcl. VAT/Incl. Discount",
-          "Max 3 decimalen achter de komma",
-          "NETTO PRIJS (PER BESTELVERPAKKING) EXCL. BTW/INCL. KORTING",
-          "NETTOPRIJS (PRIJS BESTELEENHEID)",
-          "NZA Prijs 2023 Afgerond",
-          "NZA Prijs 2023 Afronden",
-          "NZA Prijs 2023 afgerond",
-          "NZA Prijs 2025 Afgerond",
-          "NZA prijs 2023 Afgerond",
-          "NZA prijs 2025 afgerond",
-          "Net Price",
-          "Net Price(EUR)",
-          "Net Unit Price",
-          "Net Value",
-          "Net price",
-          "Net price 2023",
-          "Net price 2024",
-          "Net price excl. VAT/Incl. Discount",
-          "Net priceExcl. VAT/Incl. Discount",
-          "NetPrice",
-          "NetPrice 2023",
-          "Net_price",
-          "Netoprijs",
-          "Netprice",
-          "Nett Price",
-          "Netto",
-          "Netto Price",
-          "Netto Prijs",
-          "Netto Prijs (EUR)",
-          "Netto Prijs (EUR) 2022",
-          "Netto Prijs (EUR) AMC (Korting 10%)",
-          "Netto Prijs (EUR) MUMC",
-          "Netto Prijs (EUR) Sanquin",
-          "Netto Prijs (EUR) UMCG",
-          "Netto Prijs (EUR) UMCU",
-          "Netto Prijs (Euro)",
-          "Netto Prijs 2022 (EUR)",
-          "Netto prijs",
-          "Netto prijs (EUR)",
-          "Netto prijs (€) Ex.BTW/ inc.Korting per Besteleenheid",
-          "Netto prijs 2022",
-          "Netto prijs 2023",
-          "Netto prijs 2024",
-          "Netto prijs Excl btw",
-          "Netto prijs Excl. BTW/Incl. Korting",
-          "Netto prijs Excl.BTW / Incl.Korting",
-          "Netto prijs Per 01-01-2023",
-          "Netto prijs Per 01-01-2024",
-          "Netto prijs Per 01-02-2022",
-          "Netto prijs Per 01-07-2022",
-          "Netto prijs excl. BTW/Incl. Korting",
-          "Netto prijs excl. Btw 2023",
-          "Netto prijs excl. Btw 2024",
-          "Netto prijs per 01-01-2023",
-          "Netto prijs per bestelver1PAKking",
-          "Netto prijs per bestelverpakking",
-          "Netto prijs tot 31-12-2022",
-          "Netto prijs vanaf 01-01-2023",
-          "Netto prijsExcl. BTW/Incl. KortingNet priceExcl. VAT/Incl. Discount",
-          "Netto prijs_x000D_",
-          "Netto prjis",
-          "Netto-prijs",
-          "NettoPrijs",
-          "Netto_prijs__per_bestelverpakking__Excl__BTW_Incl__Korting__Net_price__per_price_unit__Excl__VAT_Incl__Discount",
-          "Nettoprijs",
-          "Nettoprijs excl BTW",
-          "Nettoprijs in Euro (Ex. BTW)",
-          "Nettoprijs per PE",
-          "Nettoprijs per bestelverpakking",
-          "Nettoprijs €",
-          "Nieuwe prijs",
-          "PMC Prijs 2023 Afronden",
-          "PMC prijs 2024",
-          "PMC prijs 2025",
-          "PRICE",
-          "PRICE 2022",
-          "PRICE 2023",
-          "PRICE 2024",
-          "PRIJS 2023",
-          "Price",
-          "Price 2022",
-          "Price 2023",
-          "Price 2024",
-          "Price per Order Unit",
-          "Prijs",
-          "Prijs 2022",
-          "Prijs 2024",
-          "Prijs incl opslag",
-          "Prijs incl. opslag",
-          "Prijs per 1-1-2024",
-          "Prijs per besteeenheid excl btw",
-          "Prijs per besteleenheid 2022",
-          "Prijs per doos",
-          "Prijs per stuk euro (ex btw)",
-          "Prijs per verpakking",
-          "Prijs/eenh.",
-          "Prijs_Netto_Excl",
-          "Prijslijstprijs",
-          "Rate",
-          "Stuks per doos",
-          "UMC Utrecht Net price",
-          "UMC Utrecht Net priceExcl. VAT/Incl. Discount",
-          "Unit Price",
-          "Zorgservice XL Net price",
-          "netprice",
-          "netto",
-          "netto pr per 1-1-2023",
-          "netto prijs ex btw met korting",
-          "netto prijs ex btw met korting, indien van toepassing",
-          "nettoprijs",
-          "nieuwe prijs",
-          "price 2022-16.5% discount-research",
-          "price 2023",
-          "prijs 2024",
-          "prijs per besteleenheid excl btw"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Is BestelbareEenheid": {
-        "alternatives": [
-          "Is BestelbareEenheid",
-          "Is OrderableUnit",
-          "Order Unit Indicator",
-          "Orderable Unit"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Is BasisEenheid": {
-        "alternatives": [
-          "Base Unit Indicator",
-          "Base unit",
-          "Is BaseUnit",
-          "Is BasisEenheid",
-          "Smallest Unit Indicator"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Omschrijving Verpakkingseenheid": {
-        "alternatives": [
-          "Description Order Package",
-          "Description Trade Unit",
-          "Omschrijving Besteleenheid",
-          "Omschrijving Verpakkingseenheid",
-          "Order Package Info",
-          "Order Unit Description",
-          "Priceunit",
-          "Prijseenheid"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "UOM Code Verpakkingseenheid": {
-        "alternatives": [
-          "28) UOMPrijseenheid",
-          "Besteleenheid",
-          "Gestandaardiseerde UOM:",
-          "Inhoudseenheid",
-          "OMPrijseenheid",
-          "PC = Stuk / PK = Verpakking",
-          "Packaging Unit UOM Code",
-          "UOM",
-          "UOM Bestel-/Prijseenheid",
-          "UOM Code Trade Unit",
-          "UOM Code Verpakkingseenheid",
-          "UOM Default",
-          "UOM Prijseenheid",
-          "UOM besteleeneid",
-          "UOM besteleenheid",
-          "UOM prijseenheid",
-          "UOM trade unit",
-          "UOMPRIJSEENHEID",
-          "UOMPriceUnit",
-          "UOMPrijseenheid",
-          "UOMPrijseenheid (aan de klant kant in hun systeem)",
-          "UOMPrijseenheid (aan klant kant in hun systeem)",
-          "UOMPrijseenheid (aan klant kant in hun systeem)UOMPriceUnit",
-          "UOMPrijseenheid___UOMPriceUnit",
-          "UOMPrijseenheid_x000D_",
-          "UOM_Prijseenheid",
-          "Unit of Measure Code",
-          "UoM",
-          "Verkoop-Eenheid",
-          "uomsalesunit"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Inhoud Verpakkingseenheid": {
-        "alternatives": [
-          "8) Aantal p Verp",
-          "A.u.b. leeg laten",
-          "AANTAL PER VERPAKKING (PER BESTELVERPAKKING/ SIP)",
-          "Aamtal per verpakking",
-          "Aanntal per verpakking",
-          "Aantal",
-          "Aantal inhoudseenheden per besteleenheid",
-          "Aantal per Verpakking",
-          "Aantal per Verpakkings-eenheid",
-          "Aantal per Verpakkingseenheid",
-          "Aantal per besteleenheid",
-          "Aantal per verapkking",
-          "Aantal per verpakking",
-          "Aantal per verpakking (leeg laten)",
-          "Aantal per verpakkingNumber per package",
-          "Aantal per verpakking_x000D_",
-          "Aantal-per-verpakking",
-          "AantalPerVerpakking",
-          "Aantal_per_verpakking__per_bestelverpakking__SIP___Number_per_package__per_order_unit__SIP",
-          "Aantalperverpakking",
-          "Content Trade Unit",
-          "Empty column",
-          "Inhoud Verpakkingseenheid",
-          "Lege kolom",
-          "Number per package",
-          "Number per package (leave empty)",
-          "Package size",
-          "Packs per Default",
-          "Quantity",
-          "Quantity in Trade Unit",
-          "Stuks per verpakking",
-          "UOMQuantitySIP",
-          "UOMaantalSIP",
-          "UOMaantalSIP (Aantal items in besteleenheid)",
-          "Units per Package",
-          "Verkoopeenheid",
-          "Verpakkingeenheid",
-          "Verpakkingsgrootte",
-          "aantal per eenheid",
-          "aantal per verpakking",
-          "content",
-          "per",
-          "uomqtysip"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "UOM Code Basiseenheid": {
-        "alternatives": [
-          "Base Unit UOM Code",
-          "BasisEenheid",
-          "GHX smallest",
-          "UOM Code Base Unit",
-          "UOM Code Basiseenheid",
-          "UOMkleinsteBasisEenheid",
-          "uomsmallestbum"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Inhoud Basiseenheid": {
-        "alternatives": [
-          "Base Unit Quantity",
-          "Content base unit",
-          "Content of Base Unit",
-          "INHOUD BASISEENHEID (AANTAL EENHEDEN)",
-          "INHOUD BASISEENHEID (AANTAL KLEINSTE EENHEDEN)",
-          "Inhoud Basiseenheid",
-          "Pieces per case3",
-          "Stuks/",
-          "Totale hoeveelheid van de artikelen",
-          "UOM Content BaseUnit",
-          "UOM Kleinste Inhoud",
-          "UOM kleinste Inhoud",
-          "UOMCont",
-          "UOMSmallestContent",
-          "UOMSmallestContent(Number of units for Universities)",
-          "UOM_inhoud_Basiseenheid__UOM_Content_BaseUnit",
-          "UOMkleinste eenheid_x000D_",
-          "UOMkleinsteInhoud",
-          "UOMkleinsteInhoud_x000D_",
-          "UOMsmallestBaseUnit",
-          "Units per Base Unit",
-          "uomsmallestcontent"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "UOM Code Inhoud Basiseenheid": {
-        "alternatives": [
-          "Code content base unit",
-          "Smallest Unit UOM Code",
-          "UOM CODE INHOUD BASISEENHEID (UOM CODE KLEINSTE EENHEID)",
-          "UOM Code Inhoud Basiseenheid",
-          "UOM Code Smallest Units",
-          "UOM inhoud",
-          "UOMSmallestUnit",
-          "UOMkleinste eenheid",
-          "uomsmallestunit"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Omrekenfactor": {
-        "alternatives": [
-          "Conversion Factor",
-          "OMREKENFACTOR (AANTAL KLEINSTE EENHEDEN IN DE VERPAKKINGSEENHEID)",
-          "Omrekenfactor",
-          "Total Units per Trade Unit",
-          "Units per Order Unit"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Prijs per Kleinste eenheid": {
-        "alternatives": [
-          "Price Smallest Unit",
-          "Price per Smallest Unit",
-          "Prijs per Kleinste eenheid"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Aantal van de Volgende Lagere Verpakkingslaag": {
-        "alternatives": [
-          "Aantal onderliggende eenheid (Aantal in besteleenheid / SIP)",
-          "Aantal van de Volgende Lagere Verpakkingslaag",
-          "AantalOnderliggendeEenheid",
-          "Lower Level Quantity",
-          "Quantity Of Next Lower Level Trade Item"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Artikel Hiërarchie Omschrijving": {
-        "alternatives": [
-          "Artikel Hiërarchie Omschrijving",
-          "Artikelhiërarchie Descriptor",
-          "Hierarchy Level",
-          "Packaging Level",
-          "Trade Item Hierarchy Descriptor"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "GTIN Verpakkingseenheid": {
-        "alternatives": [
-          "17) EAN",
-          "BARCODENUMMER (EAN/ GTIN/ HIBC)",
-          "Barcode_Num",
-          "Barcodenumber",
-          "Barcodenummer",
-          "Barcodenummer__EAN__GTIN__HIBC____Barcodenumber__EAN__GTIN__HIBC",
-          "EAN",
-          "EAN (BE)",
-          "EAN (optional)",
-          "EAN - Barcodenumber",
-          "EAN Barcode",
-          "EAN Barcodenummer",
-          "EAN Nummer",
-          "EAN barcode number",
-          "EAN code",
-          "EAN nummer",
-          "EAN – Barcodenummer",
-          "EAN – Barcodenummer EAN - Barcodenumber",
-          "EAN – Barcodenummer_x000D_",
-          "EAN-GTIN – Barcodenummer",
-          "EAN-–-Barcodenummer",
-          "EAN/GTIN – Barcodenummer",
-          "EAN/UPC number",
-          "EANGTIN",
-          "EANNummer",
-          "EANnr",
-          "EAN–Barcodenummer",
-          "GLN leverancier/",
-          "GTIN",
-          "GTIN Code altertief artikel",
-          "GTIN Trade Unit",
-          "GTIN Verpakkingseenheid",
-          "Package GTIN",
-          "Sum of EAN - barcodenumber",
-          "Trade Unit GTIN",
-          "UDI",
-          "barcodes",
-          "ean code",
-          "gtin"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "GTIN Verpakkingseenheid Historie": {
-        "alternatives": [
-          "GTIN Trade Unit History",
-          "GTIN Verpakkingseenheid Historie",
-          "Old Package GTINs"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "GTIN Basiseenheid": {
-        "alternatives": [
-          "Base Unit GTIN",
-          "GTIN  BASISEENHEID",
-          "GTIN BASISEENHEID",
-          "GTIN Base Unit",
-          "GTIN Base Unit (leave empty)",
-          "GTIN BaseUnit",
-          "GTIN BasisEenheid",
-          "GTIN Basiseenheid",
-          "GTIN Code EA",
-          "GTINCode",
-          "GTIN_Base",
-          "GTIN_BasisEenheid___GTIN_Base_Unit",
-          "Smallest Unit GTIN"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "GTIN Basiseenheid Historie": {
-        "alternatives": [
-          "GTIN BaseUnit History",
-          "GTIN Basiseenheid Historie",
-          "GTIN Code BX",
-          "GTIN onderliggende eenheid",
-          "GTINOnderliggendeEenh",
-          "GTIN_Code",
-          "Old Base Unit GTINs"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Aanvullende Productidentificatie": {
-        "alternatives": [
-          "ALTERNATIEF TYPE CODERING",
-          "Aanvullende Productidentificatie",
-          "Additional Product ID",
-          "Additional Trade Item Identification",
-          "Alternatief type codering",
-          "Alternative type code",
-          "GTIN_AltCodeType"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Code voor Aanvullende Productidentificatie": {
-        "alternatives": [
-          "Additional ID Type Code",
-          "Additional Trade Item Identification Type Code",
-          "Code voor Aanvullende Productidentificatie"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "GHX BTW Code": {
-        "alternatives": [
-          "0 =   0%",
-          "1 = 9%  /  2 = 21%",
-          "16) BTW code",
-          "BTW",
-          "BTW %",
-          "BTW CODE",
-          "BTW Code",
-          "BTW code",
-          "BTW code  1= lage BTW (9%)  2= Hoge BTW (21%)",
-          "BTW code NL",
-          "BTW code VAT code",
-          "BTW code x000D",
-          "BTW percentage",
-          "BTW tarief",
-          "BTW tarief %",
-          "BTW-code-",
-          "BTWCode",
-          "BTW_Code",
-          "BTW_Code(VAT)",
-          "BTW_code___gebruik_code__geen_percentage____VAT_code__please_use_code__not_percentage",
-          "BTWcode",
-          "Btw",
-          "Btw %",
-          "Btw%",
-          "GHX BTW Code",
-          "GHX VAT Code",
-          "Output Taks %",
-          "Tax Code",
-          "VAT",
-          "VAT %",
-          "VAT Code",
-          "VAT code",
-          "VAT/ BTW",
-          "VAT/BTW",
-          "VAT_code",
-          "VATcode",
-          "btw",
-          "btw tarief",
-          "btw-code",
-          "vat"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Staffel Vanaf": {
-        "alternatives": [
-          "21) Staffel vanaf",
-          "Het aantal waar de staffel vanaf begint",
-          "LOWERBREAK",
-          "Minimum Quantity",
-          "Price break from",
-          "Price break until",
-          "Pricebreak From",
-          "Pricebreak from",
-          "Quantity From",
-          "STAFFEL VANAF",
-          "Staffel Vanaf",
-          "Staffel aantal van",
-          "Staffel vaf",
-          "Staffel vanaf",
-          "Staffel vanafPricebreak from",
-          "Staffel vanaf_x000D_",
-          "Staffel-tot",
-          "Staffel-vanaf",
-          "StaffelVanaf",
-          "Staffel_Van",
-          "Staffel_vanaf__Pricebreak_from",
-          "Staffelbegin",
-          "Staffelvanaf",
-          "Sum of Price break from",
-          "gridfrom"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Staffel Tot": {
-        "alternatives": [
-          "22) Staffel tot",
-          "Het aantal waar de staffel eindigt",
-          "Maximum Quantity",
-          "Price break to",
-          "Pricebreak Until",
-          "Pricebreak until",
-          "Quantity Until",
-          "STAFFEL TOT",
-          "Staffel Tot",
-          "Staffel aantal tot",
-          "Staffel tot",
-          "Staffel totPricebreak until",
-          "Staffel tot_x000D_",
-          "StaffelTot",
-          "Staffel_Tot",
-          "Staffel_tot__Pricebreak_until",
-          "Staffeltot",
-          "Sum of Price break until",
-          "UPPERBREAK",
-          "gridto",
-          "staffeleinde"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Naam Fabrikant": {
-        "alternatives": [
-          "100306H2HS-V",
-          "9) Leverancier",
-          "Fabrikant",
-          "Fabrikant / Leverancier",
-          "Leverancier",
-          "Leveranciersnaam",
-          "Manufacturer",
-          "Manufacturer Name",
-          "ManufacturerName",
-          "NAAM FABRIKANT",
-          "Naam Fabrikant",
-          "Naam Fabrikant:",
-          "Naam FabrikantName Manufacturer",
-          "Naam Fabrikant_x000D_",
-          "Naam fabrikant",
-          "Naam fabrikant/",
-          "Naam van de fabrikant. Indien deze niet bekend is dan leveranciersnaam invullen.",
-          "Naam-Fabrikant",
-          "NaamFabrikant",
-          "Naam_Fabrikant__Name_Manufacturer",
-          "Name Manufacturer",
-          "Name manufacturer",
-          "Name_Manufacturer",
-          "Omschrijving 2: Naam van het Merk",
-          "Producer Name",
-          "Productlijn omschrijving",
-          "Trade name",
-          "am Fabrikant",
-          "fabrikant",
-          "leverancier",
-          "supplier"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Artikelnummer Fabrikant": {
-        "alternatives": [
-          "10) Art nr lev",
-          "ARTIKELNUMMER FABRIKANT",
-          "Art. nr. Leverancier",
-          "Article Number Manufacturer",
-          "Article number manufacturer",
-          "Articlenumber Manufacturer",
-          "Articlenumber Manufacturer2",
-          "Articlenumber manufacturer",
-          "Articlenumber_Manufacturer",
-          "Articlenumer Manufacturer",
-          "Artikelnumber Manufacturer",
-          "Artikelnummer Fabrikant",
-          "Artikelnummer FabrikantArticlenumber Manufacturer",
-          "Artikelnummer Fabrikant_x000D_",
-          "Artikelnummer Leverancier",
-          "Artikelnummer fabrikant",
-          "Artikelnummer van de fabrikant, indien onbekend dan artikelnummer (gelijk aan kolom A) noteren",
-          "Artikelnummer-Fabrikant",
-          "ArtikelnummerFabrikant",
-          "Artikelnummer_Fabrikant__Articlenumber_Manufacturer",
-          "Fabrikant_PN",
-          "Leverancier Artnr",
-          "Manufacturer Item Number",
-          "Manufacturer Part ID",
-          "Manufacturer Part Number",
-          "Manufacturer code",
-          "ManufacturerProductcode",
-          "Referentienummer fabrikant/",
-          "articlesupplier",
-          "artikelnummer fabrikant",
-          "code fabrikant"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "GLN Fabrikant": {
-        "alternatives": [
-          "GLN Fabrikant",
-          "GLN Manufacturer",
-          "Manufacturer GLN",
-          "Producer GLN"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "GLN Leverancier": {
-        "alternatives": [
-          "GLN Leverancier",
-          "GLN Provider",
-          "Supplier GLN",
-          "Vendor GLN"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Doelmarkt Landcode": {
-        "alternatives": [
-          "Country Code",
-          "Doelmarkt Landcode",
-          "Market Country Code",
-          "Target Market Country Code"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Link Artikelinformatie": {
-        "alternatives": [
-          "'generate'[Link Tech data]",
-          "4) Link URL",
-          "Article Info Link",
-          "Artikel_URL",
-          "LINK ARTIKEL OMSCHRIJVING",
-          "Link Article Description",
-          "Link Artikelinformatie",
-          "Link Artikelomschrijving",
-          "Link Description",
-          "Link Tech data",
-          "Link URL",
-          "Link article description",
-          "Link article description Manufacturar",
-          "Link artikel omschrijving",
-          "Link artikel omschrijving    Link article description",
-          "Link artikel omschrijving  x000D",
-          "Link artikel omschrijving Fabrikant",
-          "Link artikelinformatoe",
-          "Link artikle description",
-          "Link naar de omschrijving van het artikel op de website van de leverancier",
-          "Link-artikel-omschrijving--",
-          "LinkArtikelOmschrijving",
-          "Link_article_description",
-          "Link_artikel_omschrijving______Link_article_description",
-          "Linkartikelomschrijving",
-          "Product Info URL",
-          "Supplier URL",
-          "URL",
-          "URL Artikelinformatie",
-          "generate",
-          "generate[Link Tech data]",
-          "link artikelinformatie",
-          "linkurl",
-          "website"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Link Artikelfoto": {
-        "alternatives": [
-          "'generate'[Link Article picture]",
-          "14) Picture",
-          "ARTIKEL FOTO (LINK NAAR DE FOTO)",
-          "Article picture",
-          "Artikel Foto",
-          "Artikel afbeelding",
-          "Artikel foto",
-          "Artikel fotoArticle picture",
-          "Artikel foto_x000D_",
-          "Artikel picture",
-          "Artikel-foto",
-          "ArtikelFoto",
-          "Artikel_Pic",
-          "Artikel_foto__link_naar_de_foto___Article_picture__link_to_the_picture",
-          "Artikelfoto",
-          "Foto",
-          "Image",
-          "Link",
-          "Link Article Picture",
-          "Link Article picture",
-          "Link Artikelfoto",
-          "Link Image",
-          "Link naar uw webserver voor een foto van een artikel.",
-          "PICTURE",
-          "Picture",
-          "Picture Link",
-          "Product Image URL",
-          "Voeg een afbeelding van het product toe/",
-          "empty1",
-          "generate[Link Article picture]",
-          "link afbeelding",
-          "picture"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Link IFU": {
-        "alternatives": [
-          "IFU Link",
-          "Link IFU",
-          "Link Instructions For Use",
-          "Link technical data",
-          "Manual URL"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Functionele Artikelnaam": {
-        "alternatives": [
-          "Functional Article Name",
-          "Functional Name",
-          "Functionele Artikelnaam",
-          "Product Function Name"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Functionele Naam Taal Code": {
-        "alternatives": [
-          "Functional Name Language Code",
-          "Functionele Naam Taal Code"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Merknaam": {
-        "alternatives": [
-          "Brand",
-          "Brand Name",
-          "Merknaam",
-          "Trade Name"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Artikelnummer Alternatief Artikel": {
-        "alternatives": [
-          "Alternative Item Number",
-          "Article Number Alternative Product",
-          "Artikelnummer Alternatief Artikel"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Artikelnaam Alternatief Artikel": {
-        "alternatives": [
-          "Alternative Product Name",
-          "Article Name Alternative Product",
-          "Artikelnaam Alternatief Artikel"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Barcode Alternatief": {
-        "alternatives": [
-          "Alt. Barcode",
-          "Alternatief_type_codering__Alternative_type_code",
-          "Alternative Barcode",
-          "Barcode Alternatief",
-          "Barcode Alternatief Artikel",
-          "Barcode of Alternative Product",
-          "GTIN CODE ALTERNATIEF ARTIKEL",
-          "GTIN Code alternatief artikel",
-          "GTIN Code alternative trade item",
-          "GTIN_AltCode",
-          "GTIN_Code_alternatief_artikel__GTIN_Code_alternative_trade_item"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "UNSPSC Code": {
-        "alternatives": [
-          "13) UNSPSC code",
-          "Internationale artikelcodering. De codes kunt u vinden op http://www.unspsc.org of neem contact op met uw klant voor advies.",
-          "Nieuwe UNSPSC code",
-          "SPSC Code",
-          "UNSPSC",
-          "UNSPSC (2) (VERPLICHT UNI LEIDEN EN UNI UTRECHT)",
-          "UNSPSC CODE",
-          "UNSPSC CODE (UNITED NATIONS STANDARD PRODUCTS AND SERVICES CODE)",
-          "UNSPSC CODEUnited Nations Standard Products and Services Code",
-          "UNSPSC CODE_x000D_",
-          "UNSPSC Code",
-          "UNSPSC Number",
-          "UNSPSC code",
-          "UNSPSC-CODE",
-          "UNSPSC2",
-          "UNSPSCCODE",
-          "UNSPSC_CODE",
-          "UNSPSC_CODE_United_Nations_Standard_Products_and_Services_Code",
-          "UNSPSCode",
-          "United Nations Std P",
-          "unspsc"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "GMDN Code": {
-        "alternatives": [
-          "GMDIN",
-          "GMDN",
-          "GMDN (MEDISCHE HULPMIDDELEN)",
-          "GMDN (medical devices)",
-          "GMDN Code",
-          "GMDN Number",
-          "GMDNCode",
-          "GMDN__medische_hulpmiddelen___GMDN__medical_devices"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "EMDN Code": {
-        "alternatives": [
-          "EMDN",
-          "EMDN Code",
-          "EMDN Number"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "GPCCategoryCode": {
-        "alternatives": [
-          "GPC Category Code",
-          "GPC Code",
-          "GPCCategoryCode"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Code voor Aanvullende Productclassificatie": {
-        "alternatives": [
-          "Additional Classification Code",
-          "Additional Trade Item Classification System Code",
-          "Code voor Aanvullende Productclassificatie"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Aanvullende Productclassificatiewaarde": {
-        "alternatives": [
-          "36) Risicoklasse",
-          "AANVULLENDE PRODUCTCLASSIFICATIEWAARDE (RISICOKLASSE)",
-          "Aanvullende Productclassificatiewaarde",
-          "Additional Classification Value",
-          "Additional Trade Item Classification Code Value",
-          "Classification code EU MDR/IVDR",
-          "EU MDR",
-          "EU MDR-IVDR Classificatie",
-          "EU MDR/IVDR Classificatie",
-          "EU MDR/IVDR ificatie",
-          "EUMDRIVDR",
-          "RISICOKLASSE EU MDR/IVDR CLASSIFICATIE (ALLEEN VOOR MEDISCHE HULPMIDDELEN)",
-          "Risico",
-          "Risico Klasse (I, IIa, IIb, III)",
-          "Risico klasse/",
-          "Risicoklasse",
-          "Risicoklasse (medische hulpmiddelen)",
-          "Risicoklasse(medische hulpmiddelen)",
-          "Risicoklasse_EU_MDR_IVDR_Classificatie__alleen_voor_medische_hulpmiddelen___Classification_code_EU_MDR_IVDR_Classification__only_for_medical_devices",
-          "Risk_Class",
-          "riskclass"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "CE Certificaat nummer": {
-        "alternatives": [
-          "40) CE Markering",
-          "CE Certificaat nummer",
-          "CE Certificate Number",
-          "CE MARKERING",
-          "CE Mark",
-          "CE _Mark",
-          "CE certified",
-          "CE markering",
-          "CE markering/",
-          "CE markeringCE marking",
-          "CE marking",
-          "CE-markering",
-          "CEMarkering",
-          "CE_markering___CE_marking",
-          "CEmarkering"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "CE Certificaat einddatum": {
-        "alternatives": [
-          "41) CE einddatum",
-          "CE Certificaat einddatum",
-          "CE End Date",
-          "CE Expiry Date",
-          "CE MARKERING EINDDATUM",
-          "CE _MarkDate",
-          "CE markering einddatum",
-          "CE markering einddatumCE marking end date",
-          "CE marking end date",
-          "CE marking enddate",
-          "CE-markering-einddatum",
-          "CEMarkeringEindDatum",
-          "CE_markering_einddatum__CE_marking_end_date",
-          "CEmarkeringeinddatum",
-          "Expiratie Datum Onderhevig",
-          "Expiratiedatum CE certificaat /"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "CE Certificerende instantie": {
-        "alternatives": [
-          "CE Certification Body",
-          "CE Certificerende instantie",
-          "CE Notified Body",
-          "Certifying Body CE"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Duurzaam Geproduceerd": {
-        "alternatives": [
-          "Duurzaam Geproduceerd",
-          "Eco-friendly",
-          "Sustainable",
-          "Sustainably Produced"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Naam Duurzaamheidslabel": {
-        "alternatives": [
-          "Eco Label Name",
-          "Naam Duurzaamheidslabel",
-          "Name Sustainability Label",
-          "Sustainability Label"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Omschrijving Duurzaamheid": {
-        "alternatives": [
-          "Eco Description",
-          "Omschrijving Duurzaamheid",
-          "Sustainability Description",
-          "Sustainability Info"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "CAS nummer": {
-        "alternatives": [
-          "26) CAS nummer",
-          "CAS NUMMER",
-          "CAS Number",
-          "CAS Nummer",
-          "CAS no.",
-          "CAS number",
-          "CAS number (format: XXXXX-XX-X)",
-          "CAS nummer",
-          "CAS nummer Let op format: 2 tot 5 cijfers - 2 cijfers - 1 cijfer (XXXXX-XX-X)",
-          "CAS nummerCAS number",
-          "CAS nummer_x000D_",
-          "CAS registry number",
-          "CAS-nummer",
-          "CASNUMBER",
-          "CASNummer",
-          "CAS_number",
-          "CAS_nummer__CAS_number__CAS_registry_number",
-          "CASnummer",
-          "Cas NR:",
-          "Cas-nr",
-          "Casnr.",
-          "Chemical Abstracts Service Number",
-          "Chemical Substance Name(For Universities)",
-          "Identificatie code van een zuivere stof. Informatie: http://www.acs.org",
-          "Omschrijving 1",
-          "Sum of CAS Number",
-          "casnumber"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Stofnaam": {
-        "alternatives": [
-          "33) Stofnaam",
-          "Chemical Name",
-          "Chemical Substance Name",
-          "ChemicalSubstanceName",
-          "De stofnaam waar het artikel uit bestaat.",
-          "STOFNAAM",
-          "Stofam",
-          "Stofnaam",
-          "Stofnaam (Voor Uni",
-          "Stofnaam (engels)",
-          "Stofnaam (voor Uni",
-          "Stofnaam(Voor Uni",
-          "Stofnaam___Chemical_Substance_Name",
-          "Stofnaam_x000D_",
-          "Substance Name",
-          "Sum of Chemical substance name",
-          "nameofmaterial"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Brutoformule": {
-        "alternatives": [
-          "BRUTOFORMULE",
-          "Brutoformule",
-          "Brutoformule (Voor Uni",
-          "Brutoformule (voor Uni",
-          "Brutoformule(Voor Uni",
-          "Brutoformule___Chemical_formula",
-          "Brutoformule_x000D_",
-          "Chemical Formula",
-          "Chemical formula",
-          "Chemical formula(For Universities)",
-          "De brutoformule van een stof",
-          "Formula",
-          "Molecular Formula",
-          "Sum of Chemical formula",
-          "materialformula"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Claim Type Code": {
-        "alternatives": [
-          "Claim Code",
-          "Claim Type",
-          "Claim Type Code"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Element Claim Code": {
-        "alternatives": [
-          "Element Claim Code",
-          "Element Code",
-          "Ingredient Claim Code"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "UN-nummer Gevaarlijke Stof": {
-        "alternatives": [
-          "UN Dangerous Goods Number",
-          "UN Number",
-          "UN-nummer Gevaarlijke Stof",
-          "VN-NUMMER GEVAARLIJKE STOF",
-          "VN-Nummer",
-          "VN-nummer",
-          "VN-nummer gevaarlijke stof",
-          "VN_nummer_gevaarlijke_stof__UN_Dangerous_Goods_Number"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "ADR Gevarenklasse": {
-        "alternatives": [
-          "35) ADR Gevarenklasse",
-          "ADR",
-          "ADR Class",
-          "ADR Dangercategory",
-          "ADR Dangercategory (For Universities)",
-          "ADR Dangercategory(For Universities)",
-          "ADR GEVARENKLASSE",
-          "ADR Gevarenklasse",
-          "ADR Gevarenklasse (Voor Uni",
-          "ADR Gevarenklasse (voor Uni",
-          "ADR Gevarenklasse(Voor Uni",
-          "ADR Gevarenklasse_x000D_",
-          "ADR Klasse",
-          "ADR gevarenklasse",
-          "ADR-Gevarenklasse",
-          "ADRGevarenklasse",
-          "ADR_Gevarenklasse___ADR_Dangercategory",
-          "ADRdangercategory",
-          "ADRklasse",
-          "ChemicalFormula",
-          "Gevaarlijke stof",
-          "Hazard Class",
-          "Klasse voor vervoer van gevaarlijke stoffen (bijv: brandbaar, giftig, explosief etc.) over openbare weg, aangegeven in de hoeveelheid (milli)liter (cijfers) van een bepaalde klasse.",
-          "Sum of ADR dangercategory",
-          "adr"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Veiligheidsblad (VIB/SDS)": {
-        "alternatives": [
-          "MSDS Required",
-          "MSDS_Applicable",
-          "Material Safety Data Sheet",
-          "Material Satefy Data Sheet (MSDS) applicable?",
-          "SDS Applicable",
-          "Safety Data Sheet",
-          "VEILIGHEIDSBLAD (VIB) ONDERHEVIG?",
-          "Veiligheidsblad (VIB) onderhevig?",
-          "Veiligheidsblad (VIB/SDS)",
-          "Veiligheidsblad VIB onderhevig",
-          "Veiligheidsblad onderhevig?",
-          "Veiligheidsinformatieblad__Safety_Data_Sheet__SDS"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Link Veiligheidsinformatieblad": {
-        "alternatives": [
-          "Link Safety Data Sheet",
-          "Link Veiligheidsinformatieblad",
-          "MSDS Link",
-          "SDS",
-          "SDS URL",
-          "Safety Date Sheet",
-          "VEILIGHEIDSINFORMATIEBLAD",
-          "Veiligheidsblad link",
-          "Veiligheidsblad__VIB__onderhevig__1___ja_0___nee___Material_Satefy_Data_Sheet__MSDS__applicable__1__yes_0__no",
-          "Veiligheidsinformatie",
-          "Veiligheidsinformatieblad"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Eindgebruikersverklaring": {
-        "alternatives": [
-          "Eindgebruikersverklaring",
-          "End User Statement",
-          "End-User Declaration",
-          "User Declaration Required"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Koelgoed": {
-        "alternatives": [
-          "KOELGOED",
-          "Koelgoed",
-          "Koelgoed_1___ja_0___nee__Refrigorated_good_1__yes_0__no",
-          "Refrigerated",
-          "Refrigerated good",
-          "Requires Refrigeration"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Vriesgoed": {
-        "alternatives": [
-          "Frozen",
-          "Frozen good",
-          "Refrigorated good",
-          "Requires Freezing",
-          "VRIESGOED",
-          "Vriesgoed",
-          "Vriesgoed?",
-          "Vriesgoed_1___ja_0___nee__Frozen_good_1__yes_0__no"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Code Type Temperatuur": {
-        "alternatives": [
-          "Code Type Temperatuur",
-          "Temp Qualifier",
-          "Temperature Code",
-          "Temperature Qualifier Code"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Gebruiksaanwijzing Code Referentie": {
-        "alternatives": [
-          "Gebruiksaanwijzing Code Referentie",
-          "Handling Instructions Code Reference",
-          "Instructions Code",
-          "Usage Code"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Maximum Temperatuur": {
-        "alternatives": [
-          "Max Temp",
-          "Maximum Temperature",
-          "Maximum Temperatuur"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Minimum Temperatuur": {
-        "alternatives": [
-          "Min Temp",
-          "Minimum Temperature",
-          "Minimum Temperatuur"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Eenheid van Temperatuur": {
-        "alternatives": [
-          "Eenheid van Temperatuur",
-          "Temp Unit",
-          "Temperature Unit",
-          "Unit Of Temperature"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Bruto Gewicht Verpakkingseenheid": {
-        "alternatives": [
-          "BRUTO GEWICHT",
-          "Bruto Gewicht",
-          "Bruto Gewicht Verpakkingseenheid",
-          "Bruto gewicht",
-          "BrutoGewicht",
-          "Bruto_gewicht__Gross_weight",
-          "Gross Weight Packaging",
-          "Gross weight",
-          "Gross weight Trade Unit",
-          "Packaging Gross Weight"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Eenheidscode Bruto Gewicht Verpakkingseenheid": {
-        "alternatives": [
-          "BrutoGewichtEenheid",
-          "EENHEIDSCODE BRUTO GEWICHT",
-          "EENHEIDSCODE BRUTO GEWICHT VERPAKKINGSEENHEID (UOM)",
-          "Eenheidscode Bruto Gewicht",
-          "Eenheidscode Bruto Gewicht Verpakkingseenheid",
-          "Eenheidscode_Bruto_Gewicht__Measurement_Unit_Code_Gross_weight",
-          "Gross Weight UOM",
-          "Measurement Unit Code Gross weight",
-          "Packaging Weight UOM"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Hoogte": {
-        "alternatives": [
-          "HOOGTE",
-          "Height",
-          "Height value",
-          "Hoogte",
-          "Hoogte__Height_value"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Eenheidscode Hoogte": {
-        "alternatives": [
-          "EENHEIDSCODE HOOGTE",
-          "EENHEIDSCODE HOOGTE (UOM)",
-          "Eenheidscode Hoogte",
-          "Eenheidscode_Hoogte__measurement_Unit_Code_Height",
-          "Height UOM",
-          "HoogteEenheid",
-          "Measurement Unit Code Height"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Breedte": {
-        "alternatives": [
-          "BREEDTE",
-          "Breedte",
-          "Breedte__Width",
-          "Width",
-          "Width value"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Eenheidscode Breedte": {
-        "alternatives": [
-          "EENHEIDSCODE BREEDTE",
-          "EENHEIDSCODE BREEDTE (UOM)",
-          "Eenheidscode Breedte",
-          "EenheidscodeBreedte",
-          "Eenheidscode_Breedte__Measurement_Unit_Code_Width",
-          "Measurement Unit Code Width",
-          "Width UOM"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Diepte": {
-        "alternatives": [
-          "DIEPTE",
-          "Depth",
-          "Depth value",
-          "Diepte",
-          "Diepte__Depth",
-          "Length"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Eenheidscode Diepte": {
-        "alternatives": [
-          "Depth UOM",
-          "Diepte Eenheid",
-          "DiepteEenheid",
-          "EENHEIDSCODE DIEPTE",
-          "EENHEIDSCODE DIEPTE (UOM)",
-          "Eenheidscode Depth",
-          "Eenheidscode Diepte",
-          "Eenheidscode_Diepte__Measurement_Unit_Code_Depth",
-          "Measurement Unit Code Depth"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Bruto Gewicht Basiseenheid": {
-        "alternatives": [
-          "Base Unit Gross Weight",
-          "Base Weight",
-          "Bruto Gewicht Basiseenheid",
-          "EENHEIDSCODE GEWICHT (BASISEENHEID)",
-          "Eenheidscode Gewicht (BasisEenheid)",
-          "GEWICHT (BASISEENHEID)",
-          "Gewicht",
-          "Gewicht (BasisEenheid)",
-          "Gewicht (Kg/BasisEenheid)",
-          "Gewicht-(Kg/BasisEenheid)",
-          "Gewicht__BasisEenheid___Weight__BaseUnit",
-          "Weight (BaseUnit)",
-          "Weight BaseUnit"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Eenheidscode Gewicht Basiseenheid": {
-        "alternatives": [
-          "Base Unit Weight UOM",
-          "EENHEIDSCODE GEWICHT BASISEENHEID (UOM)",
-          "Eenheidscode Gewicht",
-          "Eenheidscode Gewicht (BasisEenheid_",
-          "Eenheidscode Gewicht Basiseenheid",
-          "Eenheidscode_Gewicht__BasisEenheid___measurement_Unit_Code_Weight__BaseUnit",
-          "Measurement Unit Code Weight (BaseUnit)",
-          "Measurement Unit Code Weight BaseUnit"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Herbruikbaar": {
-        "alternatives": [
-          "Herbruikbaar",
-          "Is Reusable",
-          "Reusable",
-          "Reusable Indicator"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Herbruikbaarheids Code": {
-        "alternatives": [
-          "Herbruikbaarheids Code",
-          "Reusability Type Code",
-          "Reuse Code"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Indicatie Implanteerbaar": {
-        "alternatives": [
-          "Implantable Indicator",
-          "Indicatie Implanteerbaar",
-          "Is Trade Item Implantable"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Bevat het Artikel Menselijk Weefsel": {
-        "alternatives": [
-          "Bevat het Artikel Menselijk Weefsel",
-          "Contains Human Tissue",
-          "Human Tissue Content"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Serienummer": {
-        "alternatives": [
-          "38) Serienr profiel",
-          "SERIENR PROFIEL",
-          "Serial Number",
-          "Serialnumber",
-          "Serialnumber profile",
-          "Serialnumber profile Yes = 1",
-          "Serialnumber profile Yes = 1 No = 0",
-          "SerieNum_Profiel",
-          "Serienr profiel",
-          "Serienr profiel Ja = 1 Nee = 0",
-          "Serienr profiel Ja = 1 Nee = 0Serialnumber profile Yes = 1 No = 0",
-          "Serienr profiel ja = 9999, nee = leeg",
-          "Serienr-profiel-",
-          "Serienr_profiel__1___ja_0___nee__Serialnumber_profile_1___yes__0___no",
-          "Serienummer",
-          "Serienummer profiel",
-          "Serienummerprofiel"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Locatie Serienummer op de Verpakking": {
-        "alternatives": [
-          "Locatie Serienummer op de Verpakking",
-          "Serial Number Location",
-          "Serial Number Location Code"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Batch Nummer": {
-        "alternatives": [
-          "39) Lotnr profiel",
-          "Batch Number",
-          "Batch Nummer",
-          "LOTNUMMER PROFIEL",
-          "Lot Number",
-          "LotNum_Profiel",
-          "Lotnumber profile",
-          "Lotnumber profileYes = 1 No = 0",
-          "Lotnummer profiel",
-          "Lotnummer profiel (ja/nee)",
-          "Lotnummer profiel Ja = 1Nee = 0",
-          "Lotnummer profiel Ja = 1Nee = 0Lotnumber profileYes = 1 No = 0",
-          "Lotnummer-profiel-",
-          "Lotnummer_profiel__1___ja_0___nee__Lotnumber_profile_1___yes__0___no",
-          "Lotnummerprofiel",
-          "lot nr verplicht",
-          "lot nr verplicht?"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Steriel": {
-        "alternatives": [
-          "27) Steriel artikel",
-          "Artikel_Sterile",
-          "GHX Sterile",
-          "Is Sterile",
-          "Is artikel steriel:",
-          "Is het product steriel?/",
-          "STERIEL ARTIKEL",
-          "Steriel",
-          "Steriel Artikel",
-          "Steriel artikel",
-          "Steriel artikelSterile article",
-          "Steriel artikel_x000D_",
-          "Steriel product J/N",
-          "Steriel-artikel",
-          "SterielArtikel",
-          "Steriel_artikel_1___ja_0___nee__Sterile_article_1___yes__0___no",
-          "Sterielartikel",
-          "Sterile",
-          "Sterile article",
-          "Sterile or non-sterile",
-          "steriel",
-          "sterile"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Type Sterilisatie Gebruikt door Fabrikant": {
-        "alternatives": [
-          "Initial Manufacturer Sterilization Code",
-          "Sterilization Type",
-          "Type Sterilisatie Gebruikt door Fabrikant"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Latex": {
-        "alternatives": [
-          "42) Bevat het product Latex",
-          "Artikel_Latex",
-          "BEVAT HET PRODUCT LATEX?",
-          "Bevat het artikel latex?/",
-          "Bevat het product late?",
-          "Bevat het product latex?",
-          "Bevat het product latex?Ja = 1Nee = 0",
-          "Bevat het product latex?Ja = 1Nee = 0Does Trade Item Contains Latex?Yes = 1 No = 0",
-          "Bevat latex",
-          "Bevat-het-product-latex?",
-          "Bevat_het_product_latex__1___ja_0___nee__Does_Trade_Item_Contains_Latex__1___yes__0___no",
-          "Bevathetproductlatex?",
-          "Contains Latex",
-          "Does Trade Item Contain Latex",
-          "Does Trade Item Contains Latex?",
-          "Does Trade Item Contains Latex?Yes = 1 No = 0",
-          "Does Trade Item contains latex?",
-          "Latex",
-          "Latex Indicator",
-          "LatexHoudend",
-          "Latexhoudend",
-          "Latexhoudend?"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "MRI Compatibility": {
-        "alternatives": [
-          "43) MRI Compatibility Code",
-          "Is MRI Compatible",
-          "MRI COMPATIBILITY CODE",
-          "MRI Compatability",
-          "MRI Compatibiliteits Code",
-          "MRI Compatibility",
-          "MRI Compatibility Code",
-          "MRI Compatibility CodeJa = 1Nee = 0",
-          "MRI Compatibility CodeJa = 1Nee = 0MRI Compatibility CodeYes = 1 No = 0",
-          "MRI Compatibility CodeYes = 1 No = 0",
-          "MRI Compatible",
-          "MRI compatibility code",
-          "MRI compatible",
-          "MRI-Compatibility-Code",
-          "MRICompatibiliteitsCode",
-          "MRICompatibilityCode",
-          "MRI_Compatibility_Code_1___ja_0___nee__MRI_Compatibility_Code_1___yes__0___no"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Is ConsumentenEenheid": {
-        "alternatives": [
-          "Consumer Unit Indicator",
-          "Is ConsumentenEenheid",
-          "Is ConsumerUnit"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Is VerzendEenheid": {
-        "alternatives": [
-          "Dispatch Unit Indicator",
-          "Is DispatchUnit",
-          "Is VerzendEenheid",
-          "Shipping Unit"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Levertijd": {
-        "alternatives": [
-          "12) Levertijd",
-          "Aantal levertijd in dagen, zoals afgesproken met ziekenhuis/universiteit",
-          "Delivery Lead Time",
-          "Delivery Time",
-          "LEVERTIJD (NUMERIEK AANTAL DAGEN)",
-          "Lead Time",
-          "Lead time",
-          "Leadtime",
-          "Levertijd",
-          "Levertijd (dagen)",
-          "Levertijd in Dagen",
-          "Levertijd in dagen",
-          "Levertijd in dagen (indien op voorraad)",
-          "Levertijd in werkdagen",
-          "Levertijd leverancier",
-          "LevertijdLeadtime",
-          "Levertijd__numeriek__aantal_dagen___Leadtime__numeric_field__days",
-          "Levertijd_x000D_",
-          "SUPPLIERLEADTIME",
-          "Supplierleadtime",
-          "daysdelivery",
-          "leadTime",
-          "levertijd",
-          "levertijd in dagen mediaal"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Code Type Datum op Verpakking": {
-        "alternatives": [
-          "Code Type Datum op Verpakking",
-          "Date on Packaging Code",
-          "Trade Item Date On Packaging Type Code"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Startdatum Beschikbaarheid": {
-        "alternatives": [
-          "Availability Start Date",
-          "Available From",
-          "Startdatum Beschikbaarheid"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Einddatum Beschikbaarheid": {
-        "alternatives": [
-          "Availability End Date",
-          "Einddatum Beschikbaarheid"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Startdatum Prijs Artikel": {
-        "alternatives": [
-          "18) Startdatum",
-          "Effective Date",
-          "GELDIG VAN",
-          "Prices start date",
-          "Pricing Date",
-          "Prijs_Startdatum",
-          "Prijzen geldig van",
-          "Prijzen geldig van:",
-          "Prijzen zijn geldig vanaf:",
-          "STARTDATE",
-          "STARTDATUM",
-          "Start Date",
-          "Start date",
-          "StartDate",
-          "StartDatum",
-          "StartDatum nieuwe prijs",
-          "Startdate",
-          "Startdatum",
-          "Startdatum Prijs Artikel",
-          "Startdatum Startdate",
-          "Startdatum van de catalogus",
-          "Startdatum x000D",
-          "Startdatum-",
-          "Startdatum___Startdate",
-          "Valid from",
-          "ingangsdatum",
-          "pricevalidfrom",
-          "prijzen geldig van",
-          "start date",
-          "vanaf"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Einddatum Prijs Artikel": {
-        "alternatives": [
-          "19) Einddatum",
-          "Available Until",
-          "EINDDATUM",
-          "ENDDATE",
-          "EindDatum",
-          "Einddatum",
-          "Einddatum Prijs Artikel",
-          "Einddatum korting",
-          "Einddatum van de catalogus",
-          "EinddatumEnddate",
-          "Einddatum__Enddate",
-          "Einddatum_x000D_",
-          "End Date",
-          "End date",
-          "EndDate",
-          "Enddate",
-          "Expiration Date",
-          "GELDIG TOT",
-          "Geldig tot",
-          "Prices end date",
-          "Prijs geldig t/m",
-          "Prijs geldig tot",
-          "Prijs_Einddatum",
-          "Prijzen geldig tot:",
-          "Valid to",
-          "eind datum",
-          "end date",
-          "pricevalidto",
-          "prijzen geldig tot"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Contract aanwezig": {
-        "alternatives": [
-          "Contract aanwezig"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Contractnummer Provider": {
-        "alternatives": [
-          "CONTRACTNUMMER INSTELLING",
-          "Contractnummer Provider"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      },
-      "Zoeksleutels": {
-        "alternatives": [
-          "24) Zoeksleutels",
-          "Aanvullende informatie of Synoniem",
-          "Item Type",
-          "Keywords",
-          "SEARCHKEYS",
-          "Search Description",
-          "Search Terms",
-          "Search term",
-          "Searchkeys",
-          "Sum of Search keys",
-          "Sum of searchkeys",
-          "ZOEKSLEUTELS",
-          "Zoeksleutel",
-          "Zoeksleutels",
-          "Zoeksleutels voor beter zoekresultaat van uw producten.",
-          "ZoeksleutelsSearchkeys",
-          "Zoeksleutels__Searchkeys",
-          "Zoeksleutels_x000D_",
-          "produktgroep",
-          "serachkey"
-        ],
-        "case_sensitive": false,
-        "strip_whitespace": true
-      }
-    },
-    "validation": {
-      "ignore_columns": [
-        "algemeen",
-        "uitleg",
-        "toelichting",
-        "Descriptiomn"
-      ],
-      "required_columns": [
+  "standard_headers": {
+    "Artikelnummer": {
+      "alternatives": [
+        "1) Art nr",
+        "ARTIKELNUMMER",
+        "Art. Code",
+        "Art. Nr.",
+        "Art. Nr. Merk",
+        "Art. leveranc.",
+        "Art.nr",
+        "Art.nr.",
+        "Art.nr.lev.",
+        "ArtNr",
+        "Article Number",
+        "Article number",
+        "Article_number",
+        "Articlenumber",
+        "Artikel nr",
+        "Artikel_Num",
+        "Artikelnr",
+        "Artikelnr.",
         "Artikelnummer",
+        "Artikelnummer Van der Bend",
+        "ArtikelnummerArticle number",
+        "Artikelnummer__Article_number",
+        "Artikelnummer_x000D_",
+        "Artiklenummer",
+        "Artnr",
+        "Atikelnummer",
+        "Bcf Artnr",
+        "Bestel-nummer",
+        "Cat. No.",
+        "Code",
+        "Guerbet article number",
+        "Item No.",
+        "Item Number",
+        "LeverancierArtikelnummer",
+        "Leveranciers artikelnummer/ Supplier article number",
+        "Materiaal",
+        "Material",
+        "PRODUCTNUMBER",
+        "Part Number",
+        "PartNo",
+        "Product",
+        "Product Code",
+        "Product nr",
+        "REF",
+        "REFERENTIE ARTIKEL",
+        "Supplier Part ID",
+        "ZorgserviceXL artikelnummer",
+        "artikelnummer",
+        "artikelnummers",
+        "material",
+        "produktcode"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Artikelnaam": {
+      "alternatives": [
+        "2) Art naam",
+        "ARTIKELNAAM",
+        "Article Name",
+        "Article name",
+        "Articlename",
+        "Artikel",
+        "Artikel naam",
+        "Artikel_Name",
+        "Artikelam",
         "Artikelnaam",
-        "Nettoprijs"
+        "Artikelnaam ENGELS",
+        "Artikelnaam NEDERLANDS",
+        "ArtikelnaamArticlename",
+        "Artikelnaam__Articlename",
+        "Artikelnaam_x000D_",
+        "De korte naam van het artikel",
+        "Description (trade name + generic name + stent/balloon size_UL)",
+        "Item",
+        "Item Description UMCU VANTIVE PRODUCTEN",
+        "Item Name",
+        "NAME",
+        "Name short (50)",
+        "Packaging",
+        "Product Name",
+        "Product Short Description",
+        "Product description",
+        "Short Description (50)",
+        "Short name",
+        "artikel naam",
+        "materialtext"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Artikelomschrijving": {
+      "alternatives": [
+        "3) Art informatie",
+        "ARTIKEL INFORMATIE",
+        "Article Information",
+        "Article information",
+        "Article_information",
+        "Artikel Informatie",
+        "Artikel beschrijving",
+        "Artikel infoResmed",
+        "Artikel informatie",
+        "Artikel informatieArticle information",
+        "Artikel informatie_x000D_",
+        "Artikel information",
+        "Artikel-informatie",
+        "ArtikelInformatie",
+        "ArtikelOmschrijving",
+        "Artikel_Desc",
+        "Artikel_informatie__Article_information",
+        "Artikelinfomatie",
+        "Artikelinformatie",
+        "Artikelomschrijving",
+        "Description",
+        "Item Description",
+        "LONGTEXT",
+        "Lange artikelomschrijving",
+        "Omschrijving",
+        "Product Description",
+        "Product Long Description",
+        "Product Omschrijving",
+        "artikel omschrijving",
+        "artikelomschrijving",
+        "materialdescription"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Artikelomschrijving Taal Code": {
+      "alternatives": [
+        "Artikelomschrijving Taal Code",
+        "Description Language Code",
+        "materiallang"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Brutoprijs": {
+      "alternatives": [
+        "BRUTOPRIJS (PRIJS ZONDER KORTING & EXCL. BTW)",
+        "BRUTOPRIJS EXCL. BTW/ EXCL. KORTING (PER BESTELVERPAKKING)",
+        "Basisprijs",
+        "Bruto Prijs",
+        "Bruto Prijs (EUR)",
+        "Bruto prijs",
+        "Bruto prijs per besteleenheid:",
+        "Bruto prijzen",
+        "Bruto prijzen 2023",
+        "Bruto prijzen 2024",
+        "Bruto verkpr 2022",
+        "Bruto verkpr 2023",
+        "Bruto verkpr 2024",
+        "BrutoPrijs",
+        "Brutoprijs",
+        "Brutoprijs 2022",
+        "Brutoprijs Excl btw",
+        "Brutoprijs Excl. BTW/ Excl. Korting",
+        "Brutoprijs excl. BTW/Excl. korting",
+        "Brutoprijs in Euro (Ex. BTW)",
+        "Brutoprijs €",
+        "BrutoprijsExcl. BTW/ Excl. KortingListpriceExcl. VAT/ Excl. Discount",
+        "Brutoprijs_Excl__BTW__Excl__Korting__per_bestelverpakking___Listprice_Excl__VAT__Excl__Discount__per_price_unit",
+        "Brutoprijs_x000D_",
+        "Corporate List Price",
+        "Excl. BTW/ Excl. Korting",
+        "Gross Price",
+        "Item Price excl. VAT",
+        "LISTPRICE",
+        "Lijstprijs fabrikant",
+        "List Price",
+        "List Price2",
+        "List Prices",
+        "List price",
+        "ListPrice",
+        "List_price",
+        "Listprice",
+        "Listprice excl. VAT/Excl. discount",
+        "ListpriceExcl. VAT/ Excl. Discount",
+        "Market Price",
+        "Price (EUR)",
+        "Price excl. VAT",
+        "Price without discount",
+        "Prijs_Bruto_Excl",
+        "bruto",
+        "brutoprice",
+        "list price",
+        "listprijs",
+        "listprijs ex btw"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Nettoprijs": {
+      "alternatives": [
+        "2022 - Prijs per Verpakkingseenheid",
+        "2023 - Prijs per Verpakkings-eenheid",
+        "2024",
+        "5) Netto prijs",
+        "AZ Maastricht Net price",
+        "AZ Maastricht Net priceExcl. VAT/Incl. Discount",
+        "Br.prijs",
+        "Customer Contract Price",
+        "Customer Price",
+        "Eenheidsprijs",
+        "Eenheidsprijs (€)",
+        "Excl. BTW/Incl. Korting",
+        "GHX NETTOPRIJS JULI 2022 PER VE",
+        "GHX Nettoprijs PER JULI 2022 per VE",
+        "GHX PRIJS PER JULI 2022 PER VE",
+        "Item Price excl. VAT w/Discount",
+        "Klantprijs",
+        "LUMC Net price",
+        "LUMC Net priceExcl. VAT/Incl. Discount",
+        "Max 3 decimalen achter de komma",
+        "NETTO PRIJS (PER BESTELVERPAKKING) EXCL. BTW/INCL. KORTING",
+        "NETTOPRIJS (PRIJS BESTELEENHEID)",
+        "NZA Prijs 2023 Afgerond",
+        "NZA Prijs 2023 Afronden",
+        "NZA Prijs 2023 afgerond",
+        "NZA Prijs 2025 Afgerond",
+        "NZA prijs 2023 Afgerond",
+        "NZA prijs 2025 afgerond",
+        "Net Price",
+        "Net Price(EUR)",
+        "Net Unit Price",
+        "Net Value",
+        "Net price",
+        "Net price 2023",
+        "Net price 2024",
+        "Net price excl. VAT/Incl. Discount",
+        "Net priceExcl. VAT/Incl. Discount",
+        "NetPrice",
+        "NetPrice 2023",
+        "Net_price",
+        "Netoprijs",
+        "Netprice",
+        "Nett Price",
+        "Netto",
+        "Netto Price",
+        "Netto Prijs",
+        "Netto Prijs (EUR)",
+        "Netto Prijs (EUR) 2022",
+        "Netto Prijs (EUR) AMC (Korting 10%)",
+        "Netto Prijs (EUR) MUMC",
+        "Netto Prijs (EUR) Sanquin",
+        "Netto Prijs (EUR) UMCG",
+        "Netto Prijs (EUR) UMCU",
+        "Netto Prijs (Euro)",
+        "Netto Prijs 2022 (EUR)",
+        "Netto prijs",
+        "Netto prijs (EUR)",
+        "Netto prijs (€) Ex.BTW/ inc.Korting per Besteleenheid",
+        "Netto prijs 2022",
+        "Netto prijs 2023",
+        "Netto prijs 2024",
+        "Netto prijs Excl btw",
+        "Netto prijs Excl. BTW/Incl. Korting",
+        "Netto prijs Excl.BTW / Incl.Korting",
+        "Netto prijs Per 01-01-2023",
+        "Netto prijs Per 01-01-2024",
+        "Netto prijs Per 01-02-2022",
+        "Netto prijs Per 01-07-2022",
+        "Netto prijs excl. BTW/Incl. Korting",
+        "Netto prijs excl. Btw 2023",
+        "Netto prijs excl. Btw 2024",
+        "Netto prijs per 01-01-2023",
+        "Netto prijs per bestelver1PAKking",
+        "Netto prijs per bestelverpakking",
+        "Netto prijs tot 31-12-2022",
+        "Netto prijs vanaf 01-01-2023",
+        "Netto prijsExcl. BTW/Incl. KortingNet priceExcl. VAT/Incl. Discount",
+        "Netto prijs_x000D_",
+        "Netto prjis",
+        "Netto-prijs",
+        "NettoPrijs",
+        "Netto_prijs__per_bestelverpakking__Excl__BTW_Incl__Korting__Net_price__per_price_unit__Excl__VAT_Incl__Discount",
+        "Nettoprijs",
+        "Nettoprijs excl BTW",
+        "Nettoprijs in Euro (Ex. BTW)",
+        "Nettoprijs per PE",
+        "Nettoprijs per bestelverpakking",
+        "Nettoprijs €",
+        "Nieuwe prijs",
+        "PMC Prijs 2023 Afronden",
+        "PMC prijs 2024",
+        "PMC prijs 2025",
+        "PRICE",
+        "PRICE 2022",
+        "PRICE 2023",
+        "PRICE 2024",
+        "PRIJS 2023",
+        "Price",
+        "Price 2022",
+        "Price 2023",
+        "Price 2024",
+        "Price per Order Unit",
+        "Prijs",
+        "Prijs 2022",
+        "Prijs 2024",
+        "Prijs incl opslag",
+        "Prijs incl. opslag",
+        "Prijs per 1-1-2024",
+        "Prijs per besteeenheid excl btw",
+        "Prijs per besteleenheid 2022",
+        "Prijs per doos",
+        "Prijs per stuk euro (ex btw)",
+        "Prijs per verpakking",
+        "Prijs/eenh.",
+        "Prijs_Netto_Excl",
+        "Prijslijstprijs",
+        "Rate",
+        "Stuks per doos",
+        "UMC Utrecht Net price",
+        "UMC Utrecht Net priceExcl. VAT/Incl. Discount",
+        "Unit Price",
+        "Zorgservice XL Net price",
+        "netprice",
+        "netto",
+        "netto pr per 1-1-2023",
+        "netto prijs ex btw met korting",
+        "netto prijs ex btw met korting, indien van toepassing",
+        "nettoprijs",
+        "nieuwe prijs",
+        "price 2022-16.5% discount-research",
+        "price 2023",
+        "prijs 2024",
+        "prijs per besteleenheid excl btw"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Is BestelbareEenheid": {
+      "alternatives": [
+        "Is BestelbareEenheid",
+        "Is OrderableUnit",
+        "Order Unit Indicator",
+        "Orderable Unit"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Is BasisEenheid": {
+      "alternatives": [
+        "Base Unit Indicator",
+        "Base unit",
+        "Is BaseUnit",
+        "Is BasisEenheid",
+        "Smallest Unit Indicator"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Omschrijving Verpakkingseenheid": {
+      "alternatives": [
+        "Description Order Package",
+        "Description Trade Unit",
+        "Omschrijving Besteleenheid",
+        "Omschrijving Verpakkingseenheid",
+        "Order Package Info",
+        "Order Unit Description",
+        "Priceunit",
+        "Prijseenheid"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "UOM Code Verpakkingseenheid": {
+      "alternatives": [
+        "28) UOMPrijseenheid",
+        "Besteleenheid",
+        "Gestandaardiseerde UOM:",
+        "Inhoudseenheid",
+        "OMPrijseenheid",
+        "PC = Stuk / PK = Verpakking",
+        "Packaging Unit UOM Code",
+        "UOM",
+        "UOM Bestel-/Prijseenheid",
+        "UOM Code Trade Unit",
+        "UOM Code Verpakkingseenheid",
+        "UOM Default",
+        "UOM Prijseenheid",
+        "UOM besteleeneid",
+        "UOM besteleenheid",
+        "UOM prijseenheid",
+        "UOM trade unit",
+        "UOMPRIJSEENHEID",
+        "UOMPriceUnit",
+        "UOMPrijseenheid",
+        "UOMPrijseenheid (aan de klant kant in hun systeem)",
+        "UOMPrijseenheid (aan klant kant in hun systeem)",
+        "UOMPrijseenheid (aan klant kant in hun systeem)UOMPriceUnit",
+        "UOMPrijseenheid___UOMPriceUnit",
+        "UOMPrijseenheid_x000D_",
+        "UOM_Prijseenheid",
+        "Unit of Measure Code",
+        "UoM",
+        "Verkoop-Eenheid",
+        "uomsalesunit"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Inhoud Verpakkingseenheid": {
+      "alternatives": [
+        "8) Aantal p Verp",
+        "A.u.b. leeg laten",
+        "AANTAL PER VERPAKKING (PER BESTELVERPAKKING/ SIP)",
+        "Aamtal per verpakking",
+        "Aanntal per verpakking",
+        "Aantal",
+        "Aantal inhoudseenheden per besteleenheid",
+        "Aantal per Verpakking",
+        "Aantal per Verpakkings-eenheid",
+        "Aantal per Verpakkingseenheid",
+        "Aantal per besteleenheid",
+        "Aantal per verapkking",
+        "Aantal per verpakking",
+        "Aantal per verpakking (leeg laten)",
+        "Aantal per verpakkingNumber per package",
+        "Aantal per verpakking_x000D_",
+        "Aantal-per-verpakking",
+        "AantalPerVerpakking",
+        "Aantal_per_verpakking__per_bestelverpakking__SIP___Number_per_package__per_order_unit__SIP",
+        "Aantalperverpakking",
+        "Content Trade Unit",
+        "Empty column",
+        "Inhoud Verpakkingseenheid",
+        "Lege kolom",
+        "Number per package",
+        "Number per package (leave empty)",
+        "Package size",
+        "Packs per Default",
+        "Quantity",
+        "Quantity in Trade Unit",
+        "Stuks per verpakking",
+        "UOMQuantitySIP",
+        "UOMaantalSIP",
+        "UOMaantalSIP (Aantal items in besteleenheid)",
+        "Units per Package",
+        "Verkoopeenheid",
+        "Verpakkingeenheid",
+        "Verpakkingsgrootte",
+        "aantal per eenheid",
+        "aantal per verpakking",
+        "content",
+        "per",
+        "uomqtysip"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "UOM Code Basiseenheid": {
+      "alternatives": [
+        "Base Unit UOM Code",
+        "BasisEenheid",
+        "GHX smallest",
+        "UOM Code Base Unit",
+        "UOM Code Basiseenheid",
+        "UOMkleinsteBasisEenheid",
+        "uomsmallestbum",
+        "UOM_Base"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Inhoud Basiseenheid": {
+      "alternatives": [
+        "Base Unit Quantity",
+        "Content base unit",
+        "Content of Base Unit",
+        "INHOUD BASISEENHEID (AANTAL EENHEDEN)",
+        "INHOUD BASISEENHEID (AANTAL KLEINSTE EENHEDEN)",
+        "Inhoud Basiseenheid",
+        "Pieces per case3",
+        "Stuks/",
+        "Totale hoeveelheid van de artikelen",
+        "UOM Content BaseUnit",
+        "UOM Kleinste Inhoud",
+        "UOM kleinste Inhoud",
+        "UOMCont",
+        "UOMSmallestContent",
+        "UOMSmallestContent(Number of units for Universities)",
+        "UOM_inhoud_Basiseenheid__UOM_Content_BaseUnit",
+        "UOMkleinste eenheid_x000D_",
+        "UOMkleinsteInhoud",
+        "UOMkleinsteInhoud_x000D_",
+        "UOMsmallestBaseUnit",
+        "Units per Base Unit",
+        "uomsmallestcontent"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "UOM Code Inhoud Basiseenheid": {
+      "alternatives": [
+        "Code content base unit",
+        "Smallest Unit UOM Code",
+        "UOM CODE INHOUD BASISEENHEID (UOM CODE KLEINSTE EENHEID)",
+        "UOM Code Inhoud Basiseenheid",
+        "UOM Code Smallest Units",
+        "UOM inhoud",
+        "UOMSmallestUnit",
+        "UOMkleinste eenheid",
+        "uomsmallestunit"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Omrekenfactor": {
+      "alternatives": [
+        "Conversion Factor",
+        "OMREKENFACTOR (AANTAL KLEINSTE EENHEDEN IN DE VERPAKKINGSEENHEID)",
+        "Omrekenfactor",
+        "Total Units per Trade Unit",
+        "Units per Order Unit"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Prijs per Kleinste eenheid": {
+      "alternatives": [
+        "Price Smallest Unit",
+        "Price per Smallest Unit",
+        "Prijs per Kleinste eenheid"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Aantal van de Volgende Lagere Verpakkingslaag": {
+      "alternatives": [
+        "Aantal onderliggende eenheid (Aantal in besteleenheid / SIP)",
+        "Aantal van de Volgende Lagere Verpakkingslaag",
+        "AantalOnderliggendeEenheid",
+        "Lower Level Quantity",
+        "Quantity Of Next Lower Level Trade Item"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Artikel Hiërarchie Omschrijving": {
+      "alternatives": [
+        "Artikel Hiërarchie Omschrijving",
+        "Artikelhiërarchie Descriptor",
+        "Hierarchy Level",
+        "Packaging Level",
+        "Trade Item Hierarchy Descriptor"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "GTIN Verpakkingseenheid": {
+      "alternatives": [
+        "17) EAN",
+        "BARCODENUMMER (EAN/ GTIN/ HIBC)",
+        "Barcode_Num",
+        "Barcodenumber",
+        "Barcodenummer",
+        "Barcodenummer__EAN__GTIN__HIBC____Barcodenumber__EAN__GTIN__HIBC",
+        "EAN",
+        "EAN (BE)",
+        "EAN (optional)",
+        "EAN - Barcodenumber",
+        "EAN Barcode",
+        "EAN Barcodenummer",
+        "EAN Nummer",
+        "EAN barcode number",
+        "EAN code",
+        "EAN nummer",
+        "EAN – Barcodenummer",
+        "EAN – Barcodenummer EAN - Barcodenumber",
+        "EAN – Barcodenummer_x000D_",
+        "EAN-GTIN – Barcodenummer",
+        "EAN-–-Barcodenummer",
+        "EAN/GTIN – Barcodenummer",
+        "EAN/UPC number",
+        "EANGTIN",
+        "EANNummer",
+        "EANnr",
+        "EAN–Barcodenummer",
+        "GLN leverancier/",
+        "GTIN",
+        "GTIN Code altertief artikel",
+        "GTIN Trade Unit",
+        "GTIN Verpakkingseenheid",
+        "Package GTIN",
+        "Sum of EAN - barcodenumber",
+        "Trade Unit GTIN",
+        "UDI",
+        "barcodes",
+        "ean code",
+        "gtin"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "GTIN Verpakkingseenheid Historie": {
+      "alternatives": [
+        "GTIN Trade Unit History",
+        "GTIN Verpakkingseenheid Historie",
+        "Old Package GTINs"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "GTIN Basiseenheid": {
+      "alternatives": [
+        "Base Unit GTIN",
+        "GTIN  BASISEENHEID",
+        "GTIN BASISEENHEID",
+        "GTIN Base Unit",
+        "GTIN Base Unit (leave empty)",
+        "GTIN BaseUnit",
+        "GTIN BasisEenheid",
+        "GTIN Basiseenheid",
+        "GTIN Code EA",
+        "GTINCode",
+        "GTIN_Base",
+        "GTIN_BasisEenheid___GTIN_Base_Unit",
+        "Smallest Unit GTIN"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "GTIN Basiseenheid Historie": {
+      "alternatives": [
+        "GTIN BaseUnit History",
+        "GTIN Basiseenheid Historie",
+        "GTIN Code BX",
+        "GTIN onderliggende eenheid",
+        "GTINOnderliggendeEenh",
+        "GTIN_Code",
+        "Old Base Unit GTINs"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Aanvullende Productidentificatie": {
+      "alternatives": [
+        "ALTERNATIEF TYPE CODERING",
+        "Aanvullende Productidentificatie",
+        "Additional Product ID",
+        "Additional Trade Item Identification",
+        "Alternatief type codering",
+        "Alternative type code",
+        "GTIN_AltCodeType"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Code voor Aanvullende Productidentificatie": {
+      "alternatives": [
+        "Additional ID Type Code",
+        "Additional Trade Item Identification Type Code",
+        "Code voor Aanvullende Productidentificatie"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "GHX BTW Code": {
+      "alternatives": [
+        "0 =   0%",
+        "1 = 9%  /  2 = 21%",
+        "16) BTW code",
+        "BTW",
+        "BTW %",
+        "BTW CODE",
+        "BTW Code",
+        "BTW code",
+        "BTW code  1= lage BTW (9%)  2= Hoge BTW (21%)",
+        "BTW code NL",
+        "BTW code VAT code",
+        "BTW code x000D",
+        "BTW percentage",
+        "BTW tarief",
+        "BTW tarief %",
+        "BTW-code-",
+        "BTWCode",
+        "BTW_Code",
+        "BTW_Code(VAT)",
+        "BTW_code___gebruik_code__geen_percentage____VAT_code__please_use_code__not_percentage",
+        "BTWcode",
+        "Btw",
+        "Btw %",
+        "Btw%",
+        "GHX BTW Code",
+        "GHX VAT Code",
+        "Output Taks %",
+        "Tax Code",
+        "VAT",
+        "VAT %",
+        "VAT Code",
+        "VAT code",
+        "VAT/ BTW",
+        "VAT/BTW",
+        "VAT_code",
+        "VATcode",
+        "btw",
+        "btw tarief",
+        "btw-code",
+        "vat"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Staffel Vanaf": {
+      "alternatives": [
+        "21) Staffel vanaf",
+        "Het aantal waar de staffel vanaf begint",
+        "LOWERBREAK",
+        "Minimum Quantity",
+        "Price break from",
+        "Price break until",
+        "Pricebreak From",
+        "Pricebreak from",
+        "Quantity From",
+        "STAFFEL VANAF",
+        "Staffel Vanaf",
+        "Staffel aantal van",
+        "Staffel vaf",
+        "Staffel vanaf",
+        "Staffel vanafPricebreak from",
+        "Staffel vanaf_x000D_",
+        "Staffel-tot",
+        "Staffel-vanaf",
+        "StaffelVanaf",
+        "Staffel_Van",
+        "Staffel_vanaf__Pricebreak_from",
+        "Staffelbegin",
+        "Staffelvanaf",
+        "Sum of Price break from",
+        "gridfrom"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Staffel Tot": {
+      "alternatives": [
+        "22) Staffel tot",
+        "Het aantal waar de staffel eindigt",
+        "Maximum Quantity",
+        "Price break to",
+        "Pricebreak Until",
+        "Pricebreak until",
+        "Quantity Until",
+        "STAFFEL TOT",
+        "Staffel Tot",
+        "Staffel aantal tot",
+        "Staffel tot",
+        "Staffel totPricebreak until",
+        "Staffel tot_x000D_",
+        "StaffelTot",
+        "Staffel_Tot",
+        "Staffel_tot__Pricebreak_until",
+        "Staffeltot",
+        "Sum of Price break until",
+        "UPPERBREAK",
+        "gridto",
+        "staffeleinde"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Naam Fabrikant": {
+      "alternatives": [
+        "100306H2HS-V",
+        "9) Leverancier",
+        "Fabrikant",
+        "Fabrikant / Leverancier",
+        "Leverancier",
+        "Leveranciersnaam",
+        "Manufacturer",
+        "Manufacturer Name",
+        "ManufacturerName",
+        "NAAM FABRIKANT",
+        "Naam Fabrikant",
+        "Naam Fabrikant:",
+        "Naam FabrikantName Manufacturer",
+        "Naam Fabrikant_x000D_",
+        "Naam fabrikant",
+        "Naam fabrikant/",
+        "Naam van de fabrikant. Indien deze niet bekend is dan leveranciersnaam invullen.",
+        "Naam-Fabrikant",
+        "NaamFabrikant",
+        "Naam_Fabrikant__Name_Manufacturer",
+        "Name Manufacturer",
+        "Name manufacturer",
+        "Name_Manufacturer",
+        "Omschrijving 2: Naam van het Merk",
+        "Producer Name",
+        "Productlijn omschrijving",
+        "Trade name",
+        "am Fabrikant",
+        "fabrikant",
+        "leverancier",
+        "supplier"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Artikelnummer Fabrikant": {
+      "alternatives": [
+        "10) Art nr lev",
+        "ARTIKELNUMMER FABRIKANT",
+        "Art. nr. Leverancier",
+        "Article Number Manufacturer",
+        "Article number manufacturer",
+        "Articlenumber Manufacturer",
+        "Articlenumber Manufacturer2",
+        "Articlenumber manufacturer",
+        "Articlenumer Manufacturer",
+        "Artikelnumber Manufacturer",
+        "Artikelnummer Fabrikant",
+        "Artikelnummer FabrikantArticlenumber Manufacturer",
+        "Artikelnummer Fabrikant_x000D_",
+        "Artikelnummer Leverancier",
+        "Artikelnummer fabrikant",
+        "Artikelnummer van de fabrikant, indien onbekend dan artikelnummer (gelijk aan kolom A) noteren",
+        "Artikelnummer-Fabrikant",
+        "ArtikelnummerFabrikant",
+        "Fabrikant_PN",
+        "Leverancier Artnr",
+        "Manufacturer Item Number",
+        "Manufacturer Part ID",
+        "Manufacturer Part Number",
+        "Manufacturer code",
+        "ManufacturerProductcode",
+        "Referentienummer fabrikant/",
+        "articlesupplier",
+        "artikelnummer fabrikant",
+        "code fabrikant"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "GLN Fabrikant": {
+      "alternatives": [
+        "GLN Fabrikant",
+        "GLN Manufacturer",
+        "Manufacturer GLN",
+        "Producer GLN"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "GLN Leverancier": {
+      "alternatives": [
+        "GLN Leverancier",
+        "GLN Provider",
+        "Supplier GLN",
+        "Vendor GLN"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Doelmarkt Landcode": {
+      "alternatives": [
+        "Country Code",
+        "Doelmarkt Landcode",
+        "Market Country Code",
+        "Target Market Country Code"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Link Artikelinformatie": {
+      "alternatives": [
+        "'generate'[Link Tech data]",
+        "4) Link URL",
+        "Article Info Link",
+        "Artikel_URL",
+        "LINK ARTIKEL OMSCHRIJVING",
+        "Link Article Description",
+        "Link Artikelinformatie",
+        "Link Artikelomschrijving",
+        "Link Description",
+        "Link Tech data",
+        "Link URL",
+        "Link article description",
+        "Link article description Manufacturar",
+        "Link artikel omschrijving",
+        "Link artikel omschrijving    Link article description",
+        "Link artikel omschrijving  x000D",
+        "Link artikel omschrijving Fabrikant",
+        "Link artikelinformatoe",
+        "Link artikle description",
+        "Link naar de omschrijving van het artikel op de website van de leverancier",
+        "Link-artikel-omschrijving--",
+        "LinkArtikelOmschrijving",
+        "Link_article_description",
+        "Link_artikel_omschrijving______Link_article_description",
+        "Linkartikelomschrijving",
+        "Product Info URL",
+        "Supplier URL",
+        "URL",
+        "URL Artikelinformatie",
+        "generate",
+        "generate[Link Tech data]",
+        "link artikelinformatie",
+        "linkurl",
+        "website"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Link Artikelfoto": {
+      "alternatives": [
+        "'generate'[Link Article picture]",
+        "14) Picture",
+        "ARTIKEL FOTO (LINK NAAR DE FOTO)",
+        "Article picture",
+        "Artikel Foto",
+        "Artikel afbeelding",
+        "Artikel foto",
+        "Artikel fotoArticle picture",
+        "Artikel foto_x000D_",
+        "Artikel picture",
+        "Artikel-foto",
+        "ArtikelFoto",
+        "Artikel_Pic",
+        "Artikel_foto__link_naar_de_foto___Article_picture__link_to_the_picture",
+        "Artikelfoto",
+        "Foto",
+        "Image",
+        "Link",
+        "Link Article Picture",
+        "Link Article picture",
+        "Link Artikelfoto",
+        "Link Image",
+        "Link naar uw webserver voor een foto van een artikel.",
+        "PICTURE",
+        "Picture",
+        "Picture Link",
+        "Product Image URL",
+        "Voeg een afbeelding van het product toe/",
+        "empty1",
+        "generate[Link Article picture]",
+        "link afbeelding",
+        "picture"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Link IFU": {
+      "alternatives": [
+        "IFU Link",
+        "Link IFU",
+        "Link Instructions For Use",
+        "Link technical data",
+        "Manual URL"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Functionele Artikelnaam": {
+      "alternatives": [
+        "Functional Article Name",
+        "Functional Name",
+        "Functionele Artikelnaam",
+        "Product Function Name"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Functionele Naam Taal Code": {
+      "alternatives": [
+        "Functional Name Language Code",
+        "Functionele Naam Taal Code"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Merknaam": {
+      "alternatives": [
+        "Brand",
+        "Brand Name",
+        "Merknaam",
+        "Trade Name"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Artikelnummer Alternatief Artikel": {
+      "alternatives": [
+        "Alternative Item Number",
+        "Article Number Alternative Product",
+        "Artikelnummer Alternatief Artikel"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Artikelnaam Alternatief Artikel": {
+      "alternatives": [
+        "Alternative Product Name",
+        "Article Name Alternative Product",
+        "Artikelnaam Alternatief Artikel"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Barcode Alternatief": {
+      "alternatives": [
+        "Alt. Barcode",
+        "Alternatief_type_codering__Alternative_type_code",
+        "Alternative Barcode",
+        "Barcode Alternatief",
+        "Barcode Alternatief Artikel",
+        "Barcode of Alternative Product",
+        "GTIN CODE ALTERNATIEF ARTIKEL",
+        "GTIN Code alternatief artikel",
+        "GTIN Code alternative trade item",
+        "GTIN_AltCode",
+        "GTIN_Code_alternatief_artikel__GTIN_Code_alternative_trade_item"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "UNSPSC Code": {
+      "alternatives": [
+        "13) UNSPSC code",
+        "Internationale artikelcodering. De codes kunt u vinden op http://www.unspsc.org of neem contact op met uw klant voor advies.",
+        "Nieuwe UNSPSC code",
+        "SPSC Code",
+        "UNSPSC",
+        "UNSPSC (2) (VERPLICHT UNI LEIDEN EN UNI UTRECHT)",
+        "UNSPSC CODE",
+        "UNSPSC CODE (UNITED NATIONS STANDARD PRODUCTS AND SERVICES CODE)",
+        "UNSPSC CODEUnited Nations Standard Products and Services Code",
+        "UNSPSC CODE_x000D_",
+        "UNSPSC Code",
+        "UNSPSC Number",
+        "UNSPSC code",
+        "UNSPSC-CODE",
+        "UNSPSC2",
+        "UNSPSCCODE",
+        "UNSPSC_CODE",
+        "UNSPSC_CODE_United_Nations_Standard_Products_and_Services_Code",
+        "UNSPSCode",
+        "United Nations Std P",
+        "unspsc"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "UNSPSC": {
+      "alternatives": [
+        "13) UNSPSC code",
+        "Internationale artikelcodering. De codes kunt u vinden op http://www.unspsc.org of neem contact op met uw klant voor advies.",
+        "Nieuwe UNSPSC code",
+        "SPSC Code", 
+        "UNSPSC",
+        "UNSPSC (2) (VERPLICHT UNI LEIDEN EN UNI UTRECHT)",
+        "UNSPSC CODE",
+        "UNSPSC CODE (UNITED NATIONS STANDARD PRODUCTS AND SERVICES CODE)",
+        "UNSPSC CODEUnited Nations Standard Products and Services Code",
+        "UNSPSC CODE_x000D_",
+        "UNSPSC Code",
+        "UNSPSC Number",
+        "UNSPSC code",
+        "UNSPSC-CODE",
+        "UNSPSC2",
+        "UNSPSCCODE", 
+        "UNSPSC_CODE",
+        "UNSPSC_CODE_United_Nations_Standard_Products_and_Services_Code",
+        "UNSPSCode",
+        "United Nations Std P",
+        "unspsc"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "GMDN Code": {
+      "alternatives": [
+        "GMDIN",
+        "GMDN",
+        "GMDN (MEDISCHE HULPMIDDELEN)",
+        "GMDN (medical devices)",
+        "GMDN Code",
+        "GMDN Number",
+        "GMDNCode",
+        "GMDN__medische_hulpmiddelen___GMDN__medical_devices"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "EMDN Code": {
+      "alternatives": [
+        "EMDN",
+        "EMDN Code",
+        "EMDN Number"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "GPCCategoryCode": {
+      "alternatives": [
+        "GPC Category Code",
+        "GPC Code",
+        "GPCCategoryCode"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Code voor Aanvullende Productclassificatie": {
+      "alternatives": [
+        "Additional Classification Code",
+        "Additional Trade Item Classification System Code",
+        "Code voor Aanvullende Productclassificatie"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Aanvullende Productclassificatiewaarde": {
+      "alternatives": [
+        "36) Risicoklasse",
+        "AANVULLENDE PRODUCTCLASSIFICATIEWAARDE (RISICOKLASSE)",
+        "Aanvullende Productclassificatiewaarde",
+        "Additional Classification Value",
+        "Additional Trade Item Classification Code Value",
+        "Classification code EU MDR/IVDR",
+        "EU MDR",
+        "EU MDR-IVDR Classificatie",
+        "EU MDR/IVDR Classificatie",
+        "EU MDR/IVDR ificatie",
+        "EUMDRIVDR",
+        "RISICOKLASSE EU MDR/IVDR CLASSIFICATIE (ALLEEN VOOR MEDISCHE HULPMIDDELEN)",
+        "Risico",
+        "Risico Klasse (I, IIa, IIb, III)",
+        "Risico klasse/",
+        "Risicoklasse",
+        "Risicoklasse (medische hulpmiddelen)",
+        "Risicoklasse(medische hulpmiddelen)",
+        "Risicoklasse_EU_MDR_IVDR_Classificatie__alleen_voor_medische_hulpmiddelen___Classification_code_EU_MDR_IVDR_Classification__only_for_medical_devices",
+        "Risk_Class",
+        "riskclass"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "CE Certificaat nummer": {
+      "alternatives": [
+        "40) CE Markering",
+        "CE Certificaat nummer",
+        "CE Certificate Number",
+        "CE MARKERING",
+        "CE Mark",
+        "CE _Mark",
+        "CE certified",
+        "CE markering",
+        "CE markering/",
+        "CE markeringCE marking",
+        "CE marking",
+        "CE-markering",
+        "CEMarkering",
+        "CE_markering___CE_marking",
+        "CEmarkering"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "CE Certificaat einddatum": {
+      "alternatives": [
+        "41) CE einddatum",
+        "CE Certificaat einddatum",
+        "CE End Date",
+        "CE Expiry Date",
+        "CE MARKERING EINDDATUM",
+        "CE _MarkDate",
+        "CE markering einddatum",
+        "CE markering einddatumCE marking end date",
+        "CE marking end date",
+        "CE marking enddate",
+        "CE-markering-einddatum",
+        "CEMarkeringEindDatum",
+        "CE_markering_einddatum__CE_marking_end_date",
+        "CEmarkeringeinddatum",
+        "Expiratie Datum Onderhevig",
+        "Expiratiedatum CE certificaat /"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "CE Certificerende instantie": {
+      "alternatives": [
+        "CE Certification Body",
+        "CE Certificerende instantie",
+        "CE Notified Body",
+        "Certifying Body CE"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Duurzaam Geproduceerd": {
+      "alternatives": [
+        "Duurzaam Geproduceerd",
+        "Eco-friendly",
+        "Sustainable",
+        "Sustainably Produced"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Naam Duurzaamheidslabel": {
+      "alternatives": [
+        "Eco Label Name",
+        "Naam Duurzaamheidslabel",
+        "Name Sustainability Label",
+        "Sustainability Label"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Omschrijving Duurzaamheid": {
+      "alternatives": [
+        "Eco Description",
+        "Omschrijving Duurzaamheid",
+        "Sustainability Description",
+        "Sustainability Info"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "CAS nummer": {
+      "alternatives": [
+        "26) CAS nummer",
+        "CAS NUMMER",
+        "CAS Number",
+        "CAS Nummer",
+        "CAS no.",
+        "CAS number",
+        "CAS number (format: XXXXX-XX-X)",
+        "CAS nummer",
+        "CAS nummer Let op format: 2 tot 5 cijfers - 2 cijfers - 1 cijfer (XXXXX-XX-X)",
+        "CAS nummerCAS number",
+        "CAS nummer_x000D_",
+        "CAS registry number",
+        "CAS-nummer",
+        "CASNUMBER",
+        "CASNummer",
+        "CAS_number",
+        "CAS_nummer__CAS_number__CAS_registry_number",
+        "CASnummer",
+        "Cas NR:",
+        "Cas-nr",
+        "Casnr.",
+        "Chemical Abstracts Service Number",
+        "Chemical Substance Name(For Universities)",
+        "Identificatie code van een zuivere stof. Informatie: http://www.acs.org",
+        "Omschrijving 1",
+        "Sum of CAS Number",
+        "casnumber"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Stofnaam": {
+      "alternatives": [
+        "33) Stofnaam",
+        "Chemical Name",
+        "Chemical Substance Name",
+        "ChemicalSubstanceName",
+        "De stofnaam waar het artikel uit bestaat.",
+        "STOFNAAM",
+        "Stofam",
+        "Stofnaam",
+        "Stofnaam (Voor Uni",
+        "Stofnaam (engels)",
+        "Stofnaam (voor Uni",
+        "Stofnaam(Voor Uni",
+        "Stofnaam___Chemical_Substance_Name",
+        "Stofnaam_x000D_",
+        "Substance Name",
+        "Sum of Chemical substance name",
+        "nameofmaterial",
+        "Stofnaam\n(Voor Uni's)\n\nChemical Substance Name\n(For Universities)"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Brutoformule": {
+      "alternatives": [
+        "BRUTOFORMULE",
+        "Brutoformule",
+        "Brutoformule (Voor Uni",
+        "Brutoformule (voor Uni",
+        "Brutoformule(Voor Uni",
+        "Brutoformule___Chemical_formula",
+        "Brutoformule_x000D_",
+        "Chemical Formula",
+        "Chemical formula",
+        "Chemical formula(For Universities)",
+        "De brutoformule van een stof",
+        "Formula",
+        "Molecular Formula",
+        "Sum of Chemical formula",
+        "materialformula",
+        "Brutoformule\n(Voor Uni's)\n\nChemical formula\n(For Universities)"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "H-zinnen": {
+      "alternatives": [
+        "H-zinnen",
+        "H zinnen",
+        "Hazard Statements",
+        "H-statements",
+        "H statements",
+        "H Statements",
+        "H-Statements",
+        "Hazard statements",
+        "GHS Hazard Statements",
+        "H phrases",
+        "H-phrases"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Claim Type Code": {
+      "alternatives": [
+        "Claim Code",
+        "Claim Type",
+        "Claim Type Code"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Element Claim Code": {
+      "alternatives": [
+        "Element Claim Code",
+        "Element Code",
+        "Ingredient Claim Code"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "UN-nummer Gevaarlijke Stof": {
+      "alternatives": [
+        "UN Dangerous Goods Number",
+        "UN Number",
+        "UN-nummer Gevaarlijke Stof",
+        "VN-NUMMER GEVAARLIJKE STOF",
+        "VN-Nummer",
+        "VN-nummer",
+        "VN-nummer gevaarlijke stof",
+        "VN_nummer_gevaarlijke_stof__UN_Dangerous_Goods_Number"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "ADR Gevarenklasse": {
+      "alternatives": [
+        "35) ADR Gevarenklasse",
+        "ADR",
+        "ADR Class",
+        "ADR Dangercategory",
+        "ADR Dangercategory (For Universities)",
+        "ADR Dangercategory(For Universities)",
+        "ADR GEVARENKLASSE",
+        "ADR Gevarenklasse",
+        "ADR Gevarenklasse (Voor Uni",
+        "ADR Gevarenklasse (voor Uni",
+        "ADR Gevarenklasse(Voor Uni",
+        "ADR Gevarenklasse_x000D_",
+        "ADR Klasse",
+        "ADR gevarenklasse",
+        "ADR-Gevarenklasse",
+        "ADRGevarenklasse",
+        "ADR_Gevarenklasse___ADR_Dangercategory",
+        "ADRdangercategory",
+        "ADRklasse",
+        "ChemicalFormula",
+        "Gevaarlijke stof",
+        "Hazard Class",
+        "Klasse voor vervoer van gevaarlijke stoffen (bijv: brandbaar, giftig, explosief etc.) over openbare weg, aangegeven in de hoeveelheid (milli)liter (cijfers) van een bepaalde klasse.",
+        "Sum of ADR dangercategory",
+        "adr"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Veiligheidsblad (VIB/SDS)": {
+      "alternatives": [
+        "MSDS Required",
+        "MSDS_Applicable",
+        "Material Safety Data Sheet",
+        "Material Satefy Data Sheet (MSDS) applicable?",
+        "SDS Applicable",
+        "Safety Data Sheet",
+        "VEILIGHEIDSBLAD (VIB) ONDERHEVIG?",
+        "Veiligheidsblad (VIB) onderhevig?",
+        "Veiligheidsblad (VIB/SDS)",
+        "Veiligheidsblad VIB onderhevig",
+        "Veiligheidsblad onderhevig?",
+        "Veiligheidsblad",
+        "Veiligheidsinformatieblad__Safety_Data_Sheet__SDS",
+        "Veiligheidsblad__VIB__onderhevig__1___ja_0___nee___Material_Satefy_Data_Sheet__MSDS__applicable__1__yes_0__no",
+        "Veiligheidsblad (VIB/SDS)"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Link Veiligheidsinformatieblad (SDS)": {
+      "alternatives": [
+        "Link Safety Data Sheet",
+        "Link Veiligheidsinformatieblad",
+        "MSDS Link",
+        "SDS",
+        "SDS URL",
+        "Safety Date Sheet",
+        "Veiligheidsblad link",
+        "Veiligheidsinformatie"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Eindgebruikersverklaring": {
+      "alternatives": [
+        "Eindgebruikersverklaring",
+        "End User Statement",
+        "End-User Declaration",
+        "User Declaration Required"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Koelgoed": {
+      "alternatives": [
+        "KOELGOED",
+        "Koelgoed",
+        "Koelgoed_1___ja_0___nee__Refrigorated_good_1__yes_0__no",
+        "Refrigerated",
+        "Refrigerated good",
+        "Requires Refrigeration"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Vriesgoed": {
+      "alternatives": [
+        "Frozen",
+        "Frozen good",
+        "Refrigorated good",
+        "Requires Freezing",
+        "VRIESGOED",
+        "Vriesgoed",
+        "Vriesgoed?",
+        "Vriesgoed_1___ja_0___nee__Frozen_good_1__yes_0__no"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Code Type Temperatuur": {
+      "alternatives": [
+        "Code Type Temperatuur",
+        "Temp Qualifier",
+        "Temperature Code",
+        "Temperature Qualifier Code"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Gebruiksaanwijzing Code Referentie": {
+      "alternatives": [
+        "Gebruiksaanwijzing Code Referentie",
+        "Handling Instructions Code Reference",
+        "Instructions Code",
+        "Usage Code"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Maximum Temperatuur": {
+      "alternatives": [
+        "Max Temp",
+        "Maximum Temperature",
+        "Maximum Temperatuur"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Minimum Temperatuur": {
+      "alternatives": [
+        "Min Temp",
+        "Minimum Temperature",
+        "Minimum Temperatuur"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Eenheid van Temperatuur": {
+      "alternatives": [
+        "Eenheid van Temperatuur",
+        "Temp Unit",
+        "Temperature Unit",
+        "Unit Of Temperature"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Bruto Gewicht Verpakkingseenheid": {
+      "alternatives": [
+        "BRUTO GEWICHT",
+        "Bruto Gewicht",
+        "Bruto Gewicht Verpakkingseenheid",
+        "Bruto gewicht",
+        "BrutoGewicht",
+        "Bruto_gewicht__Gross_weight",
+        "Gross Weight Packaging",
+        "Gross weight",
+        "Gross weight Trade Unit",
+        "Packaging Gross Weight"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Eenheidscode Bruto Gewicht Verpakkingseenheid (UOM)": {
+      "alternatives": [
+        "BrutoGewichtEenheid",
+        "EENHEIDSCODE BRUTO GEWICHT",
+        "EENHEIDSCODE BRUTO GEWICHT VERPAKKINGSEENHEID (UOM)",
+        "Eenheidscode Bruto Gewicht",
+        "Eenheidscode Bruto Gewicht Verpakkingseenheid",
+        "Eenheidscode Bruto Gewicht Verpakkingseenheid (UOM)",
+        "Eenheidscode_Bruto_Gewicht__Measurement_Unit_Code_Gross_weight",
+        "Gross Weight UOM",
+        "Measurement Unit Code Gross weight",
+        "Measurement Unit Code Gross Weight (UOM)",
+        "Packaging Weight UOM",
+        "Eenheidscode Bruto Gewicht Verpakkingseenheid\n(UOM)\n_________________\nMeasurement Unit Code Gross weight\n(UOM)",
+        "Eenheidscode Bruto Gewicht Verpakkingseenheid\n(UOM)\n\n_________________\nMeasurement Unit Code Gross Weight \n(UOM)",
+        "Eenheidscode Bruto Gewicht Verpakkingseenheid\n(UOM)\n\n_________________\nMeasurement Unit Code Gross Weight \n(UOM)",
+        "Eenheidscode Bruto Gewicht Verpakkingseenheid\n(UOM)\n\n_________________\nMeasurement Unit Code Gross Weight\n(UOM)"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Hoogte": {
+      "alternatives": [
+        "HOOGTE",
+        "Height",
+        "Height value",
+        "Hoogte",
+        "Hoogte__Height_value"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Breedte": {
+      "alternatives": [
+        "BREEDTE",
+        "Breedte",
+        "Breedte__Width",
+        "Width",
+        "Width value"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Diepte": {
+      "alternatives": [
+        "DIEPTE",
+        "Depth",
+        "Depth value",
+        "Diepte",
+        "Diepte__Depth",
+        "Length"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Eenheidscode Diepte (UOM)": {
+      "alternatives": [
+        "Depth UOM",
+        "Diepte Eenheid",
+        "DiepteEenheid",
+        "EENHEIDSCODE DIEPTE",
+        "EENHEIDSCODE DIEPTE (UOM)",
+        "EENHEIDSCODE DIEPTE(UOM)",
+        "Eenheidscode Depth",
+        "Eenheidscode Diepte",
+        "Eenheidscode Diepte (UOM)",
+        "Eenheidscode_Diepte__Measurement_Unit_Code_Depth",
+        "Measurement Unit Code Depth",
+        "Measurement Unit Code Depth (UOM)",
+        "Eenheidscode Diepte\n(UOM)\n_________________\nMeasurement Unit Code Depth\n(UOM)",
+        "Eenheidscode Diepte\n(UOM) \n\n_________________\nMeasurement Unit Code Depth\n(UOM)",
+        "Eenheidscode Diepte\n(UOM)\n\n_________________\nMeasurement Unit Code Depth\n(UOM)"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Bruto Gewicht Basiseenheid": {
+      "alternatives": [
+        "Base Unit Gross Weight",
+        "Base Weight",
+        "Bruto Gewicht Basiseenheid",
+        "EENHEIDSCODE GEWICHT (BASISEENHEID)",
+        "Eenheidscode Gewicht (BasisEenheid)",
+        "GEWICHT (BASISEENHEID)",
+        "Gewicht",
+        "Gewicht (BasisEenheid)",
+        "Gewicht (Kg/BasisEenheid)",
+        "Gewicht-(Kg/BasisEenheid)",
+        "Gewicht__BasisEenheid___Weight__BaseUnit",
+        "Weight (BaseUnit)",
+        "Weight BaseUnit"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Eenheidscode Gewicht Basiseenheid (UOM)": {
+      "alternatives": [
+        "Base Unit Weight UOM",
+        "EENHEIDSCODE GEWICHT BASISEENHEID (UOM)",
+        "Eenheidscode Gewicht",
+        "Eenheidscode Gewicht (BasisEenheid_",
+        "Eenheidscode Gewicht Basiseenheid",
+        "Eenheidscode Gewicht Basiseenheid (UOM)",
+        "Eenheidscode_Gewicht__BasisEenheid___measurement_Unit_Code_Weight__BaseUnit",
+        "Measurement Unit Code Weight (BaseUnit)",
+        "Measurement Unit Code Weight BaseUnit",
+        "Measurement Unit Code Weight Base Unit (UOM)",
+        "Eenheidscode Gewicht Basiseenheid\n(UOM)\n_________________\nMeasurement Unit Code Weight (BaseUnit)\n(UOM)",
+        "Eenheidscode Gewicht Basiseenheid\n(UOM) \n\n_________________\nMeasurement Unit Code Weight Base Unit \n(UOM) ",
+        "Eenheidscode Gewicht Basiseenheid\n(UOM)\n\n_________________\nMeasurement Unit Code Weight Base Unit\n(UOM)"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Herbruikbaar": {
+      "alternatives": [
+        "Herbruikbaar",
+        "Is Reusable",
+        "Reusable",
+        "Reusable Indicator"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Herbruikbaarheids Code": {
+      "alternatives": [
+        "Herbruikbaarheids Code",
+        "Reusability Type Code",
+        "Reuse Code"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Indicatie Implanteerbaar": {
+      "alternatives": [
+        "Implantable Indicator",
+        "Indicatie Implanteerbaar",
+        "Is Trade Item Implantable"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Bevat het Artikel Menselijk Weefsel": {
+      "alternatives": [
+        "Bevat het Artikel Menselijk Weefsel",
+        "Contains Human Tissue",
+        "Human Tissue Content"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Serienummer": {
+      "alternatives": [
+        "38) Serienr profiel",
+        "SERIENR PROFIEL",
+        "Serial Number",
+        "Serialnumber",
+        "Serialnumber profile",
+        "Serialnumber profile Yes = 1",
+        "Serialnumber profile Yes = 1 No = 0",
+        "SerieNum_Profiel",
+        "Serienr profiel",
+        "Serienr profiel Ja = 1 Nee = 0",
+        "Serienr profiel Ja = 1 Nee = 0Serialnumber profile Yes = 1 No = 0",
+        "Serienr profiel ja = 9999, nee = leeg",
+        "Serienr-profiel-",
+        "Serienr_profiel__1___ja_0___nee__Serialnumber_profile_1___yes__0___no",
+        "Serienummer",
+        "Serienummer profiel",
+        "Serienummerprofiel"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Locatie Serienummer op de Verpakking": {
+      "alternatives": [
+        "Locatie Serienummer op de Verpakking",
+        "Serial Number Location",
+        "Serial Number Location Code"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Batch Nummer": {
+      "alternatives": [
+        "39) Lotnr profiel",
+        "Batch Number",
+        "Batch Nummer",
+        "LOTNUMMER PROFIEL",
+        "Lot Number",
+        "LotNum_Profiel",
+        "Lotnumber profile",
+        "Lotnumber profileYes = 1 No = 0",
+        "Lotnummer profiel",
+        "Lotnummer profiel (ja/nee)",
+        "Lotnummer profiel Ja = 1Nee = 0",
+        "Lotnummer profiel Ja = 1Nee = 0Lotnumber profileYes = 1 No = 0",
+        "Lotnummer-profiel-",
+        "Lotnummer_profiel__1___ja_0___nee__Lotnumber_profile_1___yes__0___no",
+        "Lotnummerprofiel",
+        "lot nr verplicht",
+        "lot nr verplicht?"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Steriel": {
+      "alternatives": [
+        "27) Steriel artikel",
+        "Artikel_Sterile",
+        "GHX Sterile",
+        "Is Sterile",
+        "Is artikel steriel:",
+        "Is het product steriel?/",
+        "STERIEL ARTIKEL",
+        "Steriel",
+        "Steriel Artikel",
+        "Steriel artikel",
+        "Steriel artikelSterile article",
+        "Steriel artikel_x000D_",
+        "Steriel product J/N",
+        "Steriel-artikel",
+        "SterielArtikel",
+        "Steriel_artikel_1___ja_0___nee__Sterile_article_1___yes__0___no",
+        "Sterielartikel",
+        "Sterile",
+        "Sterile article",
+        "Sterile or non-sterile",
+        "steriel",
+        "sterile"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Type Sterilisatie Gebruikt door Fabrikant": {
+      "alternatives": [
+        "Initial Manufacturer Sterilization Code",
+        "Sterilization Type",
+        "Type Sterilisatie Gebruikt door Fabrikant"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Latex": {
+      "alternatives": [
+        "42) Bevat het product Latex",
+        "Artikel_Latex",
+        "BEVAT HET PRODUCT LATEX?",
+        "Bevat het artikel latex?/",
+        "Bevat het product late?",
+        "Bevat het product latex?",
+        "Bevat het product latex?Ja = 1Nee = 0",
+        "Bevat het product latex?Ja = 1Nee = 0Does Trade Item Contains Latex?Yes = 1 No = 0",
+        "Bevat latex",
+        "Bevat-het-product-latex?",
+        "Bevat_het_product_latex__1___ja_0___nee__Does_Trade_Item_Contains_Latex__1___yes__0___no",
+        "Bevathetproductlatex?",
+        "Contains Latex",
+        "Does Trade Item Contain Latex",
+        "Does Trade Item Contains Latex?",
+        "Does Trade Item Contains Latex?Yes = 1 No = 0",
+        "Does Trade Item contains latex?",
+        "Latex",
+        "Latex Indicator",
+        "LatexHoudend",
+        "Latexhoudend",
+        "Latexhoudend?"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "MRI Compatibility": {
+      "alternatives": [
+        "43) MRI Compatibility Code",
+        "Is MRI Compatible",
+        "MRI COMPATIBILITY CODE",
+        "MRI Compatability",
+        "MRI Compatibiliteits Code",
+        "MRI Compatibility",
+        "MRI Compatibility Code",
+        "MRI Compatibility CodeJa = 1Nee = 0",
+        "MRI Compatibility CodeJa = 1Nee = 0MRI Compatibility CodeYes = 1 No = 0",
+        "MRI Compatibility CodeYes = 1 No = 0",
+        "MRI Compatible",
+        "MRI compatibility code",
+        "MRI compatible",
+        "MRI-Compatibility-Code",
+        "MRICompatibiliteitsCode",
+        "MRICompatibilityCode",
+        "MRI_Compatibility_Code_1___ja_0___nee__MRI_Compatibility_Code_1___yes__0___no"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Is ConsumentenEenheid": {
+      "alternatives": [
+        "Consumer Unit Indicator",
+        "Is ConsumentenEenheid",
+        "Is ConsumerUnit"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Is VerzendEenheid": {
+      "alternatives": [
+        "Dispatch Unit Indicator",
+        "Is DispatchUnit",
+        "Is VerzendEenheid",
+        "Shipping Unit"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Levertijd": {
+      "alternatives": [
+        "12) Levertijd",
+        "Aantal levertijd in dagen, zoals afgesproken met ziekenhuis/universiteit",
+        "Delivery Lead Time",
+        "Delivery Time",
+        "LEVERTIJD (NUMERIEK AANTAL DAGEN)",
+        "Lead Time",
+        "Lead time",
+        "Leadtime",
+        "Levertijd",
+        "Levertijd (dagen)",
+        "Levertijd in Dagen",
+        "Levertijd in dagen",
+        "Levertijd in dagen (indien op voorraad)",
+        "Levertijd in werkdagen",
+        "Levertijd leverancier",
+        "LevertijdLeadtime",
+        "Levertijd__numeriek__aantal_dagen___Leadtime__numeric_field__days",
+        "Levertijd_x000D_",
+        "SUPPLIERLEADTIME",
+        "Supplierleadtime",
+        "daysdelivery",
+        "leadTime",
+        "levertijd",
+        "levertijd in dagen mediaal"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Code Type Datum op Verpakking": {
+      "alternatives": [
+        "Code Type Datum op Verpakking",
+        "Date on Packaging Code",
+        "Trade Item Date On Packaging Type Code"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Startdatum Beschikbaarheid": {
+      "alternatives": [
+        "Availability Start Date",
+        "Available From",
+        "Startdatum Beschikbaarheid"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Einddatum Beschikbaarheid": {
+      "alternatives": [
+        "Availability End Date",
+        "Einddatum Beschikbaarheid"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Startdatum Prijs Artikel": {
+      "alternatives": [
+        "18) Startdatum",
+        "Effective Date",
+        "GELDIG VAN",
+        "Prices start date",
+        "Pricing Date",
+        "Prijs_Startdatum",
+        "Prijzen geldig van",
+        "Prijzen geldig van:",
+        "Prijzen zijn geldig vanaf:",
+        "STARTDATE",
+        "STARTDATUM",
+        "Start Date",
+        "Start date",
+        "StartDate",
+        "StartDatum",
+        "StartDatum nieuwe prijs",
+        "Startdate",
+        "Startdatum",
+        "Startdatum Prijs Artikel",
+        "Startdatum Startdate",
+        "Startdatum van de catalogus",
+        "Startdatum x000D",
+        "Startdatum-",
+        "Startdatum___Startdate",
+        "Valid from",
+        "ingangsdatum",
+        "pricevalidfrom",
+        "prijzen geldig van",
+        "start date",
+        "vanaf"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Einddatum Prijs Artikel": {
+      "alternatives": [
+        "19) Einddatum",
+        "Available Until",
+        "EINDDATUM",
+        "ENDDATE",
+        "EindDatum",
+        "Einddatum",
+        "Einddatum Prijs Artikel",
+        "Einddatum korting",
+        "Einddatum van de catalogus",
+        "EinddatumEnddate",
+        "Einddatum__Enddate",
+        "Einddatum_x000D_",
+        "End Date",
+        "End date",
+        "EndDate",
+        "Enddate",
+        "Expiration Date",
+        "GELDIG TOT",
+        "Geldig tot",
+        "Prices end date",
+        "Prijs geldig t/m",
+        "Prijs geldig tot",
+        "Prijs_Einddatum",
+        "Prijzen geldig tot:",
+        "Valid to",
+        "eind datum",
+        "end date",
+        "pricevalidto",
+        "prijzen geldig tot"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Contract aanwezig": {
+      "alternatives": [
+        "Contract aanwezig"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Contractnummer Provider": {
+      "alternatives": [
+        "CONTRACTNUMMER INSTELLING",
+        "Contractnummer Provider"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Zoeksleutels": {
+      "alternatives": [
+        "24) Zoeksleutels",
+        "Aanvullende informatie of Synoniem",
+        "Item Type",
+        "Keywords",
+        "SEARCHKEYS",
+        "Search Description",
+        "Search Terms",
+        "Search term",
+        "Searchkeys",
+        "Sum of Search keys",
+        "Sum of searchkeys",
+        "ZOEKSLEUTELS",
+        "Zoeksleutel",
+        "Zoeksleutels",
+        "Zoeksleutels voor beter zoekresultaat van uw producten.",
+        "ZoeksleutelsSearchkeys",
+        "Zoeksleutels__Searchkeys",
+        "Zoeksleutels_x000D_",
+        "produktgroep",
+        "serachkey"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Prijs per Kleinste Eenheid": {
+      "alternatives": [
+        "Prijs per Kleinste Eenheid",
+        "Prijs_per_Kleinste_Eenheid",
+        "PrijsperKleinsteEenheid"
       ]
     },
-    "processing": {
-      "strip_newlines": true,
-      "max_column_name_length": 100
+    "Barcode Alternatief Artikel": {
+      "alternatives": [
+        "Barcode Alternatief Artikel",
+        "Barcode_Alternatief_Artikel",
+        "BarcodeAlternatiefArtikel"
+      ]
+    },
+    "Eenheidscode Hoogte (UOM)": {
+      "alternatives": [
+        "EENHEIDSCODE HOOGTE",
+        "EENHEIDSCODE HOOGTE (UOM)",
+        "Eenheidscode Hoogte",
+        "Eenheidscode Hoogte (UOM)",
+        "Eenheidscode_Hoogte__measurement_Unit_Code_Height",
+        "Height UOM",
+        "HoogteEenheid",
+        "Measurement Unit Code Height",
+        "Measurement Unit Code Height (UOM)",
+        "Eenheidscode Hoogte\n(UOM)\n_________________\nMeasurement Unit Code Height\n(UOM)",
+        "Eenheidscode Hoogte\n(UOM) \n\n_________________\nMeasurement Unit Code Height \n(UOM)",
+        "Eenheidscode Hoogte\n(UOM) \n\n_________________\nMeasurement Unit Code Height \n(UOM)",
+        "Eenheidscode Hoogte\n(UOM)\n\n_________________\nMeasurement Unit Code Height\n(UOM)"
+      ]
+    },
+    "Eenheidscode Breedte (UOM)": {
+      "alternatives": [
+        "Eenheidscode Breedte (UOM)",
+        "Eenheidscode_Breedte_(UOM)",
+        "EenheidscodeBreedte(UOM)",
+        "Eenheidscode Breedte",
+        "Eenheidscode Breedte (UOM)"
+      ]
+    },
+    "Eenheidscode Diepte (UOM)": {
+      "alternatives": [
+        "Eenheidscode Diepte (UOM)",
+        "Eenheidscode_Diepte_(UOM)",
+        "EenheidscodeDiepte(UOM)",
+        "Eenheidscode Diepte",
+        "Eenheidscode Diepte (UOM)"
+      ]
+    },
+    "Type Sterilisatie gebruikt door Fabrikant": {
+      "alternatives": [
+        "Type Sterilisatie gebruikt door Fabrikant",
+        "Type_Sterilisatie_gebruikt_door_Fabrikant",
+        "TypeSterilisatiegebruiktdoorFabrikant"
+      ]
+    },
+    "Prijseenheid": {
+      "alternatives": [
+        "Prijseenheid",
+        "Priceunit",
+        "Price unit",
+        "Price Unit"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "UOMPrijseenheid": {
+      "alternatives": [
+        "UOMPrijseenheid",
+        "UOMPriceUnit",
+        "UOM Prijseenheid",
+        "UOM Price Unit",
+        "UOM PriceUnit"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "ADR Gevarenklasse": {
+      "alternatives": [
+        "ADR Gevarenklasse",
+        "ADR Dangercategory",
+        "ADR Danger Category",
+        "Gevarenklasse",
+        "Danger Category"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "Artikel informatie": {
+      "alternatives": [
+        "Artikel informatie",
+        "Article information",
+        "Article Information",
+        "Artikelinformatie"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
     }
+  },
+  "validation": {
+    "ignore_columns": [
+      "algemeen",
+      "uitleg",
+      "toelichting",
+      "Descriptiomn"
+    ],
+    "required_columns": [
+      "Artikelnummer",
+      "Artikelnaam",
+      "Nettoprijs"
+    ]
+  },
+  "processing": {
+    "strip_newlines": true,
+    "max_column_name_length": 100
   }
+}

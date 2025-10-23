@@ -4,8 +4,9 @@ import os
 import json
 import pandas as pd
 import re
+import time
 from datetime import datetime
-from typing import Dict, List, Tuple, Any, Optional
+from typing import Dict, List, Tuple, Any, Optional, Union
 import logging
 
 # Importeer de rapporteerfunctie (ervan uitgaande dat die in rapport_utils.py staat)
@@ -108,6 +109,61 @@ def has_template_generator_stamp(excel_path: str) -> bool:
     except Exception as e:
         logging.error(f"Stamp detection error: {e}")
         return False
+
+def extract_dt_template_version(excel_path: str) -> Optional[Dict[str, str]]:
+    """
+    Extraheert versie informatie uit DT (Default Template) A1 cel.
+    
+    DT template versie logic:
+    - A1 = "Template versie: V25.01" → versie 25.01 (nieuwe templates)
+    - A1 = "ALGEMEEN\nVelden in het ROOD..." → versie 24.07 (oude templates) 
+    - A1 = andere inhoud → geen DT template
+    
+    Args:
+        excel_path: Pad naar DT Excel bestand
+        
+    Returns:
+        Dict met versie informatie of None als geen DT template
+    """
+    try:
+        import openpyxl
+        wb = openpyxl.load_workbook(excel_path, data_only=True, read_only=True)
+        
+        # Haal eerste sheet
+        sheet = wb.worksheets[0]
+        
+        # Lees A1
+        a1 = sheet["A1"].value
+        
+        wb.close()
+        
+        if not a1 or not isinstance(a1, str):
+            return None
+            
+        a1_text = a1.strip()
+        
+        # Check voor nieuwe DT templates (2025+)
+        if "Template versie:" in a1_text:
+            version_info = parse_version_line(a1_text)
+            logging.info(f"DT template versie gedetecteerd: {version_info.get('version', 'Onbekend')}")
+            return version_info
+        
+        # Check voor oude DT templates (2024)
+        elif a1_text.startswith("ALGEMEEN") and "Velden in het ROOD zijn verplicht" in a1_text:
+            version_info = {
+                'raw_version': '24.07 (legacy DT template)',
+                'version': '24.07',
+                'release_date': None
+            }
+            logging.info("Legacy DT template gedetecteerd: versie 24.07")
+            return version_info
+        
+        # Geen DT template patroon gevonden
+        return None
+        
+    except Exception as e:
+        logging.error(f"Fout bij DT versie detectie: {e}")
+        return None
 
 def extract_template_generator_context(excel_path: str) -> Optional[Dict[str, Any]]:
     """
@@ -1331,7 +1387,14 @@ def clean_supplier_header(header: str) -> str:
     return clean
 
 
-def map_headers(df: pd.DataFrame, mapping_config: Dict, return_mapping: bool = False) -> Tuple[pd.DataFrame, List[str], Dict[str, str], Dict[str, str]] | Tuple[pd.DataFrame, List[str], Dict[str, str]]:
+def map_headers(
+    df: pd.DataFrame,
+    mapping_config: Dict,
+    return_mapping: bool = False
+) -> Union[
+    Tuple[pd.DataFrame, List[str], Dict[str, str], Dict[str, str]],
+    Tuple[pd.DataFrame, List[str], Dict[str, str]]
+]:
     """Mapt de headers van het DataFrame naar de GHX standaard headers."""
     # Haal mapping uit configuratie
     header_mapping = {k: v["alternatives"] for k, v in mapping_config.get("standard_headers", {}).items()}
@@ -1395,10 +1458,10 @@ def map_headers(df: pd.DataFrame, mapping_config: Dict, return_mapping: bool = F
 
     # DEBUG: Log original_column_mapping inhoud
     if return_mapping:
-        logging.info(f"DEBUG: original_column_mapping heeft {len(original_column_mapping)} entries")
+        logging.debug(f"DEBUG: original_column_mapping heeft {len(original_column_mapping)} entries")
         # DEBUG: Toon eerste 5 entries voor analyse
         for i, (key, value) in enumerate(list(original_column_mapping.items())[:5]):
-            logging.info(f"DEBUG: original_column_mapping['{key}'] = '{value[:100]}...'")
+            logging.debug(f"DEBUG: original_column_mapping['{key}'] = '{value[:100]}...'")
 
     # Maak dictionary met details over duplicaten (welke _DUPLICAAT_X hoort bij welk origineel)
     duplicate_headers_details = {}
@@ -1415,14 +1478,14 @@ def map_headers(df: pd.DataFrame, mapping_config: Dict, return_mapping: bool = F
         # Geef alleen df, onherkende lijst, en details duplicaten terug
         return df, unrecognized, duplicate_headers_details
 
-def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+def clean_dataframe(df: pd.DataFrame) -> tuple:
     """Schoont het DataFrame op (logica uit Code 3)."""
     # Check eerst of 'Artikelnummer' kolom bestaat (na mapping)
     if 'Artikelnummer' not in df.columns:
         logging.error("'Artikelnummer' kolom niet gevonden na mapping. Opschonen gestopt.")
         # Overweeg hier een error te raisen of de originele df terug te geven
         # raise ValueError("'Artikelnummer' kolom niet gevonden na mapping.")
-        return df # Geeft df terug zoals het was
+        return df, 0 # Geeft df terug zoals het was, geen verwijderde regels
 
     # Verwijder rijen waar alles leeg is
     df = df.dropna(how='all')
@@ -1437,8 +1500,11 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         df = df.loc[first_valid:last_valid].reset_index(drop=True)
     else:
         logging.warning("Geen geldige 'Artikelnummer' waarden gevonden, dataframe is mogelijk leeg.")
-        return pd.DataFrame(columns=df.columns) # Geeft lege dataframe terug met dezelfde kolommen
+        return pd.DataFrame(columns=df.columns), 0 # Geeft lege dataframe terug met dezelfde kolommen, geen verwijderde regels
 
+    # Track aantal verwijderde regels voor Sheet 7 rijnummering
+    removed_rows_count = 0
+    
     # Verwijder uitleg/instructie rij (check op eerste rij na beperking)
     if not df.empty:
         first_value = str(df.loc[0, 'Artikelnummer']).strip()
@@ -1452,6 +1518,7 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             any(keyword in first_value.lower() for keyword in explanation_keywords)):
             logging.info(f"Mogelijke uitleg/instructie rij verwijderd op basis van inhoud: '{first_value[:100]}...'")
             df = df.iloc[1:].reset_index(drop=True)
+            removed_rows_count += 1
 
         # Extra check voor voorbeeld-/demo-rij (op de *nieuwe* eerste rij)
         if not df.empty:
@@ -1460,6 +1527,7 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             if first_value_after_potential_removal.lower() in voorbeeldwaarden:
                 logging.info(f"Mogelijke voorbeeld/demo rij verwijderd op basis van inhoud: '{first_value_after_potential_removal}'")
                 df = df.iloc[1:].reset_index(drop=True)
+                removed_rows_count += 1
 
     # Verwijder 'algemeen' kolom indien die nog bestaat (zou niet moeten na mapping, maar voor zekerheid)
     if 'algemeen' in df.columns:
@@ -1471,8 +1539,9 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         logging.warning(f"Kolommen {algemeen_cols} gevonden die lijken op 'algemeen' en worden verwijderd.")
         df = df.drop(columns=algemeen_cols)
 
-
-    return df
+    
+    logging.info(f"Clean DataFrame: totaal {removed_rows_count} regels verwijderd")
+    return df, removed_rows_count
 
 def validate_field(field_name: str, value: Any, field_rules: dict, invalid_values: list, row_data: dict = None) -> list:
     """Valideert een enkele waarde op basis van de regels (uit Code 4)."""
@@ -1629,6 +1698,26 @@ def validate_uom_relationships(df: pd.DataFrame, validation_results: list, valid
             uom_verpakking = str(row.get("UOM Code Verpakkingseenheid", "")).strip()
             uom_basis = str(row.get("UOM Code Basiseenheid", "")).strip()
             inhoud_verpakking_str = str(row.get("Inhoud Verpakkingseenheid", "")).strip()
+            
+            # Normaliseer boolean waarden - behandel 'nan', leeg, etc. als ongeldige waarden
+            def normalize_boolean_field(value):
+                """Normaliseer boolean veld naar '0', '1' of None voor ongeldige waarden"""
+                if not value or value.lower() in ['nan', 'none', '']:
+                    return None
+                value_lower = value.lower()
+                if value_lower in ['1', 'true', 'ja', 'yes']:
+                    return '1'
+                elif value_lower in ['0', 'false', 'nee', 'no']:
+                    return '0'
+                else:
+                    return None  # Ongeldige waarde
+            
+            is_besteleenheid_norm = normalize_boolean_field(is_besteleenheid)
+            is_basiseenheid_norm = normalize_boolean_field(is_basiseenheid)
+            
+            # Skip UOM validatie als een van de boolean velden ontbreekt of ongeldig is
+            if is_besteleenheid_norm is None or is_basiseenheid_norm is None:
+                continue
             inhoud_verpakking = None
             if inhoud_verpakking_str and inhoud_verpakking_str.lower() not in ["nan", "none", ""]:
                 try:
@@ -1651,7 +1740,7 @@ def validate_uom_relationships(df: pd.DataFrame, validation_results: list, valid
 
 
             # CHECK 1 & 2: Beide 1
-            if is_besteleenheid == "1" and is_basiseenheid == "1":
+            if is_besteleenheid_norm == "1" and is_basiseenheid_norm == "1":
                 # Check 1: UOMs gelijk?
                 if uom_verpakking and uom_basis and uom_verpakking != uom_basis:
                     uom_relation_errors_found = True
@@ -1659,7 +1748,7 @@ def validate_uom_relationships(df: pd.DataFrame, validation_results: list, valid
                         "Rij": excel_row_num, "GHX Kolom": "UOM Code Verpakkingseenheid",
                         "Supplier Kolom": clean_supplier_header(supplier_col_map["UOM Code Verpakkingseenheid"]),
                         "Veldwaarde": uom_verpakking,
-                        "Foutmelding": f"CONFLICT: Als IsBestelbaar=1 én IsBasis=1, moeten UOMs gelijk zijn (nu: '{uom_verpakking}' vs '{uom_basis}').",
+                        "Foutmelding": f"Als IsBestelbaar=1 én IsBasis=1, moeten UOMs gelijk zijn (nu: '{uom_verpakking}' vs '{uom_basis}').",
                         "code": "724"
                     })
                 # Check 2: Inhoud = 1?
@@ -1669,13 +1758,12 @@ def validate_uom_relationships(df: pd.DataFrame, validation_results: list, valid
                         "Rij": excel_row_num, "GHX Kolom": "Inhoud Verpakkingseenheid",
                         "Supplier Kolom": clean_supplier_header(supplier_col_map["Inhoud Verpakkingseenheid"]),
                         "Veldwaarde": inhoud_verpakking_str,
-                        "Foutmelding": "CONFLICT: Als IsBestelbaar=1 én IsBasis=1, moet Inhoud Verpakkingseenheid '1' zijn.",
+                        "Foutmelding": "Als IsBestelbaar=1 én IsBasis=1, moet Inhoud Verpakkingseenheid '1' zijn.",
                         "code": "724"
                     })
 
             # CHECK 3 & 4: Verschillend (en beide ingevuld)
-            elif (is_besteleenheid in ["1", "0"] and is_basiseenheid in ["1", "0"] and 
-                  is_besteleenheid != is_basiseenheid):
+            elif is_besteleenheid_norm != is_basiseenheid_norm:
                 # Check 3: UOMs verschillend?
                 if uom_verpakking and uom_basis and uom_verpakking == uom_basis:
                      uom_relation_errors_found = True
@@ -1683,7 +1771,7 @@ def validate_uom_relationships(df: pd.DataFrame, validation_results: list, valid
                          "Rij": excel_row_num, "GHX Kolom": "UOM Code Verpakkingseenheid",
                          "Supplier Kolom": clean_supplier_header(supplier_col_map["UOM Code Verpakkingseenheid"]),
                          "Veldwaarde": uom_verpakking,
-                         "Foutmelding": "CONFLICT: Als IsBestelbaar/IsBasis verschillend zijn, moeten UOMs ook verschillend zijn.",
+                         "Foutmelding": "Als IsBestelbaar/IsBasis verschillend zijn, moeten UOMs ook verschillend zijn.",
                          "code": "724"
                      })
                 # Check 4: Inhoud != 1?
@@ -1693,7 +1781,7 @@ def validate_uom_relationships(df: pd.DataFrame, validation_results: list, valid
                         "Rij": excel_row_num, "GHX Kolom": "Inhoud Verpakkingseenheid",
                         "Supplier Kolom": clean_supplier_header(supplier_col_map["Inhoud Verpakkingseenheid"]),
                         "Veldwaarde": inhoud_verpakking_str,
-                        "Foutmelding": "CONFLICT: Als IsBestelbaar/IsBasis verschillend zijn, mag Inhoud Verpakkingseenheid geen '1' zijn.",
+                        "Foutmelding": "Als IsBestelbaar/IsBasis verschillend zijn, mag Inhoud Verpakkingseenheid geen '1' zijn.",
                         "code": "724"
                     })
 
@@ -1707,7 +1795,9 @@ def validate_uom_relationships(df: pd.DataFrame, validation_results: list, valid
                           inhoud_str_check = inhoud_str_check[:-2]
 
                      # Basis check: bevat omschrijving (ongeacht hoofdletters) de inhoud en de UOM code?
-                     if not (inhoud_str_check.lower() in omschrijving.lower() and uom_verpakking.lower() in omschrijving.lower()):
+                     inhoud_check = inhoud_str_check.lower() in omschrijving.lower()
+                     uom_check = uom_verpakking.lower() in omschrijving.lower()
+                     if not (inhoud_check and uom_check):
                         omschrijving_format_mismatch_count += 1
                         # We voegen de Red Flag pas na de loop toe als er mismatches zijn
 
@@ -1751,10 +1841,22 @@ def validate_uom_relationships(df: pd.DataFrame, validation_results: list, valid
 def validate_field_v20_native(field_name: str, value: Any, field_config: dict, invalid_values: list, row_data: dict = None, reference_lists: dict = None) -> list:
     """Native v20 validatie zonder conversie naar v18."""
     errors = []
-    value_str = str(value).strip() if not pd.isnull(value) else ""
+    # Robuuste string conversie - handel alle lege/NaN scenarios af
+    if pd.isnull(value):
+        value_str = ""
+    else:
+        value_str = str(value).strip()
+        # Excel/pandas geeft soms "nan" strings - behandel als leeg
+        if value_str.lower() in ['nan', 'none', 'null']:
+            value_str = ""
     
-    # Check if empty/invalid
-    is_empty_or_invalid = pd.isnull(value) or value_str == '' or value_str.lower() in invalid_values
+    # Check if empty/invalid - nu robuuster
+    is_empty_or_invalid = (
+        pd.isnull(value) or 
+        value_str == '' or 
+        value_str.lower() in invalid_values or
+        value_str.lower() in ['nan', 'none', 'null']  # Extra NaN string check
+    )
     
     # Process validation rules from v20 structure
     rules = field_config.get("rules", [])
@@ -1773,12 +1875,18 @@ def validate_field_v20_native(field_name: str, value: Any, field_config: dict, i
             should_trigger = is_empty_or_invalid
             
         elif condition == "is_not_numeric" and not is_empty_or_invalid:
-            # Check if value is numeric
+            # Check if value is numeric (support both . and , as decimal separator)
             try:
+                # Try with original value first
                 float(value_str)
                 should_trigger = False
             except (ValueError, TypeError):
-                should_trigger = True
+                try:
+                    # Try replacing comma with dot for Dutch/European format
+                    float(value_str.replace(',', '.'))
+                    should_trigger = False
+                except (ValueError, TypeError):
+                    should_trigger = True
                 
         elif condition == "value_not_in_list" and not is_empty_or_invalid:
             # Check for direct params list
@@ -1803,14 +1911,22 @@ def validate_field_v20_native(field_name: str, value: Any, field_config: dict, i
             if isinstance(params, (int, float)):
                 should_trigger = len(value_str) > params
                 
-        elif condition == "is_empty_when_dependency_filled" and is_empty_or_invalid and row_data:
-            # Check if dependency field is filled
-            if isinstance(params, list) and len(params) > 0:
-                dependency_field = params[0]
-                dependency_value = row_data.get(dependency_field)
-                dependency_str = str(dependency_value).strip() if not pd.isnull(dependency_value) else ""
-                dependency_filled = dependency_str != '' and dependency_str.lower() not in invalid_values
-                should_trigger = dependency_filled
+        elif condition == "is_empty_when_dependency_filled":
+            logging.debug(f"DEPENDENCY CHECK ENTRY: veld='{field_name}', is_empty_or_invalid={is_empty_or_invalid}, row_data={'yes' if row_data else 'no'}")
+            if is_empty_or_invalid and row_data:
+                # Check if dependency field is filled
+                if isinstance(params, list) and len(params) > 0:
+                    dependency_field = params[0]
+                    dependency_value = row_data.get(dependency_field)
+                    dependency_str = str(dependency_value).strip() if not pd.isnull(dependency_value) else ""
+                    dependency_filled = dependency_str != '' and dependency_str.lower() not in invalid_values
+                    should_trigger = dependency_filled
+                    
+                    # Debug logging
+                    if should_trigger:
+                        logging.info(f"DEPENDENCY VALIDATIE TRIGGER: Veld '{field_name}' is leeg maar '{dependency_field}' = '{dependency_str}' is wel ingevuld")
+                    else:
+                        logging.debug(f"DEPENDENCY CHECK: Veld '{field_name}' is leeg, '{dependency_field}' = '{dependency_str}', dependency_filled = {dependency_filled}")
                 
         elif condition == "mismatch_calculation" and not is_empty_or_invalid and row_data:
             # Check calculation: veld1 * veld2 = current field
@@ -1855,6 +1971,90 @@ def validate_field_v20_native(field_name: str, value: Any, field_config: dict, i
             # This would require additional context about other rows
             # For now, we'll skip this complex validation
             should_trigger = False
+            
+        elif condition == "uom_description_mismatch" and not is_empty_or_invalid and row_data:
+            # Check if Omschrijving Verpakkingseenheid matches UOM fields
+            should_trigger = False
+            
+            try:
+                # Get UOM fields (kolom K, L, M, N, O)
+                uom_verpakking = str(row_data.get("UOM Code Verpakkingseenheid", "")).strip()
+                inhoud_verpakking = str(row_data.get("Inhoud Verpakkingseenheid", "")).strip()
+                uom_basis = str(row_data.get("UOM Code Basiseenheid", "")).strip()
+                inhoud_basis = str(row_data.get("Inhoud Basiseenheid", "")).strip()
+                uom_inhoud_basis = str(row_data.get("UOM Code Inhoud Basiseenheid", "")).strip()
+                
+                # Normalize omschrijving for checking
+                omschrijving_upper = value_str.upper()
+                
+                # FASE 1 Checks:
+                # Check 1: Begint omschrijving met UOM Code uit kolom K?
+                if uom_verpakking and not omschrijving_upper.startswith(uom_verpakking.upper()):
+                    should_trigger = True
+                
+                # Check 2: Zijn alle hoofdletterwoorden geldige UOM codes?
+                elif reference_lists and "reference_lists" in reference_lists:
+                    uom_codes = reference_lists["reference_lists"].get("uom_codes", [])
+                    if uom_codes:
+                        # Extract words that are all uppercase (potential UOM codes)
+                        import re
+                        potential_uom_words = re.findall(r'\b[A-Z]{2,}\b', value_str)
+                        
+                        # Check if any potential UOM word is not in valid UOM list
+                        valid_uom_codes = [str(code).strip().upper() for code in uom_codes]
+                        for word in potential_uom_words:
+                            if word.upper() not in valid_uom_codes:
+                                should_trigger = True
+                                break
+                                
+            except Exception as e:
+                logging.warning(f"Fout bij UOM omschrijving validatie: {e}")
+                should_trigger = False
+            
+        elif condition == "not_starts_with" and not is_empty_or_invalid:
+            # Check if value starts with required prefix (e.g., https for URLs)
+            if isinstance(params, str):
+                required_prefix = params
+                should_trigger = not value_str.startswith(required_prefix)
+                # Debug logging
+                if should_trigger:
+                    logging.info(f"URL validatie TRIGGER: '{value_str}' begint niet met '{required_prefix}' in veld '{field_name}'")
+            else:
+                should_trigger = False
+                
+        elif condition == "not_space_separated" and not is_empty_or_invalid:
+            # Check if GTIN Historie values are properly space-separated
+            # e.g., "Oude GTIN: 1234567890123" is valid, "OudeGTIN:1234567890123" is not
+            if len(value_str.strip()) > 0:
+                # Check if there are spaces in the value and it contains expected elements
+                has_spaces = ' ' in value_str
+                should_trigger = not has_spaces
+                # Debug logging
+                if should_trigger:
+                    logging.info(f"GTIN Historie validatie TRIGGER: '{value_str}' is niet gescheiden met spaties in veld '{field_name}'")
+            else:
+                should_trigger = False
+                
+        elif condition == "no_gtin_or_barcode" and row_data:
+            # Check if none of the GTIN/barcode fields are filled
+            if isinstance(params, list):
+                gtin_fields = params
+                has_any_gtin = False
+                
+                for gtin_field in gtin_fields:
+                    gtin_value = str(row_data.get(gtin_field, "")).strip()
+                    if gtin_value and gtin_value not in ["", "nan", "NaN", "None"]:
+                        has_any_gtin = True
+                        break
+                
+                # Trigger flag only if no GTIN/barcode fields are filled
+                should_trigger = not has_any_gtin
+                
+                # Debug logging
+                if should_trigger:
+                    logging.debug(f"Geen GTIN/barcode validatie TRIGGER: geen van de velden {gtin_fields} is ingevuld")
+            else:
+                should_trigger = False
             
         elif condition == "invalid_au_risk_combination" and not is_empty_or_invalid and row_data:
             # Cross-field validation: AU code + Risk class combination
@@ -1997,8 +2197,9 @@ def check_duplicate_urls_with_varying_chemicals(df: pd.DataFrame, url_field: str
         
         if should_flag:
             # Voeg error toe voor elke rij met deze URL
+            rij_offset = 3  # Consistent met hoofdvalidatie - Start rijnummer in Excel na headers
             for idx, row in group_df.iterrows():
-                excel_row_num = idx + 2  # Excel is 1-based, plus 1 voor header
+                excel_row_num = idx + rij_offset  # GEFIXED - consistent met hoofdvalidatie
                 supplier_col = original_column_mapping.get(url_field, url_field)
                 
                 results.append({
@@ -2039,10 +2240,11 @@ def check_duplicate_urls_simple(df: pd.DataFrame, url_field: str, rule: dict, or
     
     if len(duplicate_urls) > 0:
         # Voeg error toe voor elke rij met een duplicate URL
+        rij_offset = 3  # Consistent met hoofdvalidatie - Start rijnummer in Excel na headers
         for url in duplicate_urls:
             url_rows = df_with_urls[df_with_urls[url_field] == url]
             for idx, row in url_rows.iterrows():
-                excel_row_num = idx + 2  # Excel is 1-based, plus 1 voor header
+                excel_row_num = idx + rij_offset  # GEFIXED - consistent met hoofdvalidatie
                 supplier_col = original_column_mapping.get(url_field, url_field)
                 
                 results.append({
@@ -2167,10 +2369,36 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
                 value = row[field]
                 value_str = '' if pd.isnull(value) else str(value).strip()
 
-                # Tel gevulde velden
+                # Tel gevulde velden - met UOM conditional logic
                 is_gevuld = value_str != '' and value_str.lower() not in invalid_values
+                
+                # UOM CONDITIONAL LOGIC: UOM velden alleen tellen als Omschrijving Verpakkingseenheid gevuld is
+                uom_fields = [
+                    'UOM Code Verpakkingseenheid', 'Inhoud Verpakkingseenheid',
+                    'UOM Code Basiseenheid', 'Inhoud Basiseenheid', 
+                    'UOM Code Inhoud Basiseenheid'
+                ]
+                
                 if is_gevuld:
-                    filled_counts[field] = filled_counts.get(field, 0) + 1
+                    if field in uom_fields:
+                        logging.debug(f"DEBUG PRICE_TOOL: UOM field {field} is gevuld: {value_str} (rij {excel_row_num})")
+                        # Voor UOM velden: alleen tellen als Omschrijving Verpakkingseenheid ook gevuld is
+                        if 'Omschrijving Verpakkingseenheid' in row_data:
+                            omschrijving_value = row_data.get('Omschrijving Verpakkingseenheid', '')
+                            omschrijving_str = '' if pd.isnull(omschrijving_value) else str(omschrijving_value).strip()
+                            omschrijving_gevuld = omschrijving_str != '' and omschrijving_str.lower() not in invalid_values
+                            
+                            logging.debug(f"DEBUG PRICE_TOOL: Omschrijving = '{omschrijving_str}', gevuld: {omschrijving_gevuld}")
+                            
+                            if omschrijving_gevuld:
+                                filled_counts[field] = filled_counts.get(field, 0) + 1
+                                logging.debug(f"DEBUG PRICE_TOOL: {field} COUNTED, new count: {filled_counts[field]}")
+                            else:
+                                logging.debug(f"DEBUG PRICE_TOOL: {field} NOT COUNTED - no Omschrijving")
+                            # Als geen Omschrijving gevuld: UOM veld NIET tellen als gevuld (conditioneel niet verplicht)
+                    else:
+                        # Niet-UOM velden: normale telling
+                        filled_counts[field] = filled_counts.get(field, 0) + 1
 
                 # Voer validatie uit - gebruik v20 native als rules array aanwezig is
                 if "rules" in rules:
@@ -2192,7 +2420,8 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
                                  "Supplier Kolom": clean_supplier_header(original_column_mapping.get(field, field)),
                                  "Veldwaarde": value_str, # Altijd de string waarde opslaan
                                  "Foutmelding": err.get('message', ''),
-                                 "code": err.get('code', '')
+                                 "code": err.get('code', ''),
+                                 "type": err.get('type', '')
                              }
                              results.append(result_item)
                              if field in field_validation_results:
@@ -2203,7 +2432,7 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
         if "field_validations" in validation_config:
             # v20 structure - gebruik global_validations
             red_flags_config = validation_config.get("global_validations", [])
-            logging.info(f"Gebruik v20 global_validations: {len(red_flags_config)} validaties gevonden")
+            logging.debug(f"Gebruik v20 global_validations: {len(red_flags_config)} validaties gevonden")
         else:
             # v18 structure - gebruik red_flags
             red_flags_config = validation_config.get("red_flags", [])
@@ -2425,7 +2654,15 @@ def validate_dataframe(df: pd.DataFrame, validation_config: dict, original_colum
 # HOOFDFUNCTIE VOOR AANROEP VANUIT STREAMLIT
 # -----------------------------
 
-def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation_json_path: str, original_input_filename: str, reference_json_path: str = None, max_rows: int = None, total_rows: int = None) -> str | None:
+def validate_pricelist(
+    input_excel_path: str,
+    mapping_json_path: str,
+    validation_json_path: str,
+    original_input_filename: str,
+    reference_json_path: Optional[str] = None,
+    max_rows: Optional[int] = None,
+    total_rows: Optional[int] = None,
+) -> Optional[str]:
     """
     Valideert een Excel prijslijst en genereert een Excel validatierapport.
     Retourneert het pad naar het rapport, of None bij een fout.
@@ -2472,11 +2709,12 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
         # Haal mapping dictionary op
         header_mapping_dict = {k: v["alternatives"] for k, v in header_mapping_config.get("standard_headers", {}).items()}
         
-        # Template type detectie en configuratie
+        # Template type detectie en configuratie (met caching voor performance)
+        logging.info(f"⚡ Detectie template type voor validatie...")
         template_type = determine_template_type(input_excel_path)
         logging.info(f"Template type gedetecteerd: {template_type}")
         
-        # Template-aware mandatory fields bepaling
+        # Template-aware mandatory fields bepaling (gebruik gecachte template_type)
         ghx_mandatory_fields = determine_mandatory_fields_for_template(input_excel_path)
         logging.info(f"Verplichte velden geladen: {len(ghx_mandatory_fields)} velden voor {template_type} template")
         
@@ -2486,6 +2724,7 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
             template_context = extract_template_generator_context(input_excel_path)
             if template_context:
                 # Voeg template type toe aan context
+                template_context['type'] = template_type  # Voeg 'type' toe voor consistentie
                 template_context['template_type'] = template_type
                 
                 # Log Template Generator informatie
@@ -2504,6 +2743,7 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
                 logging.warning("TG template type maar geen geldige context gevonden")
                 # Maak fallback context
                 template_context = {
+                    'type': template_type,  # Gebruik 'type' ipv 'template_type' voor consistentie
                     'template_type': template_type,
                     'configuration': {},
                     'decisions': {}
@@ -2545,11 +2785,19 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
             dtype_spec["GTIN Verpakkingseenheid"] = str
             
             # Lees Excel in - limiteer rijen indien Quick Mode
+            logging.debug(f"🔍 DEBUG: max_rows parameter = {max_rows} (type: {type(max_rows)})")
             if max_rows is not None:
-                logging.info(f"Quick Mode: limiteer tot {max_rows} rijen")
+                logging.info(f"✅ Quick Mode: limiteer tot {max_rows} rijen")
+                start_time = time.time()
                 df = pd.read_excel(input_excel_path, dtype=dtype_spec, nrows=max_rows)
+                end_time = time.time()
+                logging.info(f"⚡ Quick Mode Excel read: {df.shape} in {end_time-start_time:.2f} sec")
             else:
+                logging.info(f"⚠️  Volledige bestand lezen (max_rows is None)")
+                start_time = time.time()
                 df = pd.read_excel(input_excel_path, dtype=dtype_spec)
+                end_time = time.time()
+                logging.info(f"⚡ Volledig Excel read: {df.shape} in {end_time-start_time:.2f} sec")
             df_original = df.copy()
             
             # DEBUG: Log de ruwe, onbewerkte headers (debug level)
@@ -2572,7 +2820,7 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
                 if isinstance(col, str) and '\n' in col and '_' in col:
                     normalized = normalize_template_header(col)
                     if normalized != col:
-                        logging.info(f"Header genormaliseerd: {repr(col[:50])}... → {repr(normalized)}")
+                        logging.debug(f"Header genormaliseerd: {repr(col[:50])}... → {repr(normalized)}")
                     normalized_columns.append(normalized)
                 else:
                     normalized_columns.append(col)
@@ -2597,12 +2845,16 @@ def validate_pricelist(input_excel_path: str, mapping_json_path: str, validation
 
         # 4. Data opschonen
         logging.info("Opschonen DataFrame...")
-        df = clean_dataframe(df)
+        df, removed_rows_count = clean_dataframe(df)
         if df.empty:
              logging.warning("DataFrame is leeg na opschonen.")
              # Overweeg hier te stoppen of een leeg rapport te maken
         else:
              logging.info(f"DataFrame opgeschoond. Resterende rijen: {len(df)}")
+        
+        # Voeg removed_rows_count toe aan template_context voor Sheet 7 rijnummering
+        if template_context:
+            template_context['removed_rows_count'] = removed_rows_count
 
 
         # 5. Valideer data

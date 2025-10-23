@@ -6,9 +6,11 @@
 3. [Foutcodes: Het foutmeldingen systeem](#foutcodes-het-foutmeldingen-systeem)
 4. [Velden: Hoe validatie werkt](#velden-hoe-validatie-werkt)
 5. [Validatie Types: Wat kun je controleren](#validatie-types-wat-kun-je-controleren)
-6. [Complexe Validaties: Cross-row checks](#complexe-validaties-cross-row-checks)
-7. [Praktische Voorbeelden](#praktische-voorbeelden)
-8. [Een nieuwe validatie toevoegen](#een-nieuwe-validatie-toevoegen)
+6. [Geavanceerde V20 Features](#geavanceerde-v20-features)
+7. [Complexe Validaties: Cross-row checks](#complexe-validaties-cross-row-checks)
+8. [Praktische Voorbeelden](#praktische-voorbeelden)
+9. [Een nieuwe validatie toevoegen](#een-nieuwe-validatie-toevoegen)
+10. [Recente Wijzigingen](#recente-wijzigingen)
 
 ## 📖 Wat doet dit bestand?
 
@@ -29,7 +31,7 @@ Het `field_validation_v20.json` bestand is het **brein** van de GHX validatie to
         "null_values": ["nvt", "N/A", "-", ...],
         "error_code_descriptions": { "700": "Foutmelding...", ... }
     },
-    "fields": {
+    "field_validations": {
         "Artikelnummer": { ... },
         "CAS nummer": { ... },
         "Link Veiligheidsinformatieblad (SDS)": { ... }
@@ -124,6 +126,53 @@ Elk veld (zoals "Artikelnummer" of "CAS nummer") heeft zijn eigen **validatie re
 ### 📅 Boolean velden (ja/nee)
 ```json
 "condition": "is_not_boolean"     → Is het niet Ja/Nee/1/0?
+```
+
+## 🧠 Geavanceerde V20 Features
+
+### **Context Triggers: Medical Device Validaties**
+V20 ondersteunt slimme context-detectie voor medische apparaten:
+
+```json
+"context_triggers": {
+    "is_medical_device": {
+        "description": "Bepaalt of het product een medisch apparaat is.",
+        "trigger_logic": "OR",
+        "triggers": [
+            { "if_field": "UNSPSC Code", "starts_with": "42" },
+            { "if_field": "Steriel", "equals": 1 },
+            { "if_field": "Indicatie Implanteerbaar", "equals": 1 }
+        ]
+    }
+}
+```
+
+**Hoe werkt dit:**
+- Systeem checkt automatisch of product medisch apparaat is
+- Op basis hiervan worden extra validaties getriggerd
+- Zorgt voor context-gevoelige business rules
+
+### **Template Type Support**
+V20 detecteert automatisch template types (TG/DT/AT):
+- **TG (Template Generator)**: Dynamische templates met stamp-detectie
+- **DT (Default Template)**: Standaard GHX templates  
+- **AT (Alternative Template)**: Afwijkende leverancier templates
+
+### **Cross-field Dependencies**
+Geavanceerde veld-afhankelijkheden:
+```json
+"rules": [
+    {
+        "type": "flag",
+        "code": "751",
+        "condition": "conditional_required",
+        "params": {
+            "if_field": "Bruto Gewicht Basiseenheid", 
+            "is": "filled",
+            "then_required": "Eenheidscode Gewicht Basiseenheid (UOM)"
+        }
+    }
+]
 ```
 
 ## 🎯 Complexe Validaties: Cross-row checks
@@ -273,6 +322,25 @@ Sommige validaties kijken naar **meerdere rijen tegelijk**. Dit is handig voor c
 1. Upload een Excel bestand met je test case
 2. Check of de fout correct wordt gedetecteerd  
 3. Verificeer dat de foutmelding duidelijk is
+
+## 🔄 Recente Wijzigingen
+
+### **UNSPSC Veldnaam Update**
+**Let op:** Het veld `"UNSPSC"` is hernoemd naar `"UNSPSC Code"` voor consistentie met GHX templates.
+
+```json
+// Oud (werkt niet meer):
+"UNSPSC": { ... }
+
+// Nieuw (correct):
+"UNSPSC Code": { ... }
+```
+
+### **Error Code 775 Bewoording**
+Foutcode 775 is aangepast voor algemene beschrijving in Sheet 1:
+```json
+"775": "FLAG: Een URL komt meer dan 5 keer voor en wijst mogelijk op een generieke link die niet specifiek is voor een product."
+```
 
 ## 💡 Tips & Tricks
 

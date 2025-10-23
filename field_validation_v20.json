@@ -65,7 +65,7 @@
         "750": "FLAG: Aanbeveling om een optioneel, maar belangrijk veld (zoals Artikelomschrijving) in te vullen.",
         "751": "FLAG: Een veld is leeg terwijl dit verplicht is vanwege een afhankelijkheid met een ander veld.",
         "752": "FLAG: De Brutoprijs is lager dan de Nettoprijs.",
-        "753": "FLAG: De 'Omschrijving Verpakkingseenheid' komt mogelijk niet overeen met de UOM-velden.",
+        "753": "DEPRECATED: Omschrijving Verpakkingseenheid vs UOM mismatch (nu 724).",
         "754": "CORRECTION: De 'Omrekenfactor' is automatisch berekend.",
         "755": "CORRECTION: De 'Prijs per Kleinste eenheid' is automatisch berekend.",
         "756": "FLAG: Een GTIN ontbreekt bij een medisch hulpmiddel met een hoge risicoklasse.",
@@ -87,7 +87,10 @@
         "772": "CORRECTION: De ingevulde risicoklasse is niet geldig in combinatie met de gekozen productclassificatiecode.",
         "773": "FLAG: Een GMDN-code of EMDN-code is verplicht voor medische producten (UNSPSC 42xxxx).",
         "774": "FLAG: Veiligheidsblad URL mogelijk generiek - URL komt meer dan 5x voor met verschillende CAS-nummers/stoffen.",
-        "775": "FLAG: Deze URL komt meer dan 5 keer voor en wijst mogelijk op een generieke link die niet specifiek is voor dit product.",
+        "775": "FLAG: Een URL komt meer dan 5 keer voor en wijst mogelijk op een generieke link die niet specifiek is voor een product.",
+        "776": "CORRECTION: H-zinnen code heeft een ongeldig format. Elke code moet bestaan uit de letter 'H' gevolgd door 3 cijfers (bijv. H300, H315).",
+        "777": "FLAG: U heeft geen enkele GTIN of alternatieve barcode ingevuld. Dat is niet onmogelijk maar wel ongebruikelijk.",
+        "780": "REJECTION: Verplichte kolom niet gevonden in template.",
 
         "800": "GLOBAL FLAG: Er ontbreekt een barcode (GTIN of Aanvullende ID) op een productregel.",
         "801": "GLOBAL FLAG: UOM codes moeten gelijk zijn als base=orderable beide 1 zijn.",
@@ -215,7 +218,7 @@
                     "code": "702",
                     "condition": "max_length",
                     "params": 90,
-                    "message": "Artikelnaam is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
+                    "message": "Artikelnaam is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden tot 90 karakters."
                 }
             ]
         },
@@ -227,7 +230,7 @@
                     "code": "702",
                     "condition": "max_length",
                     "params": 2000,
-                    "message": "Artikelomschrijving is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
+                    "message": "Artikelomschrijving is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden tot 2000 karakters."
                 },
                 {
                     "type": "flag",
@@ -269,7 +272,7 @@
                     "type": "correction",
                     "code": "704",
                     "condition": "is_not_numeric",
-                    "message": "De 'Brutoprijs' is ongeldig. De waarde zou hierdoor in een later stadium aangepast kunnen worden naar '0'."
+                    "message": "De 'Brutoprijs' is niet numeriek en daardoor ongeldig. De waarde zou hierdoor in een later stadium aangepast kunnen worden naar '0'."
                 },
                 {
                     "type": "flag",
@@ -293,7 +296,13 @@
                     "type": "rejection",
                     "code": "704",
                     "condition": "is_not_numeric",
-                    "message": "De 'Nettoprijs' heeft een ongeldig format. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
+                    "message": "De 'Nettoprijs' is niet numeriek en daardoor ongeldig. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
+                },
+                {
+                    "type": "correction",
+                    "code": "705",
+                    "condition": "currency_symbols",
+                    "message": "In het veld 'Nettoprijs' stonden valutatekens en duizendtallenscheidingstekens in het veld, die hebben wij verwijderd."
                 }
             ]
         },
@@ -345,11 +354,11 @@
                     "code": "702",
                     "condition": "max_length",
                     "params": 25,
-                    "message": "Omschrijving Verpakkingseenheid is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
+                    "message": "Omschrijving Verpakkingseenheid is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden tot 25 karakters."
                 },
                 {
                     "type": "flag",
-                    "code": "753",
+                    "code": "724",
                     "condition": "uom_description_mismatch",
                     "message": "De 'Omschrijving Verpakkingseenheid' komt mogelijk niet overeen met de specificaties in de UOM-velden die erop volgen. Controleer of de omschrijving en de UOM-codes en -inhoud met elkaar corresponderen."
                 }
@@ -516,14 +525,14 @@
                     "code": "701",
                     "condition": "min_length",
                     "params": 13,
-                    "message": "De 'GTIN Verpakkingseenheid' is te kort. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
+                    "message": "De 'GTIN Verpakkingseenheid' heeft een ongeldig format. Een GTIN bestaat uit 13 of 14 cijfers. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "rejection",
                     "code": "702",
                     "condition": "max_length",
                     "params": 14,
-                    "message": "De 'GTIN Verpakkingseenheid' is te lang. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
+                    "message": "De 'GTIN Verpakkingseenheid' heeft een ongeldig format. Een GTIN bestaat uit 13 of 14 cijfers. De regel zou hierdoor in een later stadium afgekeurd kunnen worden."
                 },
                 {
                     "type": "flag",
@@ -537,6 +546,13 @@
                     "condition": "is_empty_when_context",
                     "params": ["is_medical_device_high_risk"],
                     "message": "Een GTIN is verplicht voor medische hulpmiddelen met een hoge risicoklasse, maar het veld 'GTIN Verpakkingseenheid' is niet ingevuld."
+                },
+                {
+                    "type": "flag",
+                    "code": "777",
+                    "condition": "no_gtin_or_barcode",
+                    "params": ["GTIN Verpakkingseenheid", "GTIN Basiseenheid", "Aanvullende Productidentificatie"],
+                    "message": "U heeft geen enkele GTIN of alternatieve barcode ingevuld. Dat is niet onmogelijk maar wel ongebruikelijk."
                 }
             ]
         },
@@ -549,6 +565,12 @@
                     "condition": "max_length",
                     "params": 200,
                     "message": "Het veld 'GTIN Verpakkingseenheid Historie' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
+                },
+                {
+                    "type": "correction", 
+                    "code": "704",
+                    "condition": "not_space_separated",
+                    "message": "Het veld 'GTIN Verpakkingseenheid Historie' is niet gescheiden met een spatie. De regel is daarom leeg gelaten."
                 }
             ]
         },
@@ -580,6 +602,12 @@
                     "condition": "max_length",
                     "params": 200,
                     "message": "Het veld 'GTIN Basiseenheid Historie' is te lang. De waarde zou hierdoor in een later stadium ingekort kunnen worden."
+                },
+                {
+                    "type": "correction", 
+                    "code": "704",
+                    "condition": "not_space_separated",
+                    "message": "Het veld 'GTIN Basiseenheid Historie' is niet gescheiden met een spatie. De regel is daarom leeg gelaten."
                 }
             ]
          },
@@ -1037,7 +1065,7 @@
                     "type": "correction",
                     "code": "772",
                     "condition": "invalid_au_risk_combination",
-                    "message": "De ingevulde 'Aanvullende Productclassificatiewaarde' (Risicoklasse) is niet geldig in combinatie met de gekozen 'Code voor Aanvullende Productclassificatie'. De waarde zou hierdoor in een later stadium aangepast kunnen worden."
+                    "message": "De ingevulde 'Aanvullende Productclassificatiewaarde' (Risicoklasse) is niet geldig in combinatie met de gekozen 'Code voor Aanvullende Productclassificatie'. Het veld zal daarom leeg gelaten worden en de regel kan in een later stadium zelfs afgekeurd worden."
                 }
             ]
         },
@@ -1265,6 +1293,31 @@
                     "condition": "value_not_in_list",
                     "list_ref": "adr_classes",
                     "message": "De ingevulde waarde voor 'ADR Gevarenklasse' komt niet voor in de referentielijst. De waarde zou hierdoor in een later stadium verwijderd kunnen worden."
+                }
+            ]
+        },
+        "H-zinnen": {
+            "data_format": "string",
+            "rules": [
+                {
+                    "type": "correction",
+                    "code": "776",
+                    "condition": "invalid_h_code_format",
+                    "message": "H-zinnen hebben een ongeldig format. Elke code moet bestaan uit de letter 'H' gevolgd door 3 cijfers (bijv. H300, H315). Meerdere codes scheiden met komma's of spaties."
+                },
+                {
+                    "type": "correction",
+                    "code": "702",
+                    "condition": "max_length",
+                    "params": 255,
+                    "message": "De 'H-zinnen' zijn te lang (max 255 karakters). De waarde zou hierdoor in een later stadium ingekort kunnen worden."
+                },
+                {
+                    "type": "flag",
+                    "code": "766",
+                    "condition": "is_filled_when_dependency_empty",
+                    "params": ["CAS nummer"],
+                    "message": "Het veld 'H-zinnen' is ingevuld, maar het bijbehorende CAS-nummer ontbreekt. Dit is aanbevolen voor een volledige identificatie."
                 }
             ]
         },
@@ -1929,7 +1982,7 @@
             "code": "802",
             "condition": "template_column_missing",
             "fields": ["Is BestelbareEenheid", "Omschrijving Verpakkingseenheid"],
-            "message": "U maakt mogelijk geen gebruik van de nieuwste template. Wij adviseren u de meest actuele versie te downloaden via: https://ghxnl.ghxeurope.com/synqeps/webroot/upload/GHXstandaardTemplate2.xlsx"
+            "message": "U maakt mogelijk geen gebruik van de nieuwste template. Wij adviseren u de meest actuele versie te downloaden via de link op sheet 2. Inleiding."
         },
         {
             "id": "CHECK_UOM_DESCRIPTION_FORMAT",

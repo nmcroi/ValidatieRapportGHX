@@ -235,11 +235,19 @@ def parse_version_line(version_line: str) -> Dict[str, str]:
                 version_info['version'] = match.group(1)
                 break
         
-        # Zoek datum patroon
-        date_pattern = r'(\d{4}-\d{2}-\d{2})'
-        date_match = re.search(date_pattern, version_line)
-        if date_match:
-            version_info['release_date'] = date_match.group(1)
+        # Zoek datum en tijd patroon - verschillende formaten
+        date_patterns = [
+            r'(\d{2}-\d{2}-\d{4} \d{2}:\d{2})',  # dd-mm-yyyy hh:mm
+            r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2})',  # yyyy-mm-dd hh:mm
+            r'(\d{2}-\d{2}-\d{4})',              # dd-mm-yyyy
+            r'(\d{4}-\d{2}-\d{2})',              # yyyy-mm-dd
+        ]
+        
+        for pattern in date_patterns:
+            date_match = re.search(pattern, version_line)
+            if date_match:
+                version_info['release_date'] = date_match.group(1)
+                break
         
         return version_info
         

@@ -1045,6 +1045,33 @@
       "case_sensitive": false,
       "strip_whitespace": true
     },
+    "UNSPSC": {
+      "alternatives": [
+        "13) UNSPSC code",
+        "Internationale artikelcodering. De codes kunt u vinden op http://www.unspsc.org of neem contact op met uw klant voor advies.",
+        "Nieuwe UNSPSC code",
+        "SPSC Code", 
+        "UNSPSC",
+        "UNSPSC (2) (VERPLICHT UNI LEIDEN EN UNI UTRECHT)",
+        "UNSPSC CODE",
+        "UNSPSC CODE (UNITED NATIONS STANDARD PRODUCTS AND SERVICES CODE)",
+        "UNSPSC CODEUnited Nations Standard Products and Services Code",
+        "UNSPSC CODE_x000D_",
+        "UNSPSC Code",
+        "UNSPSC Number",
+        "UNSPSC code",
+        "UNSPSC-CODE",
+        "UNSPSC2",
+        "UNSPSCCODE", 
+        "UNSPSC_CODE",
+        "UNSPSC_CODE_United_Nations_Standard_Products_and_Services_Code",
+        "UNSPSCode",
+        "United Nations Std P",
+        "unspsc"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
     "GMDN Code": {
       "alternatives": [
         "GMDIN",
@@ -1271,6 +1298,23 @@
         "Sum of Chemical formula",
         "materialformula",
         "Brutoformule\n(Voor Uni's)\n\nChemical formula\n(For Universities)"
+      ],
+      "case_sensitive": false,
+      "strip_whitespace": true
+    },
+    "H-zinnen": {
+      "alternatives": [
+        "H-zinnen",
+        "H zinnen",
+        "Hazard Statements",
+        "H-statements",
+        "H statements",
+        "H Statements",
+        "H-Statements",
+        "Hazard statements",
+        "GHS Hazard Statements",
+        "H phrases",
+        "H-phrases"
       ],
       "case_sensitive": false,
       "strip_whitespace": true

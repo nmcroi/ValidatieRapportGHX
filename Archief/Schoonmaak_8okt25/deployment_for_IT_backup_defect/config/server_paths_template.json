@@ -1,0 +1,17 @@
+{
+  "server_paths": {
+    "logo_path": "/path/to/server/static/ghx_logo_2.png",
+    "validation_log_file": "/path/to/server/reports/validaties_overzicht.xlsx",
+    "template_generator_files": "/path/to/server/Template_Generator_Files",
+    "temp_reports_dir": "/tmp/validation_reports"
+  },
+  "urls": {
+    "ghx_template_url": "https://ghxnl.ghxeurope.com/synqeps/webroot/upload/GHXstandaardTemplate2.xlsx"
+  },
+  "deployment_notes": {
+    "logo_path": "Update this to point to your server's logo file location",
+    "validation_log_file": "Update this to point to your server's validation log file location", 
+    "template_generator_files": "Update this to point to your Template Generator Files directory",
+    "temp_reports_dir": "Temporary directory for report generation (ensure write permissions)"
+  }
+}

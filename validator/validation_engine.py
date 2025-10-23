@@ -148,6 +148,21 @@ def validate_dataframe(df: pd.DataFrame, validation_config: Dict, original_colum
                     if field_errors:
                         summary_stats['mandatory_field_errors'] += len(field_errors)
             
+            # Voeg errors toe voor missing mandatory columns (voor elke rij)
+            for missing_field in missing_mandatory_fields:
+                if should_validate_field(missing_field, template_context or {}):
+                    missing_error = {
+                        'rij': index + 1,
+                        'field': missing_field,
+                        'value': None,
+                        'error_code': '780',  # Nieuwe error code voor missing columns
+                        'error_message': f"Kolom '{missing_field}' niet gevonden in template. De regel zou hierdoor in een later stadium afgekeurd kunnen worden.",
+                        'error_type': 'rejection',
+                        'severity': 'error'
+                    }
+                    row_errors.append(missing_error)
+                    summary_stats['mandatory_field_errors'] += 1
+            
             # Valideer alle velden tegen regels
             for field_name in df.columns:
                 if should_validate_field(field_name, template_context or {}):
@@ -232,11 +247,26 @@ def validate_field_v20_native(field_name: str, value: Any, field_config: Dict,
         # Skip validatie voor lege waarden tenzij required
         if pd.isna(value) or str(value).strip() == '':
             if validation_rules.get('required', False):
+                # UOM CONDITIONAL VALIDATION FIX:
+                # UOM velden zijn alleen verplicht als Omschrijving Verpakkingseenheid gevuld is
+                uom_fields = [
+                    'UOM Code Verpakkingseenheid', 'Inhoud Verpakkingseenheid',
+                    'UOM Code Basiseenheid', 'Inhoud Basiseenheid', 
+                    'UOM Code Inhoud Basiseenheid'
+                ]
+                
+                if field_name in uom_fields and row_data:
+                    # Check of Omschrijving Verpakkingseenheid gevuld is
+                    omschrijving_value = row_data.get('Omschrijving Verpakkingseenheid', '')
+                    if pd.isna(omschrijving_value) or str(omschrijving_value).strip() == '':
+                        # Omschrijving leeg = UOM velden niet verplicht
+                        return errors
+                
                 errors.append({
                     'field': field_name,
                     'row': row_index,
                     'error_type': 'required_field_missing',
-                    'message': f"Verplicht veld '{field_name}' is leeg",
+                    'message': f"Het veld '{field_name}' is verplicht, maar niet ingevuld. De regel zou hierdoor in een later stadium afgekeurd kunnen worden.",
                     'value': value
                 })
             return errors

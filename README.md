@@ -112,8 +112,12 @@ Zie `deployment_for_IT/README_FOR_IT.md` voor server deployment instructies.
 
 ## 📖 Comprehensive Documentation
 
-Volledige documentatie beschikbaar in de `docs/` directory:
+### 🚀 **Voor Claude Code: Ready-to-Use Prompts**
+- **[Claude Code Prompt Library](Handleidingen/Claude-Code-Prompts/README.md)** - Copy-paste prompts voor snelle implementatie
+- **[Nieuwe Kolom Toevoegen](Handleidingen/Claude-Code-Prompts/NIEUWE_KOLOM_TOEVOEGEN.md)** - Template voor kolom toevoegingen
+- **[Validatieregel Aanpassen](Handleidingen/Claude-Code-Prompts/VALIDATIEREGEL_AANPASSEN.md)** - Template voor validatie wijzigingen
 
+### 📚 **Complete Technische Documentatie**
 - **[🏗️ Architecture](docs/ARCHITECTURE.md)** - Systeem ontwerp en clean architecture principes
 - **[🌳 Template Detection](docs/TEMPLATE_DETECTION.md)** - TG→N→O beslissings boom logica  
 - **[🔄 Validation Pipeline](docs/VALIDATION_PIPELINE.md)** - Complete processing workflow

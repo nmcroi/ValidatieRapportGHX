@@ -117,7 +117,8 @@ def get_context_mandatory_fields(template_config: Dict, context: Dict[str, Any])
         excel_path = context.get('excel_path')
         if excel_path:
             try:
-                excel_data = pd.read_excel(excel_path)
+                # Limiteer Excel data lezen voor performance (max 5000 rijen voor Quick Mode)
+                excel_data = pd.read_excel(excel_path, nrows=5000)
                 logging.info(f"Excel data geladen voor mandatory fields bepaling: {excel_data.shape}")
             except Exception as e:
                 logging.warning(f"Kon Excel data niet laden voor mandatory fields: {e}")

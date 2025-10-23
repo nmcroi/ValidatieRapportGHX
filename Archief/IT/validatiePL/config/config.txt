@@ -1,0 +1,23 @@
+[Input]
+# Pad naar de input Excel-bestanden die gecheckt moeten worden
+input_folder = ./input
+
+[Output]
+# Pad waar outputbestanden of rapportages worden opgeslagen
+output_folder = ./output
+
+[Validation]
+# JSON-bestanden met validatieregels
+field_validation_file = ./config/field_validation_v18.json
+header_mapping_file = ./config/header_mapping.json
+
+[Logging]
+# Map voor logbestanden (bijv. foutmeldingen)
+log_folder = ./logs
+
+[Settings]
+# True = logbestanden opslaan, False = niet opslaan
+enable_logging = true
+
+# True = open automatisch de gegenereerde output (indien van toepassing)
+open_report_on_finish = false

@@ -9,6 +9,55 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Any  # Type hints zijn goed om te behouden
 
 # -----------------------------
+# HELPER FUNCTIONS
+# -----------------------------
+
+def detect_data_start_row(excel_path: str) -> int:
+    """
+    Detecteert op welke rij de data daadwerkelijk begint in het Excel bestand.
+    Voor TG templates kan dit rij 4 zijn, voor DT templates rij 3.
+    
+    Args:
+        excel_path: Pad naar het Excel bestand
+        
+    Returns:
+        int: Rijnummer waar data begint (1-indexed, zoals Excel)
+    """
+    try:
+        logging.info(f"DEBUG Sheet 7: Detecteer data start row voor {excel_path}")
+        
+        # Lees de eerste paar rijen om de structuur te analyseren
+        df_peek = pd.read_excel(excel_path, nrows=10, header=None)
+        
+        # Zoek naar de eerste rij die echte data bevat
+        # Data begint meestal na de header rij
+        for i in range(len(df_peek)):
+            row = df_peek.iloc[i]
+            # Check of deze rij data bevat (niet alleen headers of lege cellen)
+            non_empty_cells = row.dropna().astype(str).str.strip()
+            non_empty_cells = non_empty_cells[non_empty_cells != '']
+            
+            # Als meer dan 3 gevulde cellen en geen typische header woorden
+            if len(non_empty_cells) > 3:
+                # Check of dit geen header rij is
+                row_text = ' '.join(non_empty_cells.str.lower())
+                header_keywords = ['artikel', 'prijs', 'naam', 'nummer', 'omschrijving', 'eenheid', 'code']
+                
+                # Als het weinig header keywords bevat, is het waarschijnlijk data
+                keyword_count = sum(1 for keyword in header_keywords if keyword in row_text)
+                if keyword_count < 2:  # Minder dan 2 header woorden = waarschijnlijk data
+                    logging.info(f"DEBUG Sheet 7: Data gevonden op rij {i}, Excel rij {i + 1}")
+                    return i + 1  # Excel rijnummering is 1-indexed
+        
+        # Fallback: gebruik rij 3 als default (meeste templates)
+        logging.info("DEBUG Sheet 7: Geen data rij gedetecteerd, gebruik default rij 3")
+        return 3
+        
+    except Exception as e:
+        logging.warning(f"DEBUG Sheet 7: Kon data start rij niet detecteren voor {excel_path}: {e}")
+        return 3  # Safe fallback
+
+# -----------------------------
 # NEW INTUITIVE SCORE CALCULATION
 # -----------------------------
 
@@ -579,6 +628,7 @@ def update_validation_log(
     total_leeg,
     M_missing,
     ghx_mandatory_fields_list,  # Pass ghx_mandatory_fields list
+    numeric_total_rows,  # Pass the actual numeric row count
     total_errors_non_mand=0,
     total_filled_non_mand=0,
     total_leeg_non_mand=0,
@@ -621,7 +671,7 @@ def update_validation_log(
 
     # Bereken percentages
     # We gebruiken len(ghx_mandatory_fields_list) die nu wordt doorgegeven
-    total_mandatory_potential_fields = len(ghx_mandatory_fields_list) * total_rows
+    total_mandatory_potential_fields = len(ghx_mandatory_fields_list) * numeric_total_rows
     perc_filled_mandatory = (
         (total_filled_in_present / total_mandatory_potential_fields * 100)
         if total_mandatory_potential_fields > 0
@@ -662,7 +712,7 @@ def update_validation_log(
         "Optioneel - Foutief Gevuld": total_errors_non_mand,  # Hernoemd
         "Optioneel - Leeg": total_leeg_non_mand,
         # Totalen
-        "Totaal velden": total_rows * total_cols,
+        "Totaal velden": numeric_total_rows * total_cols,
         "Totaal gevuld": total_filled_in_present + total_filled_non_mand,
         "Totaal correct gevuld": correct_filled_mandatory
         + correct_filled_non_mandatory,  # Hernoemd
@@ -762,6 +812,7 @@ def add_colored_dataset_sheet(
     JSON_CONFIG_PATH,
     validation_config=None,
     template_context=None,
+    excel_path=None,
 ):
     """Voeg een sheet toe met de volledige dataset in kleurcodering."""
     # Gebruik de doorgegeven validation_config of val terug op laden van bestand
@@ -885,13 +936,14 @@ def add_colored_dataset_sheet(
         worksheet.write("A1", "Legenda:", legenda_title_format)
         worksheet.write("A2", "Correct/Optioneel leeg", correct_format_legend)
         worksheet.write("A3", "Foutief ingevuld (verplicht)", error_format_legend)
-        worksheet.write("A4", "Foutief ingevuld (optioneel)", error_optional_format_legend)
+        worksheet.write("A4", "Foutief ingevuld/Flags", error_optional_format_legend)
         worksheet.write("A5", "Verplicht veld leeg", empty_mandatory_format_legend)
         worksheet.write("A6", "UOM-relatie conflict", uom_relation_error_format_legend)
         start_row = 7
 
         # Maak error lookups
         error_lookup = {}  # Voor normale fouten
+        flag_lookup = {}  # Voor flags (speciale roze kleur)
         uom_relation_error_lookup = {}  # Voor code 724, 801, 805 fouten (UOM relatie conflicten)
 
         for error in validation_results:
@@ -930,10 +982,18 @@ def add_colored_dataset_sheet(
                                 related_col_idx = df.columns.get_loc("Inhoud Verpakkingseenheid")
                                 uom_relation_error_lookup[row_idx].add(related_col_idx)
                     else:
-                        # Normale fouten
-                        if row_idx not in error_lookup:
-                            error_lookup[row_idx] = set()
-                        error_lookup[row_idx].add(col_idx)
+                        # Check of dit een flag is
+                        error_type = error.get("type", "")
+                        if error_type == "flag":
+                            # Flags krijgen speciale behandeling
+                            if row_idx not in flag_lookup:
+                                flag_lookup[row_idx] = set()
+                            flag_lookup[row_idx].add(col_idx)
+                        else:
+                            # Normale fouten (rejection/correction)
+                            if row_idx not in error_lookup:
+                                error_lookup[row_idx] = set()
+                            error_lookup[row_idx].add(col_idx)
 
         # Bepaal welke kolommen zichtbaar zijn (Template Generator filtering)
         visible_columns = list(df.columns)
@@ -951,8 +1011,12 @@ def add_colored_dataset_sheet(
         visible_columns = [col for col in visible_columns if not col.startswith("ALGEMEEN")]
         
         # Schrijf alleen zichtbare headers
+        # Voeg eerst de rijnummer kolom toe
+        worksheet.write(start_row, 0, "Regelnummer template", header_format)
+        
+        # Schrijf de rest van de headers vanaf kolom 1
         for col, header in enumerate(visible_columns):
-            worksheet.write(start_row, col, str(header), header_format)
+            worksheet.write(start_row, col + 1, str(header), header_format)
 
         # Schrijf data met kleuren (limiteer rijen)
         max_rows_sheet = min(len(df), ERROR_LIMIT)  # Gebruik limiet
@@ -975,7 +1039,23 @@ def add_colored_dataset_sheet(
                 warning_format
             )
 
+        # SIMPEL: Check hoeveel rijen zijn verwijderd uit originele Excel file
+        # Default: data begint op rij 2 (na headers), +1 voor elke verwijderde rij
+        data_start_row = 2
+        
+        # Check template context voor informatue over verwijderde regels
+        removed_rows = 0
+        if template_context and 'removed_rows_count' in template_context:
+            removed_rows = template_context['removed_rows_count']
+        
+        data_start_row = 2 + removed_rows  # Headers op rij 1, dan +removed rows
+        logging.info(f"Sheet 7: Data start berekening = rij 2 (base) + {removed_rows} (verwijderd) = rij {data_start_row}")
+        
         for row_idx in range(max_rows_sheet):
+            # Schrijf eerst het template rijnummer in kolom A (0) - nu dynamisch
+            template_row_number = row_idx + data_start_row
+            worksheet.write(start_row + 1 + row_idx, 0, template_row_number, correct_format)
+            
             for col_idx, field_name in enumerate(visible_columns):
                 # Get original column index for df.iloc
                 orig_col_idx = df.columns.get_loc(field_name)
@@ -1014,28 +1094,35 @@ def add_colored_dataset_sheet(
                 elif is_empty and (is_mandatory or has_dependency):
                     # PRIORITEIT: Verplichte velden die leeg zijn zijn ALTIJD geel
                     cell_format = empty_mandatory_format
+                elif row_idx in flag_lookup and orig_col_idx in flag_lookup[row_idx]:
+                    # Flags krijgen altijd roze kleur (error_optional_format)
+                    cell_format = error_optional_format  # Roze voor flags
                 elif row_idx in error_lookup and orig_col_idx in error_lookup[row_idx]:
+                    # Lege optionele velden NOOIT kleuren, ook niet bij fouten
+                    if is_empty and not is_mandatory and not has_dependency:
+                        cell_format = correct_format  # Wit voor lege optionele velden
                     # Onderscheid maken tussen verplichte en niet-verplichte fouten
-                    if is_mandatory:
+                    elif is_mandatory:
                         cell_format = error_format  # Rood voor verplichte fouten
                     else:
                         cell_format = error_optional_format  # Roze voor niet-verplichte fouten
 
-                # Schrijf waarde met bepaalde opmaak
+                # Schrijf waarde met bepaalde opmaak (shift 1 kolom naar rechts voor rijnummer kolom)
                 worksheet.write(
-                    start_row + row_idx + 1, col_idx, value_str, cell_format
+                    start_row + row_idx + 1, col_idx + 1, value_str, cell_format
                 )
             
             # Stel rijhoogte in op 15 voor elke data rij (geen terugloop)
             worksheet.set_row(start_row + row_idx + 1, 15)
 
-        # Stel kolombreedte in - A is al ingesteld op 25, rest op 30 (zoals template)
-        if len(visible_columns) > 1:
-            worksheet.set_column(1, len(visible_columns) - 1, 30)
+        # Stel kolombreedte in - alle kolommen op 30 (zoals template)
+        worksheet.set_column(0, 0, 30)  # Rijnummer kolom ook 30
+        if len(visible_columns) > 0:
+            worksheet.set_column(1, len(visible_columns), 30)  # Data kolommen
 
         # Voeg Excel AutoFilter toe voor betere filtering mogelijkheden
-        # AutoFilter bereik: van header rij tot laatste data rij
-        last_col = len(visible_columns) - 1
+        # AutoFilter bereik: van header rij tot laatste data rij (inclusief extra rijnummer kolom)
+        last_col = len(visible_columns)  # +1 voor rijnummer kolom
         last_row = start_row + max_rows_sheet  # start_row + aantal data rijen
         worksheet.autofilter(start_row, 0, last_row, last_col)
 
@@ -1091,7 +1178,7 @@ def genereer_rapport(
     template_type, template_info = determine_template_type(df, excel_path)
     
     # Quick Mode detectie (voorkom UnboundLocalError)
-    quick_mode = (max_rows is not None and max_rows == 5000)
+    quick_mode = (max_rows is not None)
 
     # Constanten voor rapportage limieten (uit notebook Code 5)
     ERROR_LIMIT = 50000  # Maximaal aantal errors per sheet
@@ -1130,8 +1217,15 @@ def genereer_rapport(
             try:
                 code_int = int(float(code_str))  # Handle both int and float strings
                 
+                # Specifieke flag codes die verkeerd zouden worden geclassificeerd
+                flag_codes = {703, 720, 751, 752, 753, 756, 758, 759, 760, 761, 762, 763, 764, 765, 766, 769, 770, 771, 773, 774, 775}
+                
                 # Categorisering op basis van code ranges
-                if 700 <= code_int <= 749:
+                if code_int in flag_codes:
+                    return "Vlag"
+                elif 700 <= code_int <= 749:
+                    if code_int == 724:  # Speciale uitzondering voor conflict
+                        return "Conflict"
                     return "Afkeuring"
                 elif code_int == 772:  # Speciale uitzondering voor correction
                     return "Aanpassing"
@@ -1139,6 +1233,62 @@ def genereer_rapport(
                     return "Vlag"
                 elif 800 <= code_int <= 899:
                     return "Vlag"  # Global flags zijn ook vlaggen
+                else:
+                    return "Onbekend"
+            except (ValueError, TypeError):
+                return "Onbekend"
+        
+        def get_error_category_with_type(row):
+            """Bepaal error category op basis van type field (indien beschikbaar) of code."""
+            # Probeer eerst het type field te gebruiken (nieuw systeem)
+            if 'type' in row and pd.notna(row['type']) and str(row['type']).strip():
+                error_type = str(row['type']).strip().lower()
+                if error_type == 'flag':
+                    return "Vlag"
+                elif error_type == 'correction':
+                    return "Aanpassing"
+                elif error_type == 'rejection':
+                    return "Afkeuring"
+            
+            # Fallback naar oude code-based logica
+            return get_error_category(row.get('Foutcode', row.get('code', '')))
+        
+        def get_error_category_optional(row):
+            """Speciale versie voor optionele fouten - gebruikt 'Incorrect' in plaats van 'Afkeuring'."""
+            # Probeer eerst het type field te gebruiken (nieuw systeem)
+            if 'type' in row and pd.notna(row['type']) and str(row['type']).strip():
+                error_type = str(row['type']).strip().lower()
+                if error_type == 'flag':
+                    return "Vlag"
+                elif error_type == 'correction':
+                    return "Aanpassing"
+                elif error_type == 'rejection':
+                    return "Incorrect"  # Voor optionele fouten: "Incorrect" i.p.v. "Afkeuring"
+            
+            # Fallback naar code-based logica maar met aangepaste terminologie
+            error_code = row.get('Foutcode', row.get('code', ''))
+            if pd.isna(error_code) or str(error_code).strip() == "":
+                return "Onbekend"
+            
+            code_str = str(error_code).strip()
+            try:
+                code_int = int(float(code_str))
+                
+                # Specifieke flag codes
+                flag_codes = {703, 720, 751, 752, 753, 756, 758, 759, 760, 761, 762, 763, 764, 765, 766, 769, 770, 771, 773, 774, 775}
+                
+                if code_int in flag_codes:
+                    return "Vlag"
+                elif 700 <= code_int <= 749:
+                    if code_int == 724:
+                        return "Conflict"
+                    return "Incorrect"  # Voor optionele fouten
+                elif code_int == 772:
+                    return "Aanpassing"
+                elif 750 <= code_int <= 799:
+                    return "Vlag"
+                elif 800 <= code_int <= 899:
+                    return "Vlag"
                 else:
                     return "Onbekend"
             except (ValueError, TypeError):
@@ -1153,15 +1303,28 @@ def genereer_rapport(
             total_rows = len(df)  # Normale modus: gebruik processed data lengte
         # Anders: behoud originele total_rows parameter (Quick Mode)
         
+        # Voor berekeningen: gebruik altijd een numerieke waarde
+        numeric_total_rows = len(df) if total_rows == "5000+" else (total_rows if isinstance(total_rows, int) else len(df))
+        
         processed_rows = len(df)  # Aantal verwerkte rijen (voor berekeningen)
         total_cols = len(df.columns)  # Kolommen in verwerkte df
         total_original_cols = len(df_original.columns)  # Kolommen in origineel bestand
 
+        # DEBUG: Log template context
+        if template_context:
+            logging.info(f"DEBUG Sheet 1: Template context aanwezig, type: {template_context.get('type', 'Unknown')}")
+            if template_context.get('type') == 'TG':
+                logging.info(f"DEBUG Sheet 1: TG Template gedetecteerd met {template_context.get('visible_fields', '?')} zichtbare velden")
+        else:
+            logging.info("DEBUG Sheet 1: Geen template context (waarschijnlijk DT/AT template)")
+        
         # Gebruik de doorgegeven validation_config of val terug op laden van bestand
         if validation_config:
             config = validation_config
+            logging.info(f"DEBUG Sheet 1: validation_config gebruikt (niet van file)")
         else:
             config = load_validation_config(JSON_CONFIG_PATH)
+            logging.info(f"DEBUG Sheet 1: config geladen van file: {JSON_CONFIG_PATH}")
             if not config:
                 logging.error("Kan rapport niet genereren zonder validatie configuratie.")
                 return None
@@ -1192,15 +1355,27 @@ def genereer_rapport(
                 f for f in ghx_mandatory_fields if f not in df.columns
             ]
         
-        M_found = len(present_mandatory_columns)
+        # M_found = aantal CORRECT ingevulde mandatory fields, niet alleen aanwezige kolommen
+        # Initialiseer M_found voorlopig met aantal aanwezige kolommen, wordt later herberekend
+        M_found_columns = len(present_mandatory_columns)  # Bewaar voor later gebruik
+        M_found = M_found_columns  # Tijdelijke waarde, wordt later herberekend na corrected_errors
         M_missing = len(missing_mandatory_columns)
 
         # Herbereken filled_counts en empty/errors voor consistentie hier
         filled_counts = {}
         invalid_values_config = config.get("invalid_values", [])
         invalid_values = [str(val).lower() for val in invalid_values_config]
+        
+        # UOM velden voor conditional logic
+        uom_fields = [
+            'UOM Code Verpakkingseenheid', 'Inhoud Verpakkingseenheid',
+            'UOM Code Basiseenheid', 'Inhoud Basiseenheid', 
+            'UOM Code Inhoud Basiseenheid'
+        ]
+        
         for f in present_mandatory_columns:
-            filled_counts[f] = (
+            # Normale filled count berekening
+            basic_filled = (
                 df[f].notna()
                 & (
                     ~df[f]
@@ -1210,21 +1385,72 @@ def genereer_rapport(
                     .isin(["nan", ""] + invalid_values)
                 )
             ).sum()
+            
+            # UOM CONDITIONAL LOGIC: Voor UOM velden, alleen tellen als Omschrijving gevuld is
+            if f in uom_fields and 'Omschrijving Verpakkingseenheid' in df.columns:
+                # PER RIJ: UOM veld telt alleen als die rij ook Omschrijving Verpakkingseenheid heeft
+                omschrijving_mask = (
+                    df['Omschrijving Verpakkingseenheid'].notna()
+                    & (
+                        ~df['Omschrijving Verpakkingseenheid']
+                        .astype(str)
+                        .str.strip()
+                        .str.lower()
+                        .isin(["nan", ""] + invalid_values)
+                    )
+                )
+                
+                uom_field_mask = (
+                    df[f].notna()
+                    & (
+                        ~df[f]
+                        .astype(str)
+                        .str.strip()
+                        .str.lower()
+                        .isin(["nan", ""] + invalid_values)
+                    )
+                )
+                
+                # Tel alleen UOM velden waar ZOWEL UOM veld als Omschrijving gevuld zijn
+                filled_counts[f] = (omschrijving_mask & uom_field_mask).sum()
+            else:
+                filled_counts[f] = basic_filled
 
         total_filled_in_present = sum(
             filled_counts.get(f, 0) for f in present_mandatory_columns
         )
         # Bij Quick Mode: gebruik processed_rows, anders total_rows
         rows_for_calculation = processed_rows if max_rows is not None else total_rows
-        empty_in_present = (M_found * rows_for_calculation) - total_filled_in_present
+        empty_in_present = (M_found_columns * rows_for_calculation) - total_filled_in_present
 
         corrected_errors = {}
         for f in present_mandatory_columns:
             field_filled = filled_counts.get(f, 0)
             field_errors = errors_per_field.get(f, 0)  # Gebruik doorgegeven errors
+            
+            # UOM CONDITIONAL CORRECTION: Voor UOM velden, corrigeer voor conditionele validatie
+            uom_fields = [
+                'UOM Code Verpakkingseenheid', 'Inhoud Verpakkingseenheid',
+                'UOM Code Basiseenheid', 'Inhoud Basiseenheid', 
+                'UOM Code Inhoud Basiseenheid'
+            ]
+            
+            if f in uom_fields:
+                # Voor UOM velden: alleen errors tellen waar Omschrijving Verpakkingseenheid gevuld is
+                # Dit corrigeert het probleem dat lege UOM velden als fout werden geteld
+                omschrijving_filled = filled_counts.get('Omschrijving Verpakkingseenheid', 0)
+                if omschrijving_filled < field_filled:
+                    # Er zijn meer UOM velden gevuld dan omschrijvingen - dit zou niet mogen
+                    # Corrigeer de error count naar realistisch aantal
+                    field_errors = min(field_errors, omschrijving_filled)
+            
             corrected_errors[f] = min(field_errors, field_filled)
         total_errors_in_present = sum(corrected_errors.values())
         totaal_juist = total_filled_in_present - total_errors_in_present
+        
+        # Fix voor Olaf's bug: M_found = aantal CORRECT ingevulde mandatory fields
+        # Niet aantal aanwezige kolommen, maar aantal correct ingevulde velden
+        M_found = totaal_juist  # Dit is de juiste waarde voor volledigheid score
 
         # Bereken percentage fouten van ingevulde verplichte velden
         percentage_incorrect_of_filled_present = (
@@ -1234,7 +1460,7 @@ def genereer_rapport(
         )
 
         # Statistieken voor Blok 2 ("Actiepunten" uit origineel)
-        aantal_leeg_incl_missing = empty_in_present + (M_missing * total_rows)
+        aantal_leeg_incl_missing = empty_in_present + (M_missing * numeric_total_rows)
         
         # Voor TG templates: gebruik template_mandatory_fields count
         # Voor ALT/DT templates: gebruik ghx_mandatory_fields count
@@ -1319,8 +1545,8 @@ def genereer_rapport(
 
         # BEREKEN HIER DE MISSENDE VARIABELE (Percentage gevuld van AANWEZIGE verplichte velden):
         perc_verpl_gevuld = (
-            (total_filled_in_present / (M_found * total_rows) * 100)
-            if (M_found * total_rows) > 0
+            (total_filled_in_present / (M_found * numeric_total_rows) * 100)
+            if (M_found * numeric_total_rows) > 0
             else 0
         )
 
@@ -1654,7 +1880,7 @@ def genereer_rapport(
             template_table_end_row = current_row - 1  # Default: geen template tabel
             
             # === QUICK MODE TABEL (rij 8-9 indien actief) ===
-            quick_mode_active = (max_rows is not None and max_rows == 5000)
+            quick_mode_active = (max_rows is not None)
 
             if quick_mode_active:
                 # Quick Mode tabel op vaste positie: rij 8-9
@@ -1691,10 +1917,10 @@ def genereer_rapport(
                 ws_dash.set_row(quick_mode_start_row, 18)
                 
                 # Rij 9: Beschrijving (alleen B9:C9)
-                if total_rows:
+                if total_rows and total_rows != "5000+":
                     quick_text = f"Alleen de eerste {max_rows:,} van {total_rows:,} rijen zijn gevalideerd"
                 else:
-                    quick_text = f"Alleen de eerste {max_rows:,} rijen zijn gevalideerd"
+                    quick_text = f"Alleen de eerste {max_rows:,} van 5000+ rijen zijn gevalideerd"
                 
                 ws_dash.merge_range(
                     f"B{quick_mode_start_row + 2}:C{quick_mode_start_row + 2}",
@@ -1786,9 +2012,71 @@ def genereer_rapport(
                     fmt_template_value,
                 )
                 
-                # EXTRA REGELS ALLEEN VOOR TG TEMPLATES
-                current_template_row = base_content_start_row + 2  # Start na Template Type voor TG-specifieke content
+                # DERDE REGEL: Template Versie (alleen voor TG en DT templates)
+                current_template_row = base_content_start_row + 2  # Start na Template Type
                 
+                # Extracteer en toon versie alleen voor TG en DT templates
+                if template_type == "TG" and template_context:
+                    # TG: uit A2 cel via template_context
+                    version_info = template_context.get("version_info", {})
+                    template_version = version_info.get("version", "Onbekend")
+                    version_display = f"Versie: {template_version}"
+                    ws_dash.merge_range(
+                        f"B{current_template_row + 1}:C{current_template_row + 1}",
+                        version_display,
+                        fmt_template_value,
+                    )
+                    current_template_row += 1
+                elif template_type == "DT":
+                    # DT: uit A1 cel 
+                    from .price_tool import extract_dt_template_version
+                    try:
+                        dt_version_info = extract_dt_template_version(excel_path)
+                        if dt_version_info:
+                            template_version = dt_version_info.get("version", "Onbekend")
+                        else:
+                            template_version = "Onbekend"
+                    except Exception as e:
+                        logging.warning(f"Fout bij DT versie extractie: {e}")
+                        template_version = "Onbekend"
+                    
+                    version_display = f"Versie: {template_version}"
+                    ws_dash.merge_range(
+                        f"B{current_template_row + 1}:C{current_template_row + 1}",
+                        version_display,
+                        fmt_template_value,
+                    )
+                    current_template_row += 1
+                # AT templates: geen versie regel - "Onbekende Template" is al duidelijk genoeg
+                
+                # VIERDE REGEL: Generatie Tijd (alleen voor TG templates)
+                if template_type == "TG" and template_context:
+                    # Extracteer generatie tijd uit version_info
+                    version_info = template_context.get("version_info", {})
+                    generation_time = version_info.get("release_date")
+                    
+                    # Als geen release_date, probeer generated veld
+                    if not generation_time:
+                        generated_text = version_info.get("generated", "")
+                        if generated_text:
+                            # Extracteer alleen de eerste regel (de datum/tijd)
+                            first_line = generated_text.split('\n')[0].strip()
+                            # Check of het een datum/tijd format is
+                            import re
+                            if re.match(r'\d{2}-\d{2}-\d{4} \d{2}:\d{2}', first_line):
+                                generation_time = first_line
+                    
+                    # Toon generatie tijd indien beschikbaar
+                    if generation_time:
+                        time_display = f"Gegenereerd op: {generation_time}"
+                        ws_dash.merge_range(
+                            f"B{current_template_row + 1}:C{current_template_row + 1}",
+                            time_display,
+                            fmt_template_value,
+                        )
+                        current_template_row += 1
+                
+                # TG-SPECIFIEKE CONTENT: Template Code en Categorie
                 if template_type == "TG" and template_context:
                     # Template Code (zoals S-LM-0-0-0-umcu-V77-M19)  
                     # Probeer eerst uit template_context, anders uit enhanced template display
@@ -1949,12 +2237,12 @@ def genereer_rapport(
             stats_start_row = current_row + 1  # Rij 10 (direct na header rij 9)
             
             # GEEN current_row increment hier - data moet DIRECT na header
-            aantal_velden_totaal = total_rows * total_original_cols
+            aantal_velden_totaal = numeric_total_rows * total_original_cols
             
             # CORRECTIE: "Aantal aanwezige/afwezige verplichte velden" betekent KOLOMMEN, niet velden
             # Voor alle template types: tel alleen kolommen (niet kolommen * rijen)
-            aantal_aanw_verpl_velden = M_found        # Aantal verplichte KOLOMMEN die aanwezig zijn
-            aantal_afw_verpl_velden = M_missing       # Aantal verplichte KOLOMMEN die afwezig zijn
+            aantal_aanw_verpl_velden = M_found_columns  # Aantal verplichte KOLOMMEN die aanwezig zijn
+            aantal_afw_verpl_velden = M_missing         # Aantal verplichte KOLOMMEN die afwezig zijn
             aantal_aanw_lege_verpl_velden = empty_in_present
 
             # Tel rejection errors (afkeuringen) - alleen regels die door Gatekeeper zouden worden afgewezen
@@ -2094,13 +2382,15 @@ def genereer_rapport(
                 aantal_afw_verpl_velden = M_missing  # Nu correct omdat M_missing is bijgewerkt voor TG
                 
                 # Voeg statistieken toe met correcte labels voor Quick Mode
-                quick_mode_suffix = " (over de eerste 5000 regels)" if max_rows is not None else ""
+                quick_mode_suffix = f" (over de eerste {max_rows} regels)" if max_rows is not None else ""
+                # Voor aantal rijen: toon "5000+" als total_rows None is in Quick Mode
+                display_rows = total_rows if total_rows is not None else "5000+"
                 stats_data_original.extend([
-                    ("Aantal rijen", total_rows),
+                    ("Aantal rijen", display_rows),
                     ("Aantal kolommen", total_original_cols),  # Nu gefilterde kolom count voor TG
                     ("Aantal aanwezige verplichte kolommen", aantal_aanw_verpl_velden),  # Nu consistent
                     ("Aantal afwezige verplichte kolommen", aantal_afw_verpl_velden),    # Nu consistent
-                    ("Aantal velden", aantal_velden_totaal),  # Verplaatst naar beneden
+                    (f"Aantal velden{quick_mode_suffix}", aantal_velden_totaal),  # Verplaatst naar beneden
                     (f"Aantal gevulde verplichte velden{quick_mode_suffix}", total_filled_in_present),
                     (f"Aantal aanwezige lege verplichte velden{quick_mode_suffix}", aantal_aanw_lege_verpl_velden),
                 ])
@@ -2109,13 +2399,15 @@ def genereer_rapport(
                 stats_data_original = []
                 
                 # Voeg reguliere statistieken toe met correcte labels voor Quick Mode
-                quick_mode_suffix = " (over de eerste 5000 regels)" if max_rows is not None else ""
+                quick_mode_suffix = f" (over de eerste {max_rows} regels)" if max_rows is not None else ""
+                # Voor aantal rijen: toon "5000+" als total_rows None is in Quick Mode
+                display_rows = total_rows if total_rows is not None else "5000+"
                 stats_data_original.extend([
-                    ("Aantal rijen", total_rows),
+                    ("Aantal rijen", display_rows),
                     ("Aantal kolommen", total_original_cols),
                     ("Aantal aanwezige verplichte kolommen", aantal_aanw_verpl_velden),
                     ("Aantal afwezige verplichte kolommen", aantal_afw_verpl_velden),
-                    ("Aantal velden", aantal_velden_totaal),  # Verplaatst naar beneden
+                    (f"Aantal velden{quick_mode_suffix}", aantal_velden_totaal),  # Verplaatst naar beneden
                     (f"Aantal gevulde verplichte velden{quick_mode_suffix}", total_filled_in_present),
                     (f"Aantal aanwezige lege verplichte velden{quick_mode_suffix}", aantal_aanw_lege_verpl_velden),
                 ])
@@ -2249,13 +2541,41 @@ def genereer_rapport(
             
             actions_end_row = actions_data_row
 
-            # Load error code descriptions - support both v18 and v20 structure  
-            if "global_settings" in config and "error_code_descriptions" in config["global_settings"]:
-                # v20 structure
+            # Load error code descriptions - support both v18 and v20 structure
+            # DEBUG: Log config structure
+            logging.info(f"DEBUG Sheet 1: Config keys beschikbaar: {list(config.keys()) if config else 'Config is None'}")
+            
+            # Voor TG templates: config bevat alleen template settings, niet validation rules
+            # We moeten error descriptions direct uit JSON file laden
+            if template_context and template_context.get('type') == 'TG':
+                # TG Template: laad error descriptions direct uit JSON file
+                logging.info("DEBUG Sheet 1: TG Template - laad error descriptions uit JSON file")
+                try:
+                    import json
+                    with open(JSON_CONFIG_PATH, 'r', encoding='utf-8') as f:
+                        full_config = json.load(f)
+                    
+                    if "global_settings" in full_config and "error_code_descriptions" in full_config["global_settings"]:
+                        error_code_desc = full_config["global_settings"]["error_code_descriptions"]
+                        logging.info(f"DEBUG Sheet 1: {len(error_code_desc)} error codes geladen uit JSON file voor TG")
+                    else:
+                        error_code_desc = {}
+                        logging.warning("DEBUG Sheet 1: Geen error descriptions in JSON file voor TG")
+                except Exception as e:
+                    logging.error(f"DEBUG Sheet 1: Fout bij laden JSON voor TG: {e}")
+                    error_code_desc = {}
+            elif "global_settings" in config and "error_code_descriptions" in config["global_settings"]:
+                # v20 structure (original JSON)
                 error_code_desc = config["global_settings"]["error_code_descriptions"]
+                logging.info(f"DEBUG Sheet 1: Gebruikt v20 structure, {len(error_code_desc)} error codes geladen")
+            elif "error_code_descriptions" in config:
+                # v18 structure (normalized or original v18)
+                error_code_desc = config["error_code_descriptions"]
+                logging.info(f"DEBUG Sheet 1: Gebruikt v18 structure, {len(error_code_desc)} error codes geladen")
             else:
-                # v18 structure (fallback)
-                error_code_desc = config.get("error_code_descriptions", {})
+                # Fallback: empty dict
+                error_code_desc = {}
+                logging.warning("DEBUG Sheet 1: Geen error code descriptions gevonden in config!")
             
             if "724" not in error_code_desc:
                 error_code_desc["724"] = "UOM-relatie conflict"
@@ -2279,9 +2599,22 @@ def genereer_rapport(
                     df_foutcodes = df_foutcodes[df_foutcodes["code"] != ""]
                     
                     # Maak beschrijving op basis van de foutcode en verwijder FLAG: prefix
+                    # DEBUG: Log foutcodes en beschrijvingen
+                    logging.info(f"DEBUG Sheet 1: Aantal foutcodes gevonden: {len(df_foutcodes)}")
+                    if not df_foutcodes.empty:
+                        logging.info(f"DEBUG Sheet 1: Eerste paar foutcodes: {df_foutcodes['code'].head().tolist()}")
+                    
                     df_foutcodes["Beschrijving"] = df_foutcodes["code"].apply(
                         lambda x: error_code_desc.get(str(x).strip(), f"Code: {x}").replace("FLAG: ", "")
                     )
+                    
+                    # DEBUG: Log beschrijvingen
+                    if not df_foutcodes.empty:
+                        logging.info(f"DEBUG Sheet 1: Eerste beschrijving: '{df_foutcodes['Beschrijving'].iloc[0] if len(df_foutcodes) > 0 else 'Geen'}'")
+                        # Check of beschrijvingen leeg zijn
+                        empty_desc = df_foutcodes[df_foutcodes["Beschrijving"].str.strip() == ""]
+                        if not empty_desc.empty:
+                            logging.warning(f"DEBUG Sheet 1: {len(empty_desc)} lege beschrijvingen gevonden voor codes: {empty_desc['code'].tolist()}")
 
                     # --- NIEUWE CODE: Bepaal sets van error codes VOOR de helper functie ---
                     mandatory_error_codes = set()
@@ -2557,41 +2890,85 @@ def genereer_rapport(
             
             # 1. Stacked Bar Data
             bar_chart_row = chart_data_start_row + 2
-            bar_headers = ["Veld", "Juist", "Foutief", "Leeg", "Kolom Missing"]
+            bar_headers = ["Veld", "Juist", "Foutief", "Leeg", "Kolom Missing", "UOM Conflict"]
             ws_dash.write_row(bar_chart_row, 0, bar_headers)
             bar_chart_data = []
-            # CRITICAL: Use processed_rows for chart calculations, not total_rows!
-            chart_rows = len(df)  # Use actual processed data length
+            # NIEUWE SIMPELE CHART LOGICA: Gebruik Sheet 7 kleuren
+            chart_rows = len(df)
+            
+            # Analyseer validation_results per kolom (net zoals Sheet 7 doet)
+            def analyze_column_colors(column_name, df, validation_results):
+                """Analyseer kleuren van een kolom zoals Sheet 7 doet"""
+                if column_name not in df.columns:
+                    return {"correct": 0, "error": 0, "empty": 0, "conflict": 0, "missing": chart_rows}
+                
+                colors = {"correct": 0, "error": 0, "empty": 0, "conflict": 0, "missing": 0}
+                
+                # Bouw lookup dictionaries zoals Sheet 7 doet
+                error_lookup = {}  # Voor normale fouten (rood)
+                uom_relation_error_lookup = {}  # Voor UOM conflicten (blauw - codes 724, 801, 805)
+                
+                for error in validation_results:
+                    if error["GHX Kolom"] == "RED FLAG":
+                        continue
+                    # Gebruik dezelfde rij index logica als Sheet 7
+                    row_idx = error["Rij"] - 3
+                    col_name = error["GHX Kolom"]
+                    error_code = error.get("code", "")
+                    
+                    if col_name == column_name and col_name in df.columns:
+                        col_idx = df.columns.get_loc(col_name)
+                        if 0 <= row_idx < len(df):
+                            # UOM relatie fouten (724, 801, 805) krijgen speciale behandeling
+                            if error_code in ["724", "801", "805"]:
+                                if row_idx not in uom_relation_error_lookup:
+                                    uom_relation_error_lookup[row_idx] = set()
+                                uom_relation_error_lookup[row_idx].add(col_idx)
+                            else:
+                                # Normale fouten (rejection/correction)
+                                error_type = error.get("type", "")
+                                if error_type != "flag":  # Skip flags
+                                    if row_idx not in error_lookup:
+                                        error_lookup[row_idx] = set()
+                                    error_lookup[row_idx].add(col_idx)
+                
+                # Nu analyseer elke rij in de kolom
+                col_idx = df.columns.get_loc(column_name)
+                for row_idx, row in df.iterrows():
+                    cell_value = row.get(column_name, "")
+                    is_filled = not (pd.isna(cell_value) or str(cell_value).strip() == "")
+                    
+                    if not is_filled:
+                        colors["empty"] += 1
+                    elif row_idx in uom_relation_error_lookup and col_idx in uom_relation_error_lookup[row_idx]:
+                        colors["conflict"] += 1  # Blauw voor UOM conflicten
+                    elif row_idx in error_lookup and col_idx in error_lookup[row_idx]:
+                        colors["error"] += 1  # Rood voor normale fouten
+                    else:
+                        colors["correct"] += 1  # Groen voor correcte cellen
+                
+                return colors
+            
+            # SHEET7-BASED CHART LOGIC - Direct replacement using analyze_column_colors
             for i, f in enumerate(ghx_mandatory_fields):
                 row_num = bar_chart_row + 1 + i
-                if f not in df.columns:
-                    # Voor lege templates, toon als "leeg" (geel) in plaats van "missing" (zwart)
-                    if chart_rows == 0:
-                        correct, error, empty, missing = 0, 0, 1, 0  # Toon minimaal 1 voor zichtbaarheid
-                    else:
-                        correct, error, empty, missing = 0, 0, 0, chart_rows
-                else:
-                    filled = filled_counts.get(f, 0)
-                    errors = corrected_errors.get(f, 0)
-                    correct = max(0, filled - errors)
-                    error = errors
-                    empty = chart_rows - filled  # Use processed rows for chart
-                    missing = 0
-                    
-                    # Voor lege templates met kolommen aanwezig, toon als "leeg"
-                    if chart_rows == 0:
-                        empty = 1  # Toon minimaal 1 voor zichtbaarheid
+                
+                # Use Sheet 7 logic to analyze this column
+                colors = analyze_column_colors(f, df, validation_results)
+                
+                # Write to worksheet - exact same layout as before
                 ws_dash.write(row_num, 0, f)
-                ws_dash.write(row_num, 1, correct)
-                ws_dash.write(row_num, 2, error)
-                ws_dash.write(row_num, 3, empty)
-                ws_dash.write(row_num, 4, missing)
-                bar_chart_data.append([f, correct, error, empty, missing])
+                ws_dash.write(row_num, 1, colors["correct"])
+                ws_dash.write(row_num, 2, colors["error"])
+                ws_dash.write(row_num, 3, colors["empty"])
+                ws_dash.write(row_num, 4, colors["missing"])
+                ws_dash.write(row_num, 5, colors["conflict"])
+                bar_chart_data.append([f, colors["correct"], colors["error"], colors["empty"], colors["missing"], colors["conflict"]])
             last_bar_data_row = bar_chart_row + len(ghx_mandatory_fields)
 
             # 2. Donut Mandatory Data
             donut_mand_row = last_bar_data_row + 2
-            missing_mandatory_count = M_missing * total_rows
+            missing_mandatory_count = M_missing * numeric_total_rows
             donut_mand_data = [
                 ["Status", "Aantal"],
                 ["Juist ingevuld", totaal_juist],
@@ -2609,7 +2986,7 @@ def genereer_rapport(
             # 3. Donut All Data
             donut_all_row = donut_mand_row + 6
             total_all_fields_in_config = len(config.get("fields", {}))
-            total_all_fields_possible = total_rows * total_all_fields_in_config
+            total_all_fields_possible = numeric_total_rows * total_all_fields_in_config
             total_all_filled = total_filled_in_present + total_filled_non_mand
             total_all_errors = total_errors_in_present + total_errors_non_mand
             total_all_correct = total_all_filled - total_all_errors
@@ -2661,9 +3038,10 @@ def genereer_rapport(
                 2: "Foutief",
                 3: "Leeg",
                 4: "Kolom niet aanwezig",
+                5: "UOM Conflict",
             }
-            colors = {1: "#70AD47", 2: "#FF0000", 3: "#FFC000", 4: "#000000"}
-            for i in range(1, 5):
+            colors = {1: "#70AD47", 2: "#FF0000", 3: "#FFC000", 4: "#000000", 5: "#ADD8E6"}
+            for i in range(1, 6):
                 stacked_chart.add_series(
                     {
                         "name": legend_labels[i],  # <-- Correcte naam direct hier
@@ -2730,7 +3108,7 @@ def genereer_rapport(
                     "font_name": "Arial",
                     "font_size": 20,
                     "bold": True,
-                    "align": "center",
+                    "align": "left",
                     "valign": "vcenter",
                     "bg_color": "#16365C",  # Gewijzigd naar blauw
                     "font_color": "white",
@@ -2778,7 +3156,7 @@ def genereer_rapport(
             # Gebruik NU de correct gedefinieerde fmt_title9
             ws_inleiding.merge_range(
                 f"A{current_row_intro+1}:B{current_row_intro+1}",
-                "GHX TEMPLATE VALIDATIE RAPPORT",
+                "  GHX TEMPLATE VALIDATIE RAPPORT",
                 fmt_title,
             )  # Merge A1:B1
             ws_inleiding.set_row(current_row_intro, 40)  # Stel hoogte in voor titelrij
@@ -2844,11 +3222,19 @@ def genereer_rapport(
             uom_penalties = score_result['uom_penalties']
             template_penalty = score_result['template_penalty']
             
+            # Template type beschrijving voor gebruikersvriendelijke tekst
+            if template_type == "TG":
+                template_type_description = "nieuwe GHX Template Generator"
+            elif template_type == "DT": 
+                template_type_description = "standaard GHX Default Template"
+            else:  # AT
+                template_type_description = "een onbekende template, ofwel niet een nieuwe GHX Prijstemplate"
+            
             score_body_tekst = f"""BEREKENING:
 • Volledigheid (M): {M_percentage}% ({M_found}/{len(ghx_mandatory_fields)} verplichte velden ingevuld)
 • Juistheid (J): {J_percentage}% (correcte data van ingevulde velden)
 • Core score: {M_percentage}% × {J_percentage}% = {core_score}%
-• Template penalty: {template_penalty} ({template_type} template)
+• Template penalty: {template_penalty} ({template_type_description})
 • UOM penalties: {uom_penalties} (foutcodes in UOM kolommen)
 • Eindscore: {core_score} + {template_penalty} + {uom_penalties} = {score_int_uitleg}
 
@@ -3018,7 +3404,7 @@ Kwaliteitscore Uitleg:
                 )
                 
                 # Voeg Type kolom toe
-                df_errors_mand_sheet["Type"] = df_errors_mand_sheet["Foutcode"].apply(get_error_category)
+                df_errors_mand_sheet["Type"] = df_errors_mand_sheet.apply(get_error_category_with_type, axis=1)
                 df_errors_mand_sheet = df_errors_mand_sheet.sort_values(
                     by=["Rij", "GHX Kolom"]
                 )
@@ -3156,7 +3542,7 @@ Kwaliteitscore Uitleg:
                 aanwezig = "Ja" if f in df.columns else "Nee"
                 filled = filled_counts.get(f, 0)
                 field_filled_percentage = (
-                    (filled / total_rows * 100) if total_rows > 0 else 0
+                    (filled / numeric_total_rows * 100) if numeric_total_rows > 0 else 0
                 )
                 field_errors = corrected_errors.get(f, 0)
                 percentage_fout_field = (
@@ -3239,8 +3625,8 @@ Kwaliteitscore Uitleg:
                     columns={"code": "Foutcode"}
                 )
                 
-                # Voeg Type kolom toe
-                df_errors_non_mand_sheet["Type"] = df_errors_non_mand_sheet["Foutcode"].apply(get_error_category)
+                # Voeg Type kolom toe (speciale versie voor optionele fouten)
+                df_errors_non_mand_sheet["Type"] = df_errors_non_mand_sheet.apply(get_error_category_optional, axis=1)
                 df_errors_non_mand_sheet = df_errors_non_mand_sheet.sort_values(
                     by=["Rij", "GHX Kolom"]
                 )
@@ -3251,7 +3637,8 @@ Kwaliteitscore Uitleg:
                     df_errors_non_mand_sheet["Supplier Kolom"] = df_errors_non_mand_sheet["Supplier Kolom"].apply(
                         clean_header_for_display
                     )
-                # Limiet
+                # Gebruik een aparte naam voor de DataFrame die daadwerkelijk naar Excel gaat (ivm slicing)
+                df_errors_non_mand_sheet_display = df_errors_non_mand_sheet
                 if len(df_errors_non_mand_sheet) > ERROR_LIMIT:
                     ws_opt_err.write(
                         0,
@@ -3259,14 +3646,16 @@ Kwaliteitscore Uitleg:
                         f"LET OP: Weergave beperkt tot de eerste {ERROR_LIMIT} fouten.",
                         workbook.add_format({"bold": True, "color": "red"}),
                     )
-                    df_errors_non_mand_sheet = df_errors_non_mand_sheet.iloc[
+                    # Maak een slice en BELANGRIJK: een .copy() om SettingWithCopyWarning te voorkomen
+                    df_errors_non_mand_sheet_display = df_errors_non_mand_sheet.iloc[
                         ERROR_START:ERROR_END
-                    ]
-                    startrow_opt_err = 1
+                    ].copy()
+                    startrow_opt_err = 1  # Data start op rij 2 (index 1) omdat rij 1 het limiet-bericht bevat
                 else:
-                    startrow_opt_err = 0
-                # Schrijf
-                df_errors_non_mand_sheet.to_excel(
+                    startrow_opt_err = 0  # Data start op rij 1 (index 0)
+                
+                # Schrijf de data naar Excel (BELANGRIJK: ZONDER header nu)
+                df_errors_non_mand_sheet_display.to_excel(
                     writer,
                     sheet_name="5. Optionele Fouten",
                     startrow=startrow_opt_err,
@@ -3280,30 +3669,31 @@ Kwaliteitscore Uitleg:
                 ws_opt_err.set_column(4, 4, 150)  # Foutmelding
                 ws_opt_err.set_column(5, 5, 10)  # Foutcode
                 ws_opt_err.set_column(6, 6, 12)  # Type
-                (max_row_oe, max_col_oe) = df_errors_non_mand_sheet.shape
+                # Bepaal tabel dimensies gebaseerd op de display DataFrame
+                (max_row_oe, max_col_oe) = df_errors_non_mand_sheet_display.shape
                 ws_opt_err.add_table(
                     startrow_opt_err,
                     0,
                     startrow_opt_err + max_row_oe,
                     max_col_oe - 1,
                     {
-                        "columns": [{"header": col} for col in df_errors_non_mand_sheet.columns],
+                        "columns": [{"header": col} for col in df_errors_non_mand_sheet_display.columns],
                         "style": "Table Style Medium 7",
                     },
                 )
                 # --- Pas format toe op Kol C & D NA HET MAKEN VAN DE TABEL ---
                 fmt_col_c_no_wrap_oe = workbook.add_format({'valign': 'top'}) # ZONDER text_wrap
                 fmt_col_d_basic_oe = workbook.add_format({'valign': 'top'})
-                # Kolom C = index 2, Kolom D = index 3 in df_errors_non_mand_sheet
+                # Kolom C = index 2, Kolom D = index 3 in df_errors_non_mand_sheet_display
                 for row_idx_in_df in range(max_row_oe):
                     excel_row_index = startrow_opt_err + 1 + row_idx_in_df
 
                     # Kolom C: Schrijf ZONDER wrap
-                    value_c = df_errors_non_mand_sheet.iat[row_idx_in_df, 2]
+                    value_c = df_errors_non_mand_sheet_display.iat[row_idx_in_df, 2]
                     ws_opt_err.write(excel_row_index, 2, value_c, fmt_col_c_no_wrap_oe)
 
                     # Kolom D: Schrijf expliciet, zet spatie indien leeg
-                    value_d = df_errors_non_mand_sheet.iat[row_idx_in_df, 3]
+                    value_d = df_errors_non_mand_sheet_display.iat[row_idx_in_df, 3]
                     if value_d == '':
                         ws_opt_err.write_string(excel_row_index, 3, ' ', fmt_col_d_basic_oe)
                     else:
@@ -3345,7 +3735,7 @@ Kwaliteitscore Uitleg:
                 aanwezig = "Ja" if f in df.columns else "Nee"
                 filled_nm = filled_counts_non_mand.get(f, 0)  # 0 als kolom mist
                 field_filled_percentage_nm = (
-                    (filled_nm / total_rows * 100) if total_rows > 0 else 0
+                    (filled_nm / numeric_total_rows * 100) if numeric_total_rows > 0 else 0
                 )
                 field_errors_nm = errors_per_field_non_mand.get(
                     f, 0
@@ -3539,6 +3929,7 @@ Kwaliteitscore Uitleg:
                 JSON_CONFIG_PATH,
                 validation_config,
                 template_context,
+                excel_path,
             )
 
             # ==================================================================
@@ -3721,7 +4112,7 @@ Kwaliteitscore Uitleg:
             # --- Update validatie logboek ---
             # Bereken waarden specifiek voor de log functie
             total_leeg_non_mand = (
-                len(present_non_mandatory_columns) * total_rows
+                len(present_non_mandatory_columns) * numeric_total_rows
             ) - total_filled_non_mand
             update_validation_log(
                 bestandsnaam=bestandsnaam,
@@ -3735,6 +4126,7 @@ Kwaliteitscore Uitleg:
                 total_leeg=empty_in_present,
                 M_missing=M_missing,
                 ghx_mandatory_fields_list=ghx_mandatory_fields,
+                numeric_total_rows=numeric_total_rows,
                 total_errors_non_mand=total_errors_non_mand,
                 total_filled_non_mand=total_filled_non_mand,
                 total_leeg_non_mand=total_leeg_non_mand,
@@ -3791,9 +4183,9 @@ Kwaliteitscore Uitleg:
             
         # Bereken kwaliteitscore (0-45 punten)  
         # Gebaseerd op foutpercentage - hoe minder fouten, hoe hoger de score
-        if total_rows > 0:
+        if numeric_total_rows > 0:
             total_fouten = len(df_errors_mand) + len(df_errors_non_mand)
-            fout_percentage = min(100, (total_fouten / total_rows) * 100)
+            fout_percentage = min(100, (total_fouten / numeric_total_rows) * 100)
             kwaliteits_score = int(max(0, 45 - (fout_percentage / 100 * 45)))
         else:
             kwaliteits_score = 45  # Perfect als geen data om fouten in te maken

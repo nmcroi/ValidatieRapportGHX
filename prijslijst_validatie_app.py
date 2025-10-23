@@ -7,6 +7,7 @@ import tempfile # Nodig om geupload bestand tijdelijk op te slaan
 import logging # Om logging uit de tool te zien (optioneel)
 import io
 import zipfile
+import time
 
 # Importeer de hoofdfunctie uit price_tool.py (met volledige rapport functionaliteit)
 try:
@@ -24,12 +25,12 @@ VALIDATION_JSON = "field_validation_v20.json"
 REFERENCE_JSON = "reference_lists.json"
 
 # Logging configureren (optioneel, toont logs in console waar Streamlit draait)
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # --- Streamlit UI Opzet ---
 st.set_page_config(layout="wide") # Gebruik meer schermbreedte
-st.title("GHX Prijslijst Validatie Tool")
-st.markdown("Upload hier de GHX prijslijst template (.xlsx of .xls) om deze te valideren.")
+st.title("✅ GHX Prijslijst Validatie Tool - BUG GEFIXED!")
+st.markdown("🎯 **VERSIE MET WERKENDE UOM CONFLICT LOGIC** - Upload hier de GHX prijslijst template (.xlsx of .xls) om deze te valideren.")
 
 # Controleer of configuratiebestanden bestaan
 if not os.path.exists(MAPPING_JSON):
@@ -85,57 +86,89 @@ if uploaded_files:
 
             try:
                 # Create a temporary file for THIS file
+                start_time = time.time()
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_file:
                     tmp_file.write(uploaded_file.getvalue())
                     temp_file_path = tmp_file.name
+                end_time = time.time()
+                logging.info(f"⏱️  Tijdelijk bestand opslaan: {end_time-start_time:.2f} sec voor {len(uploaded_file.getvalue())/1024/1024:.1f} MB")
 
-                # DEBUG: Test template detectie voor dit bestand
-                try:
-                    from validator.price_tool import test_template_detection, debug_header_mapping
-                    debug_result = test_template_detection(temp_file_path)
-                    st.info(f"🔍 **Debug Info voor '{original_filename}':**")
-                    st.write(f"- Template Type: **{debug_result.get('template_type', 'Unknown')}**")
-                    st.write(f"- Heeft Stamp: **{debug_result.get('has_stamp', False)}**")
-                    if debug_result.get('template_type') == 'TG':
-                        st.write(f"- Mandatory Fields: **{debug_result.get('mandatory_fields_count', 0)}**")
-                        st.write(f"- Visible Fields: **{debug_result.get('visible_fields_count', 0)}**")
-                        st.write(f"- Hidden Fields: **{debug_result.get('hidden_fields_count', 0)}**")
-                        if debug_result.get('institutions'):
-                            st.write(f"- Instellingen: **{len(debug_result.get('institutions', []))}**")
-                        if debug_result.get('product_types'):
-                            st.write(f"- Product Types: **{debug_result.get('product_types', [])}**")
-                    elif 'error' in debug_result:
-                        st.error(f"Debug Error: {debug_result['error']}")
-                except Exception as debug_e:
-                    st.warning(f"Debug info niet beschikbaar: {debug_e}")
+                # Template detectie gebeurt in de achtergrond tijdens validate_pricelist()
+                # Geen UI output nodig - dit is alleen een testomgeving
 
-                # Tel eerst aantal rijen in Excel
+                # Initialiseer total_rows voor het geval er een exception optreedt
+                total_rows = None
+                max_rows_param = None
+                
+                # Slimme row counting - vermijd trage openpyxl voor grote bestanden
                 try:
                     import pandas as pd
-                    df_check = pd.read_excel(temp_file_path, nrows=0)  # Alleen headers
-                    with pd.ExcelFile(temp_file_path) as xls:
-                        # Tel rijen in eerste sheet
-                        df_temp = pd.read_excel(xls, nrows=1)
-                        # Gebruik xlrd/openpyxl om totaal te tellen
-                        import openpyxl
-                        wb = openpyxl.load_workbook(temp_file_path, read_only=True)
-                        ws = wb.active
-                        total_rows = ws.max_row - 1  # -1 voor header
-                        wb.close()
                     
-                    logging.info(f"Bestand heeft {total_rows} rijen data.")
+                    # Stap 1: Probeer eerst 5001 regels te lezen voor snelle detectie
+                    df_check = pd.read_excel(temp_file_path, nrows=5001)
+                    actual_rows = len(df_check)
                     
-                    # Bepaal of Quick Mode nodig is
-                    if total_rows >= 5000:
-                        st.info(f"📊 Bestand heeft {total_rows} rijen. Quick Validatie: eerste 5000 rijen worden gevalideerd.")
+                    if actual_rows <= 5000:
+                        # Bestand heeft 5000 of minder regels - we hebben het exacte aantal
+                        total_rows = actual_rows
+                        max_rows_param = None  # Valideer alles
+                        logging.info(f"Bestand heeft {total_rows} rijen data (klein bestand).")
+                        if total_rows > 0:
+                            st.info(f"📊 Bestand heeft {total_rows} rijen. Volledige validatie wordt uitgevoerd.")
+                    else:
+                        # Bestand heeft meer dan 5000 regels
+                        # Optioneel: probeer exact aantal te bepalen met openpyxl (kan traag zijn)
+                        quick_count_only = True  # Zet op False als je exact aantal wilt voor grote bestanden
+                        
+                        # PERFORMANCE BOOST: Maak snel tijdelijk bestand voor zeer grote bestanden
+                        original_temp_path = temp_file_path
+                        quick_temp_path = None
+                        
+                        try:
+                            # Test performance: is origineel bestand erg traag?
+                            start_time = time.time()
+                            test_df = pd.read_excel(temp_file_path, nrows=10)  # Test read 10 rows
+                            test_time = time.time() - start_time
+                            
+                            if test_time > 0.5:  # Als lezen van 10 rijen >0.5 sec duurt, optimaliseer
+                                import tempfile
+                                
+                                with st.spinner("⚡ Optimaliseren voor Quick Mode..."):
+                                    # Maak snel tijdelijk bestand met alleen eerste 5001 rijen
+                                    quick_temp_fd, quick_temp_path = tempfile.mkstemp(suffix='.xlsx')
+                                    os.close(quick_temp_fd)
+                                    
+                                    # Gebruik de al gelezen 5001 rijen data
+                                    df_check.to_excel(quick_temp_path, index=False)
+                                    temp_file_path = quick_temp_path
+                                    
+                                    logging.info(f"✅ Quick Mode optimalisatie: {test_time:.2f}s → snel tijdelijk bestand")
+                                    st.success("⚡ Bestand geoptimaliseerd voor snelle verwerking!")
+                        
+                        except Exception as opt_e:
+                            logging.warning(f"Quick Mode optimalisatie gefaald: {opt_e}")
+                        
+                        if quick_count_only:
+                            total_rows = "5000+"  # Voor rapport weergave
+                            st.info(f"📊 Bestand heeft meer dan 5000 rijen. Quick Validatie: eerste 5000 rijen worden gevalideerd.")
+                        else:
+                            # Alleen als echt nodig: tel exact met openpyxl
+                            with st.spinner("Exact aantal rijen wordt geteld..."):
+                                import openpyxl
+                                wb = openpyxl.load_workbook(original_temp_path, read_only=True)  # Gebruik origineel voor telling
+                                ws = wb.active
+                                total_rows = ws.max_row - 1  # -1 voor header
+                                wb.close()
+                            st.info(f"📊 Bestand heeft {total_rows:,} rijen. Quick Validatie: eerste 5000 rijen worden gevalideerd.")
+                        
                         max_rows_param = 5000
+                        logging.info(f"Bestand heeft 5000+ rijen data (groot bestand). Quick Mode actief.")
+                        
                         # Sla Quick Mode info op in session state
                         st.session_state.quick_mode_files[original_filename] = {
                             'total_rows': total_rows,
                             'file_data': uploaded_file.getvalue()
                         }
-                    else:
-                        max_rows_param = None  # Valideer alles
                         
                 except Exception as count_error:
                     st.warning(f"Kon aantal rijen niet tellen: {count_error}. Valideer volledig bestand.")
@@ -156,9 +189,13 @@ if uploaded_files:
                     )
                     logging.info(f"validate_pricelist voltooid voor {original_filename}.")
 
-                # Remove the temporary file after validation is done
+                # Remove the temporary files after validation is done
                 if os.path.exists(temp_file_path):
                      os.remove(temp_file_path)
+                # Cleanup Quick Mode tijdelijk bestand als gebruikt
+                if 'quick_temp_path' in locals() and quick_temp_path and os.path.exists(quick_temp_path):
+                    os.remove(quick_temp_path)
+                    logging.info(f"✅ Quick Mode tijdelijk bestand opgeruimd: {quick_temp_path}")
 
                 # Show result and download button for THIS file
                 if report_path and os.path.exists(report_path):
@@ -178,10 +215,18 @@ if uploaded_files:
                         
                         # Voeg "Volledige Validatie" knop toe voor Quick Mode bestanden
                         if max_rows_param is not None and original_filename in st.session_state.quick_mode_files:
-                            if st.button(f"🔍 Volledige Validatie voor '{original_filename}' ({total_rows:,} rijen)", key=f"full_validation_{original_filename}"):
+                            stored_total = st.session_state.quick_mode_files[original_filename]['total_rows']
+                            if stored_total == '5000+':
+                                button_text = f"🔍 Volledige Validatie voor '{original_filename}' (5000+ rijen)"
+                                info_text = "Start volledige validatie van alle rijen..."
+                            else:
+                                button_text = f"🔍 Volledige Validatie voor '{original_filename}' ({stored_total:,} rijen)"
+                                info_text = f"Start volledige validatie van alle {stored_total:,} rijen..."
+                            
+                            if st.button(button_text, key=f"full_validation_{original_filename}"):
                                 st.markdown("---")
                                 st.subheader(f"Volledige Validatie: {original_filename}")
-                                st.info(f"Start volledige validatie van alle {total_rows:,} rijen...")
+                                st.info(info_text)
                                 
                                 # Maak opnieuw een tijdelijk bestand van de opgeslagen data
                                 full_temp_file_path = None
@@ -189,6 +234,17 @@ if uploaded_files:
                                     with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_file:
                                         tmp_file.write(st.session_state.quick_mode_files[original_filename]['file_data'])
                                         full_temp_file_path = tmp_file.name
+                                    
+                                    # Bij volledige validatie, tel het exacte aantal als we dat nog niet wisten
+                                    actual_total_rows = stored_total
+                                    if stored_total == '5000+':
+                                        with st.spinner("Exact aantal rijen wordt geteld voor volledige validatie..."):
+                                            import openpyxl
+                                            wb = openpyxl.load_workbook(full_temp_file_path, read_only=True)
+                                            ws = wb.active
+                                            actual_total_rows = ws.max_row - 1  # -1 voor header
+                                            wb.close()
+                                            st.info(f"📊 Bestand heeft {actual_total_rows:,} rijen. Volledige validatie wordt uitgevoerd...")
                                     
                                     # Start volledige validatie (ZONDER max_rows parameter)
                                     with st.spinner(f"Volledige validatie voor '{original_filename}' bezig..."):
@@ -199,7 +255,7 @@ if uploaded_files:
                                             original_input_filename=original_filename,
                                             reference_json_path=REFERENCE_JSON,
                                             max_rows=None,  # VOLLEDIGE validatie
-                                            total_rows=total_rows,
+                                            total_rows=actual_total_rows,
                                         )
                                     
                                     # Ruim tijdelijk bestand op
@@ -284,10 +340,18 @@ if st.session_state.report_data:
             # Voeg "Volledige Validatie" knop toe als dit een Quick Mode bestand was
             if original_filename in st.session_state.quick_mode_files:
                 quick_info = st.session_state.quick_mode_files[original_filename]
-                if st.button(f"🔍 Volledige Validatie voor '{original_filename}' ({quick_info['total_rows']:,} rijen)", key=f"persistent_full_validation_{original_filename}"):
+                total_rows_display = quick_info['total_rows']
+                if total_rows_display == '5000+':
+                    button_text = f"🔍 Volledige Validatie voor '{original_filename}' (5000+ rijen)"
+                    info_text = "Start volledige validatie van alle rijen..."
+                else:
+                    button_text = f"🔍 Volledige Validatie voor '{original_filename}' ({total_rows_display:,} rijen)"
+                    info_text = f"Start volledige validatie van alle {total_rows_display:,} rijen..."
+                
+                if st.button(button_text, key=f"persistent_full_validation_{original_filename}"):
                     st.markdown("---")
                     st.subheader(f"Volledige Validatie: {original_filename}")
-                    st.info(f"Start volledige validatie van alle {quick_info['total_rows']:,} rijen...")
+                    st.info(info_text)
                     
                     # Maak opnieuw een tijdelijk bestand van de opgeslagen data
                     full_temp_file_path = None
@@ -295,6 +359,17 @@ if st.session_state.report_data:
                         with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_file:
                             tmp_file.write(quick_info['file_data'])
                             full_temp_file_path = tmp_file.name
+                        
+                        # Bij volledige validatie, tel het exacte aantal als we dat nog niet wisten
+                        actual_total_rows = quick_info['total_rows']
+                        if actual_total_rows == '5000+':
+                            with st.spinner("Exact aantal rijen wordt geteld voor volledige validatie..."):
+                                import openpyxl
+                                wb = openpyxl.load_workbook(full_temp_file_path, read_only=True)
+                                ws = wb.active
+                                actual_total_rows = ws.max_row - 1  # -1 voor header
+                                wb.close()
+                                st.info(f"📊 Bestand heeft {actual_total_rows:,} rijen. Volledige validatie wordt uitgevoerd...")
                         
                         # Start volledige validatie (ZONDER max_rows parameter)
                         with st.spinner(f"Volledige validatie voor '{original_filename}' bezig..."):
@@ -306,7 +381,7 @@ if st.session_state.report_data:
                                 original_input_filename=original_filename,
                                 reference_json_path=REFERENCE_JSON,
                                 max_rows=None,  # VOLLEDIGE validatie
-                                total_rows=quick_info['total_rows'],
+                                total_rows=actual_total_rows,
                             )
                         
                         # Ruim tijdelijk bestand op
@@ -333,7 +408,17 @@ if st.session_state.report_data:
                                 'bytes': full_report_bytes,
                                 'filename': full_download_filename
                             }
-                            st.rerun()  # Herlaad om nieuwe rapport te tonen
+                            
+                            # Toon direct de download knop voor het volledige rapport
+                            st.markdown("---")
+                            st.success(f"✅ Volledig rapport klaar voor download!")
+                            st.download_button(
+                                label=f"📥 Download Volledig Rapport voor '{original_filename}'",
+                                data=full_report_bytes,
+                                file_name=full_download_filename,
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                key=f"immediate_full_download_{original_filename}"
+                            )
                         else:
                             st.error(f"Volledige validatie voor '{original_filename}' mislukt.")
                             

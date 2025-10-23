@@ -1257,10 +1257,13 @@
       "3375",
       "3423",
       "3535"
+    ],
+    "implant_unspsc_codes": [
+      "42203501",
+      "42203506",
+      "42203505",
+      "42295503",
+      "42295512"
     ]
-  },
-  "context_rules": {},
-  "field_validations": {},
-  "global_validations": [],
-  "reporting": {}
+  }
 }
